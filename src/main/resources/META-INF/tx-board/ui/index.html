@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spring Transaction Monitor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>Spring Tx Board</h1>
+                    <p>Real-time spring transaction log analysis and monitoring</p>
+                </div>
+                <button class="refresh-btn" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Total Transactions</span>
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="metric-value" id="totalTransactions">0</div>
+                <div class="metric-subtitle">Lifetime</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Success Rate</span>
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="metric-value success" id="successRate">0%</div>
+                <div class="metric-subtitle">Commit rate</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Committed</span>
+                    <i class="fas fa-check-circle success"></i>
+                </div>
+                <div class="metric-value success" id="committedCount">0</div>
+                <div class="metric-subtitle">Successful transactions</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Rolled Back</span>
+                    <i class="fas fa-times-circle error"></i>
+                </div>
+                <div class="metric-value error" id="rolledBackCount">0</div>
+                <div class="metric-subtitle">Failed transactions</div>
+            </div>
+
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="metric-title">Avg Duration</span>
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="metric-value" id="avgDuration">0ms</div>
+                <div class="metric-subtitle">Average execution time</div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-section">
+            <div class="tabs">
+                <div class="tab-buttons">
+                    <button class="tab-btn active" data-tab="overview">Overview</button>
+<!--                    <button class="tab-btn" data-tab="performance">Performance</button>-->
+<!--                    <button class="tab-btn" data-tab="trends">Trends</button>-->
+                </div>
+
+                <div class="tab-content active" id="overview">
+                    <div class="charts-grid">
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Transaction Status Distribution</h3>
+                                <p>Commit vs Rollback ratio</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="chart-card">
+                            <div class="chart-header">
+                                <h3>Duration Distribution</h3>
+                                <p>Transaction execution time ranges</p>
+                            </div>
+                            <div class="chart-container">
+                                <canvas id="durationChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+<!--                <div class="tab-content" id="performance">-->
+<!--                    <div class="chart-card full-width">-->
+<!--                        <div class="chart-header">-->
+<!--                            <h3>Hourly Transaction Volume</h3>-->
+<!--                            <p>Transaction count and success rate by hour</p>-->
+<!--                        </div>-->
+<!--                        <div class="chart-container">-->
+<!--                            <canvas id="hourlyChart"></canvas>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+
+<!--                <div class="tab-content" id="trends">-->
+<!--                    <div class="chart-card full-width">-->
+<!--                        <div class="chart-header">-->
+<!--                            <h3>Success Rate Trend</h3>-->
+<!--                            <p>Hourly success rate percentage</p>-->
+<!--                        </div>-->
+<!--                        <div class="chart-container">-->
+<!--                            <canvas id="trendsChart"></canvas>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+            </div>
+        </div>
+
+        <!-- Transaction Table -->
+        <div class="table-section">
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>Transaction Log</h3>
+                    <p>Detailed view of all transactions</p>
+
+                    <!-- Filters -->
+                    <div class="filters">
+                        <div class="search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="searchInput" placeholder="Search by method or thread name...">
+                        </div>
+
+                        <select id="statusFilter">
+                            <option value="all">All Status</option>
+                            <option value="COMMITTED">Committed</option>
+                            <option value="ROLLED_BACK">Rolled Back</option>
+                        </select>
+
+                        <select id="sortBy">
+                            <option value="startTime">Start Time</option>
+                            <option value="duration">Duration</option>
+                            <option value="method">Method</option>
+                        </select>
+
+                        <button id="sortOrder" class="sort-btn" data-order="desc">
+                            <i class="fas fa-sort-amount-down"></i>
+                            Desc
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="transactionTable">
+                        <thead>
+                            <tr>
+                                <th>Transaction ID</th>
+                                <th>Method</th>
+                                <th>Start Time</th>
+                                <th>End Time</th>
+                                <th>Duration</th>
+                                <th>Status</th>
+                                <th>Thread</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionTableBody">
+                            <!-- Table rows will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="table-footer" id="tableFooter">
+                    <div class="pagination-info">
+                        <p>Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span id="totalResults">0</span> transactions</p>
+                    </div>
+                    <div class="pagination-controls">
+                        <div class="page-size-selector">
+                            <label for="pageSize">Show:</label>
+                            <select id="pageSize">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50" selected>50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span>per page</span>
+                        </div>
+                        <div class="pagination-buttons">
+                            <button id="firstPage" class="pagination-btn" title="First Page">
+                                <i class="fas fa-angle-double-left"></i>
+                            </button>
+                            <button id="prevPage" class="pagination-btn" title="Previous Page">
+                                <i class="fas fa-angle-left"></i>
+                            </button>
+                            <div class="page-numbers" id="pageNumbers">
+                                <!-- Page numbers will be generated by JavaScript -->
+                            </div>
+                            <button id="nextPage" class="pagination-btn" title="Next Page">
+                                <i class="fas fa-angle-right"></i>
+                            </button>
+                            <button id="lastPage" class="pagination-btn" title="Last Page">
+                                <i class="fas fa-angle-double-right"></i>
+                            </button>
+                        </div>
+                        <div class="page-jump">
+                            <span>Go to page:</span>
+                            <input type="number" id="pageJump" min="1" max="1" value="1">
+                            <button id="jumpToPage" class="pagination-btn">Go</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
