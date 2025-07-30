@@ -1,0 +1,40 @@
+{
+  "groups": [
+    {
+      "name": "spring.tx.board",
+      "type": "com.sdlc.pro.txboard.config.TxBoardProperties",
+      "sourceType": "com.sdlc.pro.txboard.config.TxBoardProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.tx.board.enable",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enable or disable the transaction board feature."
+    },
+    {
+      "name": "spring.tx.board.alarming-threshold",
+      "type": "java.lang.Long",
+      "defaultValue": 1000,
+      "description": "Duration threshold (in ms) for alarming slow transactions."
+    },
+    {
+      "name": "spring.tx.board.storage",
+      "type": "com.sdlc.pro.txboard.config.TxBoardProperties.StorageType",
+      "defaultValue": "IN_MEMORY",
+      "description": "Storage type for transaction logs. Options: IN_MEMORY, REDIS."
+    },
+    {
+      "name": "spring.tx.board.enable-listener-log",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "Enable logging transaction start/end debug messages."
+    },
+    {
+      "name": "spring.tx.board.duration-buckets",
+      "type": "java.util.List<java.lang.Integer>",
+      "description": "List of duration buckets (in ms) for distribution analysis."
+    }
+  ]
+}
