@@ -92,23 +92,17 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
     @Override
-    public TransactionLogPageResponse findAll(TransactionLogPageRequest request) {
-        List<TransactionLog> logs = request.getFilter() == FilterNode.UNFILTERED ? this.transactionLogs :
+    public TransactionLogPageResponse findAll(TransactionLogPageRequest pageRequest) {
+        List<TransactionLog> logs = pageRequest.getFilter() == FilterNode.UNFILTERED ? this.transactionLogs :
                 this.transactionLogs.stream()
-                        .filter(FilterPredicateFactory.buildPredicate(request.getFilter()))
+                        .filter(FilterPredicateFactory.buildPredicate(pageRequest.getFilter()))
                         .toList();
 
-        List<TransactionLog> sortedLogs = SortUtils.sort(logs, request.getSort());
-        List<TransactionLog> content = getTransactionLogPage(sortedLogs, request);
+        List<TransactionLog> sortedLogs = SortUtils.sort(logs, pageRequest.getSort());
+        List<TransactionLog> content = getTransactionLogPage(sortedLogs, pageRequest);
 
         int totalElements = sortedLogs.size();
-        int totalPages = (int) Math.ceil((double) totalElements / (double) request.getPageSize());
-
-        boolean first = request.getPageNumber() > 0;
-        boolean last = request.getPageNumber() + 1 > totalPages;
-
-        return new TransactionLogPageResponse(content, totalElements, totalPages, request.getPageNumber(),
-                request.getPageSize(), first, last);
+        return new TransactionLogPageResponse(content, pageRequest, totalElements);
     }
 
     @Override
@@ -120,12 +114,12 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
 
-    private static List<TransactionLog> getTransactionLogPage(List<TransactionLog> logs, TransactionLogPageRequest request) {
+    private static List<TransactionLog> getTransactionLogPage(List<TransactionLog> logs, TransactionLogPageRequest pageRequest) {
         try {
-            int start = request.getPageNumber() * request.getPageSize();
-            int end = (request.getPageNumber() + 1) * request.getPageSize();
+            int start = pageRequest.getPageNumber() * pageRequest.getPageSize();
+            int end = (pageRequest.getPageNumber() + 1) * pageRequest.getPageSize();
             return logs.subList(start, Math.min(end, logs.size()));
-        } catch (IndexOutOfBoundsException ex) {
+        } catch (IndexOutOfBoundsException | IllegalArgumentException ex) {
             return List.of();
         }
     }
