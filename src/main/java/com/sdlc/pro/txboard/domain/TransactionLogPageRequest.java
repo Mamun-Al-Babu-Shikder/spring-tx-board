@@ -8,7 +8,7 @@ public class TransactionLogPageRequest {
 
     private TransactionLogPageRequest(int pageNumber, int pageSize, Sort sort, FilterNode filter) {
         if (pageNumber < 0 || pageSize < 1 || filter == null) {
-            throw new IllegalArgumentException("Found invalid argument");
+            throw new IllegalArgumentException("Found invalid argument (pageNumber or pageSize or filter)  to initialize TransactionLogPageRequest");
         }
         this.pageNumber = pageNumber;
         this.pageSize = pageSize;
