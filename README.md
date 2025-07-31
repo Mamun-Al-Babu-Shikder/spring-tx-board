@@ -2,6 +2,8 @@
 
 **Spring Tx Board** is a lightweight, auto-configurable transaction monitoring library for Spring-based applications. It allows developers to capture, analyze, and visualize transaction execution metrics such as duration, thread information, and status—all without requiring heavy instrumentation.
 
+![Spring Tx Board Image](spring-tx-board-looks-like.png)
+
 ## Features
 
 * Autoconfigures itself when added as a dependency
@@ -40,14 +42,10 @@ sdlc.pro.spring.tx.board:
 
 > `alarming-threshold`: Transaction duration (ms) above which the transaction will be highlighted
 
----
-
 ## Storage Options
 
 * **IN\_MEMORY** (default): Simple, thread-safe `List` with in-memory counters
 * **REDIS** (planned): Store and distribute logs across instances (not-implemented)
-
----
 
 ## Developer Usage
 
@@ -85,8 +83,6 @@ public class OrderService {
 
 No additional annotations or API calls required.
 
----
-
 ## Utilities
 
 ### Duration Distribution
@@ -101,17 +97,11 @@ Calculates and buckets transaction durations into defined ranges like:
 
 Spring Boot metadata support for IDE auto-completion is provided via `spring-configuration-metadata.json`.
 
----
-
 ## Future Enhancements
 
 * Redis-backed storage with TTL
 * Export to `CSV/JSON`
 * Spring Boot Admin integration
-
----
-
-
 
 ## Contribution
 
