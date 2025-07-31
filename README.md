@@ -24,13 +24,22 @@ and status—all without requiring heavy instrumentation.
 Add the following dependency to your `pom.xml`:
 
 ```xml
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
 
-<dependency>
-    <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
-    <artifactId>spring-tx-board</artifactId>
-    <version>1.5.0</version>
-</dependency>
+<dependencies>
+    <dependency>
+        <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
+        <artifactId>spring-tx-board</artifactId>
+        <version>1.5.0</version>
+    </dependency>
+</dependencies>
 ```
+> Published via JitPack.io
 
 ### 2. Configuration
 
