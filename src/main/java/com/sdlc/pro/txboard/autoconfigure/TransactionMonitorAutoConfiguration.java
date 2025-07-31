@@ -31,8 +31,7 @@ import java.util.Map;
 @AutoConfiguration
 @ConditionalOnClass({PlatformTransactionManager.class, WebMvcConfigurer.class, HttpRequestHandler.class})
 @EnableConfigurationProperties(TxBoardProperties.class)
-@ConditionalOnProperty(prefix = "spring.tx.board", name = "enable", havingValue = "true")
-//@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
 public class TransactionMonitorAutoConfiguration {
     private static final int ORDER = 0;
     private static final Logger log = LoggerFactory.getLogger(TransactionMonitorAutoConfiguration.class);

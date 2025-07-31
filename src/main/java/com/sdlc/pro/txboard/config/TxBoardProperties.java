@@ -5,10 +5,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import java.util.Collections;
 import java.util.List;
 
-//@ConfigurationProperties(prefix = "sdlc.pro.spring.tx.board")
-@ConfigurationProperties(prefix = "spring.tx.board")
+@ConfigurationProperties(prefix = "sdlc.pro.spring.tx.board")
 public class TxBoardProperties {
-    private boolean enable;
+    private boolean enable = true;
     private long alarmingThreshold = 1000;
     private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
