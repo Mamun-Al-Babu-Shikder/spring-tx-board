@@ -1,6 +1,8 @@
 # Spring Tx Board
 
-**Spring Tx Board** is a lightweight, auto-configurable transaction monitoring library for Spring-based applications. It allows developers to capture, analyze, and visualize transaction execution metrics such as duration, thread information, and status—all without requiring heavy instrumentation.
+**Spring Tx Board** is a lightweight, auto-configurable transaction monitoring library for Spring-based applications. It
+allows developers to capture, analyze, and visualize transaction execution metrics such as duration, thread information,
+and status—all without requiring heavy instrumentation.
 
 ![Spring Tx Board Image](spring-tx-board-looks-like.png)
 
@@ -22,10 +24,11 @@
 Add the following dependency to your `pom.xml`:
 
 ```xml
+
 <dependency>
-  <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
-  <artifactId>spring-tx-board</artifactId>
-  <version>1.5.0</version>
+    <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
+    <artifactId>spring-tx-board</artifactId>
+    <version>1.5.0</version>
 </dependency>
 ```
 
@@ -37,10 +40,18 @@ sdlc.pro.spring.tx.board:
   alarming-threshold: 1000
   storage: IN_MEMORY  # or REDIS
   enable-listener-log: true
-  duration-buckets: [100, 500, 1000, 2000, 5000]
+  duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
 ```
 
 > `alarming-threshold`: Transaction duration (ms) above which the transaction will be highlighted
+
+## Web UI
+
+If your application includes Spring Web, a minimal built-in UI is accessible at:
+
+> http://localhost:8080/tx-board/ui
+
+This dashboard provides a real-time view of transaction activity including filtering, status, execution time, and more.
 
 ## Storage Options
 
@@ -49,7 +60,8 @@ sdlc.pro.spring.tx.board:
 
 ## Developer Usage
 
-Just annotate your service methods with `@Transactional` or use `TransactionTemplate`, and Spring Tx Board will automatically hook into them using transaction lifecycle listeners.
+Just annotate your service methods with `@Transactional` or use `TransactionTemplate`, and Spring Tx Board will
+automatically hook into them using transaction lifecycle listeners.
 
 ```java
 import org.springframework.stereotype.Service;
@@ -71,7 +83,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class OrderService {
     @Autowired
     private TransactionTemplate template;
-    
+
     @Transactional
     public void placeOrder() {
         template.executeWithoutResult(transactionStatus -> {
@@ -110,8 +122,6 @@ Pull requests and feedback are welcome!
 ```
 git clone https://github.com/Mamun-Al-Babu-Shikder/spring-tx-board
 ```
-
----
 
 ## Maintainer
 
