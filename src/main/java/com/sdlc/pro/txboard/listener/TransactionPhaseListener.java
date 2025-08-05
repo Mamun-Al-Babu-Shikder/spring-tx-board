@@ -1,18 +1,19 @@
 package com.sdlc.pro.txboard.listener;
 
-
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 
 public interface TransactionPhaseListener {
 
-    default void beforeBegin(TransactionDefinition definition, TransactionStatus status) {
+    default void beforeBegin(TransactionDefinition definition) {
     }
 
-    default void afterCommit(TransactionStatus status) {
+    default void afterBegin(boolean isNewTransaction) {
     }
 
-    default void afterRollback(TransactionStatus status) {
+    default void afterCommit() {
+    }
+
+    default void afterRollback() {
     }
 
     default void afterAcquiredConnection() {
