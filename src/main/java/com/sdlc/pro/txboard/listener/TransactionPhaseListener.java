@@ -1,13 +1,14 @@
 package com.sdlc.pro.txboard.listener;
 
 import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 
-public interface TransactionPhaseListener {
+public sealed interface TransactionPhaseListener permits TransactionPhaseListenerImpl {
 
     default void beforeBegin(TransactionDefinition definition) {
     }
 
-    default void afterBegin(boolean isNewTransaction) {
+    default void afterBegin(TransactionStatus transactionStatus, Throwable throwable) {
     }
 
     default void afterCommit() {
