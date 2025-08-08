@@ -21,6 +21,11 @@ public sealed interface TransactionPhaseListener permits TransactionPhaseListene
     }
 
     default void afterCloseConnection() {
+    }
 
+    default void executedQuery(String query) {
+    }
+
+    default void errorOccurredAtTransactionPhase(Throwable throwable) {
     }
 }
