@@ -23,4 +23,7 @@ public sealed interface TransactionPhaseListener permits TransactionPhaseListene
     default void afterCloseConnection() {
 
     }
+
+    default void errorOccurredAtTransactionPhase(Throwable throwable) {
+    }
 }
