@@ -8,7 +8,7 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 
 public abstract class AbstractDatasourceDelegator implements DataSource {
-    protected DataSource dataSource;
+    protected final DataSource dataSource;
 
     public AbstractDatasourceDelegator(DataSource dataSource) {
         this.dataSource = dataSource;
