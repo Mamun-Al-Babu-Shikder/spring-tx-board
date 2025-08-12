@@ -1,2 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.sdlc.pro.txboard.autoconfigure.TransactionMonitorAutoConfiguration
+com.sdlc.pro.txboard.autoconfigure.BeanPostProcessorAutoConfiguration
