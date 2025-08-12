@@ -7,7 +7,10 @@ import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionMetricsHttpHandler;
-import com.sdlc.pro.txboard.listener.TransactionMonitoringListener;
+import com.sdlc.pro.txboard.listener.TransactionLogListener;
+import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
+import com.sdlc.pro.txboard.listener.TransactionPhaseListener;
+import com.sdlc.pro.txboard.listener.TransactionPhaseListenerImpl;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
@@ -26,9 +29,13 @@ import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 
+import java.util.List;
 import java.util.Map;
 
-@AutoConfiguration
+@AutoConfiguration(
+        value = "com.sdlc.pro.txboard.autoconfigure.TransactionMonitorAutoConfiguration",
+        after = BeanPostProcessorAutoConfiguration.class
+)
 @ConditionalOnClass({PlatformTransactionManager.class, WebMvcConfigurer.class, HttpRequestHandler.class})
 @EnableConfigurationProperties(TxBoardProperties.class)
 @ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
@@ -53,16 +60,20 @@ public class TransactionMonitorAutoConfiguration {
         };
     }
 
-    @ConditionalOnMissingBean
-    @Bean("sdlcProTxMonitoringListener")
-    public TransactionMonitoringListener transactionMonitoringListener(TransactionLogRepository transactionLogRepository, TxBoardProperties txBoardProperties) {
-        return new TransactionMonitoringListener(transactionLogRepository, txBoardProperties);
-    }
-
     @Bean("sdlcProTxBoardWebConfiguration")
     @ConditionalOnClass(WebMvcConfigurer.class)
-    public TransactionBoardWebConfiguration transactionBoardWebConfiguration(TransactionLogRepository transactionLogRepository) {
+    public TransactionBoardWebConfiguration transactionBoardWebConfiguration() {
         return new TransactionBoardWebConfiguration();
+    }
+
+    @Bean("sdlcProTransactionLogPersistenceListener")
+    public TransactionLogListener transactionLogPersistenceListener(TransactionLogRepository transactionLogRepository) {
+        return new TransactionLogPersistenceListener(transactionLogRepository);
+    }
+
+    @Bean("sdlcProTxPhaseListener")
+    public TransactionPhaseListener transactionPhaseListener(List<TransactionLogListener> transactionLogListeners, TxBoardProperties txBoardProperties) {
+        return new TransactionPhaseListenerImpl(transactionLogListeners, txBoardProperties);
     }
 
     @Bean("sdlcProTxBoardRestHandlerMapping")
