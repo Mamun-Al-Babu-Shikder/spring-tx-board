@@ -1,7 +1,7 @@
 package com.sdlc.pro.txboard.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sdlc.pro.txboard.enums.TransactionStatus;
+import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.dto.TransactionMetrics;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ public class TransactionMetricsHttpHandler implements HttpRequestHandler {
         PrintWriter writer = response.getWriter();
 
         long totalTransactions = transactionLogRepository.count();
-        long committedCount = transactionLogRepository.countByTransactionStatus(TransactionStatus.COMMITTED);
+        long committedCount = transactionLogRepository.countByTransactionStatus(TransactionPhaseStatus.COMMITTED);
         long rolledBackCount = totalTransactions - committedCount;
         double successRate = (committedCount * 100.0) / totalTransactions;
         double avgDuration = transactionLogRepository.averageDuration();

@@ -1,1 +1,2 @@
 com.sdlc.pro.txboard.autoconfigure.TransactionMonitorAutoConfiguration
+com.sdlc.pro.txboard.autoconfigure.BeanPostProcessorAutoConfiguration

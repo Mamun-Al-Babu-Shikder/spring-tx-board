@@ -1,6 +1,6 @@
 package com.sdlc.pro.txboard.repository;
 
-import com.sdlc.pro.txboard.enums.TransactionStatus;
+import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
 import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
 import com.sdlc.pro.txboard.model.DurationDistribution;
@@ -12,7 +12,7 @@ public sealed interface TransactionLogRepository permits InMemoryTransactionLogR
     void save(TransactionLog transactionLog);
     List<TransactionLog> findAll();
     long count();
-    long countByTransactionStatus(TransactionStatus status);
+    long countByTransactionStatus(TransactionPhaseStatus status);
     double averageDuration();
     TransactionLogPageResponse findAll(TransactionLogPageRequest request);
     List<DurationDistribution> getDurationDistributions();
