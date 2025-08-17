@@ -1,7 +1,7 @@
 package com.sdlc.pro.txboard.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sdlc.pro.txboard.enums.TransactionStatus;
+import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.domain.*;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -72,9 +72,9 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
 
         if (status != null && !status.isBlank()) {
             try {
-                filters.add(Filter.of("status", TransactionStatus.valueOf(status), Filter.Operator.EQUALS));
+                filters.add(Filter.of("status", TransactionPhaseStatus.valueOf(status), Filter.Operator.EQUALS));
             } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("The value of status must be " + Arrays.toString(TransactionStatus.values()));
+                throw new IllegalArgumentException("The value of status must be " + Arrays.toString(TransactionPhaseStatus.values()));
             }
         }
 

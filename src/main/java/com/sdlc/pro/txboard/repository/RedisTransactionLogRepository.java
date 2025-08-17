@@ -2,7 +2,7 @@ package com.sdlc.pro.txboard.repository;
 
 import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
 import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
-import com.sdlc.pro.txboard.enums.TransactionStatus;
+import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.exception.MethodNotImplementedException;
 import com.sdlc.pro.txboard.model.DurationDistribution;
 import com.sdlc.pro.txboard.model.TransactionLog;
@@ -31,7 +31,7 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
     }
 
     @Override
-    public long countByTransactionStatus(TransactionStatus status) {
+    public long countByTransactionStatus(TransactionPhaseStatus status) {
         throw new MethodNotImplementedException();
     }
 

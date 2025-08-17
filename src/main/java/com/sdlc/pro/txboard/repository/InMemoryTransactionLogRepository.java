@@ -4,7 +4,7 @@ import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.domain.FilterNode;
 import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
 import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
-import com.sdlc.pro.txboard.enums.TransactionStatus;
+import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.DurationDistribution;
 import com.sdlc.pro.txboard.model.DurationRange;
 import com.sdlc.pro.txboard.model.TransactionLog;
@@ -78,7 +78,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
     @Override
-    public long countByTransactionStatus(TransactionStatus status) {
+    public long countByTransactionStatus(TransactionPhaseStatus status) {
         return this.transactionLogs.stream()
                 .filter(t -> t.getStatus() == status)
                 .count();

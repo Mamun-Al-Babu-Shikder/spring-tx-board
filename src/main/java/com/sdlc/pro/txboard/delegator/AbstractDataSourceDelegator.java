@@ -7,15 +7,11 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
 
-public abstract class AbstractDatasourceDelegator implements DataSource {
-    private final DataSource dataSource;
+public abstract class AbstractDataSourceDelegator implements DataSource {
+    protected final DataSource dataSource;
 
-    public AbstractDatasourceDelegator(DataSource dataSource) {
+    public AbstractDataSourceDelegator(DataSource dataSource) {
         this.dataSource = dataSource;
-    }
-
-    protected DataSource getDataSource() {
-        return dataSource;
     }
 
     @Override
