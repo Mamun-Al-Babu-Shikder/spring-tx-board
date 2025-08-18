@@ -119,17 +119,35 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     private void finish() {
         popCurrentTransactionInfo().ifPresent(txInfo -> {
-            // Log the transaction according to configured level
-            String logMsg = "Transaction [{}] consumed {}ms to completed with status {}";
+            TransactionLog txLog = txInfo.toTransactionLog();
+            String logMsg = String.format(
+                    """
+                            [TX-Board] Transaction Completed:
+                              • ID: %s
+                              • Method: %s
+                              • Status: %s
+                              • Duration: %s ms
+                              • Connections Acquired: %s
+                              • Queries Executed: %s
+                              • Started At: %s
+                              • Ended At: %s""",
+                    txLog.getTxId(),
+                    txLog.getMethod(),
+                    txLog.getStatus(),
+                    txLog.getDuration(),
+                    txLog.getConnectionAcquisitionCount(),
+                    txLog.getTotalQueryCount(),
+                    txLog.getStartTime(),
+                    txLog.getEndTime()
+            );
+
             switch (txBoardProperties.getLogLevel()) {
-                case TRACE -> log.trace(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
-                case DEBUG -> log.debug(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
-                case INFO -> log.info(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
-                case WARN -> log.warn(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
-                case ERROR -> log.error(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
-                case OFF -> {
-                    // do not log
-                }
+                case TRACE -> log.trace(logMsg);
+                case DEBUG -> log.debug(logMsg);
+                case INFO -> log.info(logMsg);
+                case WARN -> log.warn(logMsg);
+                case ERROR -> log.error(logMsg);
+                case OFF -> {}
             }
 
             this.publishTransactionLogToListeners(txInfo);
