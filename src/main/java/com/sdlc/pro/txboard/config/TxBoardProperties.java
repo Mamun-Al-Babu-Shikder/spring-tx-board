@@ -12,6 +12,7 @@ public class TxBoardProperties {
     private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
+    private LogLevel logLevel = LogLevel.INFO;
 
     public boolean isEnable() {
         return enable;
@@ -62,7 +63,19 @@ public class TxBoardProperties {
         this.durationBuckets = Collections.unmodifiableList(durationBuckets);
     }
 
+    public LogLevel getLogLevel() {
+        return logLevel;
+    }
+
+    public void setLogLevel(LogLevel logLevel) {
+        this.logLevel = logLevel;
+    }
+
     public enum StorageType {
         IN_MEMORY, REDIS
+    }
+
+    public enum LogLevel {
+        TRACE, DEBUG, INFO, WARN, ERROR, OFF
     }
 }

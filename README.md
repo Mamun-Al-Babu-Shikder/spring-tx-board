@@ -50,6 +50,7 @@ sdlc.pro.spring.tx.board:
   storage: IN_MEMORY  # or REDIS
   enable-listener-log: true
   duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
+  log-level: INFO     # TRACE | DEBUG | INFO | WARN | ERROR | OFF
 ```
 
 > `alarming-threshold`: Transaction duration (ms) above which the transaction will be highlighted

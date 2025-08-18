@@ -35,6 +35,12 @@
       "name": "sdlc.pro.spring.tx.board.duration-buckets",
       "type": "java.util.List<java.lang.Integer>",
       "description": "List of duration buckets (in ms) for distribution analysis."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.log-level",
+      "type": "com.sdlc.pro.txboard.config.TxBoardProperties.LogLevel",
+      "defaultValue": "INFO",
+      "description": "Log level for transaction completion message. Options: TRACE, DEBUG, INFO, WARN, ERROR, OFF."
     }
   ]
 }

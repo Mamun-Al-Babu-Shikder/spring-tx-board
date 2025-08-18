@@ -119,12 +119,18 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     private void finish() {
         popCurrentTransactionInfo().ifPresent(txInfo -> {
-            // TODO: log the transaction info properly according to the configuration
-            log.info("Transaction [{}] consumed {}ms to completed with status {}",
-                    txInfo.getMethodName(),
-                    txInfo.getTransactionDuration(),
-                    txInfo.getStatus()
-            );
+            // Log the transaction according to configured level
+            String logMsg = "Transaction [{}] consumed {}ms to completed with status {}";
+            switch (txBoardProperties.getLogLevel()) {
+                case TRACE -> log.trace(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
+                case DEBUG -> log.debug(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
+                case INFO -> log.info(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
+                case WARN -> log.warn(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
+                case ERROR -> log.error(logMsg, txInfo.getMethodName(), txInfo.getTransactionDuration(), txInfo.getStatus());
+                case OFF -> {
+                    // do not log
+                }
+            }
 
             this.publishTransactionLogToListeners(txInfo);
         });
