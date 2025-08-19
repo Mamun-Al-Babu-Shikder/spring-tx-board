@@ -7,10 +7,10 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-public final class TrackingDataSourceProxy extends AbstractDataSourceDelegator {
+public final class DataSourceProxy extends AbstractDataSourceDelegator {
     private final TransactionPhaseListener transactionPhaseListener;
 
-    public TrackingDataSourceProxy(DataSource dataSource, TransactionPhaseListener transactionPhaseListener) {
+    public DataSourceProxy(DataSource dataSource, TransactionPhaseListener transactionPhaseListener) {
         super(dataSource);
         this.transactionPhaseListener = transactionPhaseListener;
     }
@@ -26,7 +26,7 @@ public final class TrackingDataSourceProxy extends AbstractDataSourceDelegator {
     }
 
     private Connection createProxyConnection(Connection connection) {
-        Connection interceptedConnection = new TrackingConnectionProxy(connection, this.transactionPhaseListener);
+        Connection interceptedConnection = new ConnectionProxy(connection, this.transactionPhaseListener);
         this.transactionPhaseListener.afterAcquiredConnection();
         return interceptedConnection;
     }

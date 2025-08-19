@@ -8,10 +8,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public final class TrackingConnectionProxy extends AbstractConnectionDelegator {
+public final class ConnectionProxy extends AbstractConnectionDelegator {
     private final TransactionPhaseListener transactionPhaseListener;
 
-    public TrackingConnectionProxy(Connection connection, TransactionPhaseListener transactionPhaseListener) {
+    public ConnectionProxy(Connection connection, TransactionPhaseListener transactionPhaseListener) {
         super(connection);
         this.transactionPhaseListener = transactionPhaseListener;
     }
