@@ -1,7 +1,7 @@
 package com.sdlc.pro.txboard.autoconfigure;
 
-import com.sdlc.pro.txboard.proxy.TrackingDataSourceProxy;
-import com.sdlc.pro.txboard.proxy.TrackingPlatformTransactionManagerProxy;
+import com.sdlc.pro.txboard.proxy.DataSourceProxy;
+import com.sdlc.pro.txboard.proxy.PlatformTransactionManagerProxy;
 import com.sdlc.pro.txboard.listener.TransactionPhaseListener;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -25,12 +25,12 @@ public class BeanPostProcessorAutoConfiguration implements BeanPostProcessor, Ap
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if (bean instanceof DataSource dataSource) {
             TransactionPhaseListener transactionPhaseListener = this.applicationContext.getBean(TransactionPhaseListener.class);
-            return new TrackingDataSourceProxy(dataSource, transactionPhaseListener);
+            return new DataSourceProxy(dataSource, transactionPhaseListener);
         }
 
         if (bean instanceof PlatformTransactionManager transactionManager) {
             TransactionPhaseListener transactionPhaseListener = this.applicationContext.getBean(TransactionPhaseListener.class);
-            return new TrackingPlatformTransactionManagerProxy(transactionManager, transactionPhaseListener);
+            return new PlatformTransactionManagerProxy(transactionManager, transactionPhaseListener);
         }
 
         return BeanPostProcessor.super.postProcessAfterInitialization(bean, beanName);

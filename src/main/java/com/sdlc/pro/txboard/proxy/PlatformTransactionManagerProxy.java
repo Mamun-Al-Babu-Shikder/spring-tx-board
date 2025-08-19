@@ -6,11 +6,11 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionException;
 import org.springframework.transaction.TransactionStatus;
 
-public class TrackingPlatformTransactionManagerProxy implements PlatformTransactionManager {
+public class PlatformTransactionManagerProxy implements PlatformTransactionManager {
     private final PlatformTransactionManager transactionManager;
     private final TransactionPhaseListener transactionPhaseListener;
 
-    public TrackingPlatformTransactionManagerProxy(PlatformTransactionManager transactionManager, TransactionPhaseListener transactionPhaseListener) {
+    public PlatformTransactionManagerProxy(PlatformTransactionManager transactionManager, TransactionPhaseListener transactionPhaseListener) {
         this.transactionManager = transactionManager;
         this.transactionPhaseListener = transactionPhaseListener;
     }
