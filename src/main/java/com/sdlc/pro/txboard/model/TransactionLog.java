@@ -122,4 +122,12 @@ public class TransactionLog implements Serializable {
     public Boolean getHavingAlarmingConnection() {
         return havingAlarmingConnection;
     }
+
+    public boolean isHealthyTransaction() {
+        if (this.havingAlarmingConnection == null) {
+            return !this.alarmingTransaction;
+        }
+
+        return !this.alarmingTransaction && !this.havingAlarmingConnection;
+    }
 }
