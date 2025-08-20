@@ -20,10 +20,10 @@ public class PlatformTransactionManagerProxy implements PlatformTransactionManag
         this.transactionPhaseListener.beforeBegin(definition);
         try {
             TransactionStatus transactionStatus = transactionManager.getTransaction(definition);
-            this.transactionPhaseListener.afterBegin(transactionStatus, null);
+            this.transactionPhaseListener.afterBegin(null);
             return transactionStatus;
         } catch (Throwable throwable) {
-            this.transactionPhaseListener.afterBegin(null, throwable);
+            this.transactionPhaseListener.afterBegin(throwable);
             throw throwable;
         }
     }

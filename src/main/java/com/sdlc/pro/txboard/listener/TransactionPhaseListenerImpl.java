@@ -53,7 +53,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     }
 
     @Override
-    public void afterBegin(TransactionStatus transactionStatus, Throwable throwable) {
+    public void afterBegin(Throwable throwable) {
         currentTransactionInfo().ifPresent(txInfo -> txInfo.setStartTime(Instant.now()));
         addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Transaction Start [%s]".formatted(currentTransactionMethodName())));
         if (throwable != null) {
