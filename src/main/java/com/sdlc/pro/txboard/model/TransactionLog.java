@@ -26,7 +26,7 @@ public class TransactionLog implements Serializable {
     private final List<TransactionLog> child;
     private final List<TransactionEvent> events;
     private final boolean alarmingTransaction;
-    private final Boolean alarmingConnection;
+    private final Boolean havingAlarmingConnection;
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
@@ -47,7 +47,7 @@ public class TransactionLog implements Serializable {
         this.executedQuires = executedQuires;
         this.events = events;
         this.alarmingTransaction = this.duration > txAlarmingThreshold;
-        this.alarmingConnection = this.connectionSummary != null ?
+        this.havingAlarmingConnection = this.connectionSummary != null ?
                 this.connectionSummary.occupiedTime() > conAlarmingThreshold : null;
     }
 
@@ -119,7 +119,15 @@ public class TransactionLog implements Serializable {
         return this.alarmingTransaction;
     }
 
-    public Boolean isAlarmingConnection() {
-        return this.alarmingConnection;
+    public Boolean getHavingAlarmingConnection() {
+        return havingAlarmingConnection;
+    }
+
+    public boolean isHealthyTransaction() {
+        if (this.havingAlarmingConnection == null) {
+            return !this.alarmingTransaction;
+        }
+
+        return !this.alarmingTransaction && !this.havingAlarmingConnection;
     }
 }
