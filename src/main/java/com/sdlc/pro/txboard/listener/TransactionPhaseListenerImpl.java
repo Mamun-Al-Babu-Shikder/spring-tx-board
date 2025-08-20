@@ -4,6 +4,7 @@ import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
+import com.sdlc.pro.txboard.model.ConnectionSummary;
 import com.sdlc.pro.txboard.model.TransactionEvent;
 import com.sdlc.pro.txboard.model.TransactionLog;
 import org.slf4j.Logger;
@@ -15,6 +16,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.sdlc.pro.txboard.config.TxBoardProperties.AlarmingThreshold;
 
 public final class TransactionPhaseListenerImpl implements TransactionPhaseListener {
     private static final Logger log = LoggerFactory.getLogger(TransactionPhaseListenerImpl.class);
@@ -112,26 +115,25 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             } else {
                 popCurrentTransactionInfo();
             }
-
-            // TODO: we can log the inner transactions according to the configuration
         });
     }
 
     private void finish() {
         popCurrentTransactionInfo().ifPresent(txInfo -> {
+            TransactionLog txLog = txInfo.toTransactionLog();
+
             // TODO: log the transaction info properly according to the configuration
             log.info("Transaction [{}] consumed {}ms to completed with status {}",
-                    txInfo.getMethodName(),
-                    txInfo.getTransactionDuration(),
+                    txLog.getMethod(),
+                    txLog.getDuration(),
                     txInfo.getStatus()
             );
 
-            this.publishTransactionLogToListeners(txInfo);
+            this.publishTransactionLogToListeners(txLog);
         });
     }
 
-    private void publishTransactionLogToListeners(TransactionInfo txInfo) {
-        TransactionLog txLog = txInfo.toTransactionLog();
+    private void publishTransactionLogToListeners(TransactionLog txLog) {
         if (this.transactionLogListeners != null && !this.transactionLogListeners.isEmpty()) {
             for (TransactionLogListener logListener : this.transactionLogListeners) {
                 try {
@@ -217,18 +219,19 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         private final List<TransactionInfo> child;
         private final List<String> executedQuires;
         private final List<TransactionEvent> events;
-        private final long alarmingThreshold;
+        private final AlarmingThreshold alarmingThreshold;
 
-        public TransactionInfo(String methodName, PropagationBehavior propagation, IsolationLevel isolation, long alarmingThreshold, boolean isMostParent) {
-            this.txId = ATOMIC_TX_ID_GEN.incrementAndGet();
+        public TransactionInfo(String methodName, PropagationBehavior propagation, IsolationLevel isolation,
+                               AlarmingThreshold alarmingThreshold, boolean isMostParent) {
             this.isMostParent = isMostParent;
+            this.txId = this.isMostParent ? ATOMIC_TX_ID_GEN.incrementAndGet() : null;
             this.methodName = methodName;
             this.propagation = propagation;
             this.isolation = isolation;
             this.thread = Thread.currentThread().getName();
             this.child = new LinkedList<>();
             this.executedQuires = new LinkedList<>();
-            this.events = new LinkedList<>();
+            this.events = this.isMostParent ? new LinkedList<>() : null;
             this.alarmingThreshold = alarmingThreshold;
         }
 
@@ -256,10 +259,6 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             this.status = status;
         }
 
-        public long getTransactionDuration() {
-            return this.startTime == null || this.endTime == null ? 0L : Duration.between(this.startTime, this.endTime).toMillis();
-        }
-
         public void addChild(TransactionInfo childTxInfo) {
             this.child.add(childTxInfo);
         }
@@ -281,8 +280,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     .map(TransactionInfo::toTransactionLog)
                     .toList();
 
-            int connectionAcquisitionCount = (int) calculateConnectionAcquisitionCount();
-            long occupiedTime = calculateConnectionOccupiedTime();
+            ConnectionSummary connectionSummary = this.isMostParent ? getConnectionRelatedInfo() : null;
 
             return new TransactionLog(
                     this.txId,
@@ -291,45 +289,40 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     this.isolation,
                     this.startTime,
                     this.endTime,
-                    connectionAcquisitionCount,
-                    occupiedTime,
-                    this.alarmingThreshold,
+                    connectionSummary,
                     this.status,
                     this.thread,
-                    child,
                     executedQuires,
-                    events
+                    child,
+                    events,
+                    this.alarmingThreshold.getTransaction(),
+                    this.alarmingThreshold.getConnection()
             );
         }
 
-        private long calculateConnectionOccupiedTime() {
-            if (this.events == null || this.events.isEmpty()) {
-                return 0L;
-            }
-
+        private ConnectionSummary getConnectionRelatedInfo() {
             long occupiedTime = 0L;
-            Deque<TransactionEvent> conEventStack = new LinkedList<>();;
-            for (TransactionEvent event : this.events) {
-                if (event.getType() == TransactionEvent.Type.CONNECTION_ACQUIRED) {
-                    conEventStack.push(event);
-                } else if (event.getType() == TransactionEvent.Type.CONNECTION_RELEASED) {
-                    TransactionEvent prevEvent = conEventStack.pop();
-                    occupiedTime += Duration.between(prevEvent.getTimestamp(), event.getTimestamp()).toMillis();
+            int acquisitionCount = 0;
+            int alarmingConnectionCount = 0;
+
+            if (this.events != null && !this.events.isEmpty()) {
+                Deque<TransactionEvent> conEventStack = new LinkedList<>();
+                for (TransactionEvent event : this.events) {
+                    if (event.getType() == TransactionEvent.Type.CONNECTION_ACQUIRED) {
+                        acquisitionCount++;
+                        conEventStack.push(event);
+                    } else if (event.getType() == TransactionEvent.Type.CONNECTION_RELEASED) {
+                        TransactionEvent prevEvent = conEventStack.pop();
+                        long duration = Duration.between(prevEvent.getTimestamp(), event.getTimestamp()).toMillis();
+                        if (duration >= alarmingThreshold.getConnection()) {
+                            alarmingConnectionCount++;
+                        }
+                        occupiedTime += duration;
+                    }
                 }
             }
 
-            return occupiedTime;
-        }
-
-        private long calculateConnectionAcquisitionCount() {
-            if (this.events == null || this.events.isEmpty()) {
-                return 0;
-            }
-
-            return this.events.stream()
-                    .filter(e-> e.getType() == TransactionEvent.Type.CONNECTION_ACQUIRED)
-                    .count();
+            return new ConnectionSummary(acquisitionCount, alarmingConnectionCount, occupiedTime);
         }
     }
 }
-

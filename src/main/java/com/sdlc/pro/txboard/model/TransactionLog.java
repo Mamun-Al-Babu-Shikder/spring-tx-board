@@ -19,20 +19,20 @@ public class TransactionLog implements Serializable {
     private final Instant startTime;
     private final Instant endTime;
     private final long duration;
-    private final int connectionAcquisitionCount;
-    private final long connectionOccupiedTime;
-    private final long alarmingThreshold;
+    private final ConnectionSummary connectionSummary;
     private final TransactionPhaseStatus status;
     private final String thread;
-    private final List<TransactionLog> child;
     private final List<String> executedQuires;
+    private final List<TransactionLog> child;
     private final List<TransactionEvent> events;
+    private final boolean alarmingTransaction;
+    private final Boolean alarmingConnection;
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
-                          Instant startTime, Instant endTime, int connectionAcquisitionCount,
-                          long connectionOccupiedTime, long alarmingThreshold, TransactionPhaseStatus status,
-                          String thread, List<TransactionLog> child, List<String> executedQuires,
-                          List<TransactionEvent> events) {
+                          Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
+                          TransactionPhaseStatus status, String thread, List<String> executedQuires,
+                          List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
+                          long conAlarmingThreshold) {
         this.txId = txId;
         this.method = method;
         this.propagation = propagation;
@@ -41,13 +41,14 @@ public class TransactionLog implements Serializable {
         this.endTime = endTime;
         this.status = status;
         this.duration = Duration.between(startTime, endTime).toMillis();
-        this.connectionAcquisitionCount = connectionAcquisitionCount;
-        this.connectionOccupiedTime = connectionOccupiedTime;
-        this.alarmingThreshold = alarmingThreshold;
+        this.connectionSummary = connectionSummary;
         this.thread = thread;
         this.child = child;
         this.executedQuires = executedQuires;
         this.events = events;
+        this.alarmingTransaction = this.duration > txAlarmingThreshold;
+        this.alarmingConnection = this.connectionSummary != null ?
+                this.connectionSummary.occupiedTime() > conAlarmingThreshold : null;
     }
 
     public Integer getTxId() {
@@ -64,10 +65,6 @@ public class TransactionLog implements Serializable {
 
     public IsolationLevel getIsolation() {
         return isolation;
-    }
-
-    public long getAlarmingThreshold() {
-        return alarmingThreshold;
     }
 
     public Instant getStartTime() {
@@ -90,16 +87,8 @@ public class TransactionLog implements Serializable {
         return duration;
     }
 
-    public int getConnectionAcquisitionCount() {
-        return connectionAcquisitionCount;
-    }
-
-    public long getConnectionOccupiedTime() {
-        return connectionOccupiedTime;
-    }
-
-    public boolean isAlarming() {
-        return this.connectionOccupiedTime > this.alarmingThreshold;
+    public ConnectionSummary getConnectionSummary() {
+        return this.connectionSummary;
     }
 
     public List<TransactionLog> getChild() {
@@ -124,5 +113,13 @@ public class TransactionLog implements Serializable {
         return this.getExecutedQuires().size() + getChild().stream()
                 .mapToInt(TransactionLog::getTotalQueryCount)
                 .sum();
+    }
+
+    public boolean isAlarmingTransaction() {
+        return this.alarmingTransaction;
+    }
+
+    public Boolean isAlarmingConnection() {
+        return this.alarmingConnection;
     }
 }
