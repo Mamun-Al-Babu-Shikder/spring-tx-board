@@ -8,7 +8,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "sdlc.pro.spring.tx.board")
 public class TxBoardProperties {
     private boolean enable = true;
-    private long alarmingThreshold = 1000;
+    private AlarmingThreshold alarmingThreshold = new AlarmingThreshold();
     private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
@@ -21,11 +21,11 @@ public class TxBoardProperties {
         this.enable = enable;
     }
 
-    public long getAlarmingThreshold() {
+    public AlarmingThreshold getAlarmingThreshold() {
         return alarmingThreshold;
     }
 
-    public void setAlarmingThreshold(long alarmingThreshold) {
+    public void setAlarmingThreshold(AlarmingThreshold alarmingThreshold) {
         this.alarmingThreshold = alarmingThreshold;
     }
 
@@ -64,5 +64,26 @@ public class TxBoardProperties {
 
     public enum StorageType {
         IN_MEMORY, REDIS
+    }
+
+    public static class AlarmingThreshold {
+        private long transaction = 1000L;
+        private long connection = 1000L;
+
+        public long getTransaction() {
+            return transaction;
+        }
+
+        public void setTransaction(long transaction) {
+            this.transaction = transaction;
+        }
+
+        public long getConnection() {
+            return connection;
+        }
+
+        public void setConnection(long connection) {
+            this.connection = connection;
+        }
     }
 }

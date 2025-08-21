@@ -14,12 +14,6 @@
       "description": "Enable or disable the transaction board feature."
     },
     {
-      "name": "sdlc.pro.spring.tx.board.alarming-threshold",
-      "type": "java.lang.Long",
-      "defaultValue": 1000,
-      "description": "Duration threshold (in ms) for alarming slow transactions."
-    },
-    {
       "name": "sdlc.pro.spring.tx.board.storage",
       "type": "com.sdlc.pro.txboard.config.TxBoardProperties.StorageType",
       "defaultValue": "IN_MEMORY",
@@ -35,6 +29,18 @@
       "name": "sdlc.pro.spring.tx.board.duration-buckets",
       "type": "java.util.List<java.lang.Integer>",
       "description": "List of duration buckets (in ms) for distribution analysis."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.alarming-threshold.transaction",
+      "type": "java.lang.Long",
+      "defaultValue": 1000,
+      "description": "Duration threshold (in ms) for alarming slow transactions."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.alarming-threshold.connection",
+      "type": "java.lang.Long",
+      "defaultValue": 1000,
+      "description": "Duration threshold (in ms) for alarming high connection occupied time."
     }
   ]
 }

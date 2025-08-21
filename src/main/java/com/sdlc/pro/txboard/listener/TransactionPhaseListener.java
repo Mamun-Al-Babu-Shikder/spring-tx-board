@@ -8,7 +8,7 @@ public sealed interface TransactionPhaseListener permits TransactionPhaseListene
     default void beforeBegin(TransactionDefinition definition) {
     }
 
-    default void afterBegin(TransactionStatus transactionStatus, Throwable throwable) {
+    default void afterBegin(Throwable throwable) {
     }
 
     default void afterCommit() {
