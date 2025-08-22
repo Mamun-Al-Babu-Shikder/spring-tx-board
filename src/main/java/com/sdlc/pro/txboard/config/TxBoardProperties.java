@@ -12,6 +12,7 @@ public class TxBoardProperties {
     private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
+    private LogType logType = LogType.SIMPLE;
 
     public boolean isEnable() {
         return enable;
@@ -62,8 +63,20 @@ public class TxBoardProperties {
         this.durationBuckets = Collections.unmodifiableList(durationBuckets);
     }
 
+    public LogType getLogType() {
+        return logType;
+    }
+
+    public void setLogType(LogType logType) {
+        this.logType = logType == null ? LogType.SIMPLE : logType;
+    }
+
     public enum StorageType {
         IN_MEMORY, REDIS
+    }
+
+    public enum LogType {
+        SIMPLE, DETAILS
     }
 
     public static class AlarmingThreshold {
