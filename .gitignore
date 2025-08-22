@@ -11,6 +11,7 @@ target/
 *.iws
 *.iml
 *.ipr
+out/
 
 ### Eclipse ###
 .apt_generated
@@ -33,6 +34,23 @@ build/
 
 ### VS Code ###
 .vscode/
+.history/
 
 ### Mac OS ###
 .DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+__MACOSX/
+
+# -----------------------------
+# Other build tools
+# -----------------------------
+node_modules/
+bower_components/
+.cache/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.pnp/
+.pnp.js
