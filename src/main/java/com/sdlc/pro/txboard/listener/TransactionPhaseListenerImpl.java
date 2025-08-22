@@ -10,7 +10,6 @@ import com.sdlc.pro.txboard.model.TransactionLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -122,15 +121,69 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         popCurrentTransactionInfo().ifPresent(txInfo -> {
             TransactionLog txLog = txInfo.toTransactionLog();
 
-            // TODO: log the transaction info properly according to the configuration
-            log.info("Transaction [{}] consumed {}ms to completed with status {}",
-                    txLog.getMethod(),
-                    txLog.getDuration(),
-                    txInfo.getStatus()
-            );
+            boolean healthyTransaction = txLog.isHealthyTransaction();
+            boolean detailedLoggingEnabled = txBoardProperties.getLogType() == TxBoardProperties.LogType.DETAILS;
+
+            int acquiredConnections = getConnectionAcquiredCount(txLog);
+
+            if (detailedLoggingEnabled) {
+                String message = buildDetailedLogMessage(txLog, acquiredConnections);
+                if (healthyTransaction) {
+                    log.info("{}", message);
+                } else {
+                    log.warn("{}", message);
+                }
+            } else {
+                if (healthyTransaction) {
+                    log.info("Transaction [{}] took {} ms, Status: {}", txLog.getMethod(), txLog.getDuration(), txLog.getStatus());
+                } else {
+                    log.warn("Transaction [{}] took {} ms, Status: {}, Connections: {}, Queries: {}",
+                            txLog.getMethod(), txLog.getDuration(), txLog.getStatus(), acquiredConnections, txLog.getTotalQueryCount());
+                }
+            }
 
             this.publishTransactionLogToListeners(txLog);
         });
+    }
+
+    private static int getConnectionAcquiredCount(TransactionLog txLog) {
+        return txLog.getConnectionSummary() != null ? txLog.getConnectionSummary().acquisitionCount() : 0;
+    }
+
+    private static String buildDetailedLogMessage(TransactionLog txLog, int acquiredConnections) {
+        String base = """
+            [TX-Board] Transaction Completed:
+              • ID: %s
+              • Method: %s
+              • Status: %s
+              • Duration: %d ms
+              • Connections Acquired: %d
+              • Queries Executed: %d
+              • Started At: %s
+              • Ended At: %s
+            """.formatted(
+                txLog.getTxId(),
+                txLog.getMethod(),
+                txLog.getStatus(),
+                txLog.getDuration(),
+                acquiredConnections,
+                txLog.getTotalQueryCount(),
+                txLog.getStartTime(),
+                txLog.getEndTime()
+        );
+
+        if (txLog.getChild().isEmpty()) {
+            return base;
+        }
+
+        StringJoiner joiner = new StringJoiner(System.lineSeparator());
+        for (TransactionLog childTx : txLog.getChild()) {
+            String s = "      - " + childTx.getMethod() + " (" + childTx.getDuration() + " ms, " + childTx.getStatus() + ")";
+            joiner.add(s);
+        }
+        String children = joiner.toString();
+
+        return base + "  • Inner Transactions:" + System.lineSeparator() + children + System.lineSeparator();
     }
 
     private void publishTransactionLogToListeners(TransactionLog txLog) {
