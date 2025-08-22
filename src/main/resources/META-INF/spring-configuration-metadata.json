@@ -41,6 +41,12 @@
       "type": "java.lang.Long",
       "defaultValue": 1000,
       "description": "Duration threshold (in ms) for alarming high connection occupied time."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.log-type",
+      "type": "com.sdlc.pro.txboard.config.TxBoardProperties.LogType",
+      "defaultValue": "SIMPLE",
+      "description": "Logging mode for transaction completion logs. Options: SIMPLE, DETAILS."
     }
   ]
 }
