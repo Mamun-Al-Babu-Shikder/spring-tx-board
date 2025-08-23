@@ -176,14 +176,37 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             return base;
         }
 
-        StringJoiner joiner = new StringJoiner(System.lineSeparator());
-        for (TransactionLog childTx : txLog.getChild()) {
-            String s = "      - " + childTx.getMethod() + " (" + childTx.getDuration() + " ms, " + childTx.getStatus() + ")";
-            joiner.add(s);
-        }
-        String children = joiner.toString();
+        return base + "  • Inner Transactions:\n" + formatNestedTransactions(txLog);
+    }
 
-        return base + "  • Inner Transactions:" + System.lineSeparator() + children + System.lineSeparator();
+    public static String formatNestedTransactions(TransactionLog txLog) {
+        StringBuilder nestedTx = new StringBuilder();
+        appendChildren(txLog, nestedTx, "    ");
+        return nestedTx.toString();
+    }
+
+    private static void appendChildren(TransactionLog txLog, StringBuilder nestedTx, String prefix) {
+        if (txLog.getChild().isEmpty()) {
+            return;
+        }
+
+        List<TransactionLog> children = txLog.getChild();
+        for (int i = 0; i < children.size(); i++) {
+            TransactionLog child = children.get(i);
+            boolean last = (i == children.size() - 1);
+
+            nestedTx.append(prefix)
+                    .append(last ? "└── " : "├── ")
+                    .append(child.getMethod())
+                    .append(" (")
+                    .append(child.getDuration())
+                        .append(" ms, ")
+                        .append(child.getStatus())
+                    .append(")\n");
+
+            String childPrefix = prefix + (last ? "    " : "│   ");
+            appendChildren(child, nestedTx, childPrefix);
+        }
     }
 
     private void publishTransactionLogToListeners(TransactionLog txLog) {
