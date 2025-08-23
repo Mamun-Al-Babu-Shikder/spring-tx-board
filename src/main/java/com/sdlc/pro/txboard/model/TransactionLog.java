@@ -10,6 +10,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+import static java.util.Collections.emptyList;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionLog implements Serializable {
     private final Integer txId;
@@ -48,7 +50,7 @@ public class TransactionLog implements Serializable {
         this.events = events;
         this.alarmingTransaction = this.duration > txAlarmingThreshold;
         this.havingAlarmingConnection = this.connectionSummary != null ?
-                this.connectionSummary.occupiedTime() > conAlarmingThreshold : null;
+                this.connectionSummary.getOccupiedTime() > conAlarmingThreshold : null;
     }
 
     public Integer getTxId() {
@@ -92,11 +94,11 @@ public class TransactionLog implements Serializable {
     }
 
     public List<TransactionLog> getChild() {
-        return this.child == null ? List.of() : this.child;
+        return this.child == null ? emptyList() : this.child;
     }
 
     public List<String> getExecutedQuires() {
-        return this.executedQuires == null ? List.of() : this.executedQuires;
+        return this.executedQuires == null ? emptyList() : this.executedQuires;
     }
 
     public List<TransactionEvent> getEvents() {

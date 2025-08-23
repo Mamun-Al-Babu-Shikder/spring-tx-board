@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.domain.*;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.HttpRequestHandler;
 
@@ -60,9 +60,9 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
     public static FilterNode buildFilter(String search, String status) {
         List<FilterNode> filters = new ArrayList<>();
 
-        if (search != null && !search.isBlank()) {
+        if (search != null && !search.trim().isEmpty()) {
             filters.add(FilterGroup.of(
-                    List.of(
+                    java.util.Arrays.asList(
                             Filter.of("method", search, Filter.Operator.CONTAINS),
                             Filter.of("thread", search, Filter.Operator.CONTAINS)
                     ),
@@ -70,7 +70,7 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
             ));
         }
 
-        if (status != null && !status.isBlank()) {
+        if (status != null && !status.trim().isEmpty()) {
             try {
                 filters.add(Filter.of("status", TransactionPhaseStatus.valueOf(status), Filter.Operator.EQUALS));
             } catch (IllegalArgumentException e) {

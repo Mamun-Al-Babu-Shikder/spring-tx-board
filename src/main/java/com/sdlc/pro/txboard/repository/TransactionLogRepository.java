@@ -8,7 +8,7 @@ import com.sdlc.pro.txboard.model.TransactionLog;
 
 import java.util.List;
 
-public sealed interface TransactionLogRepository permits InMemoryTransactionLogRepository, RedisTransactionLogRepository {
+public interface TransactionLogRepository {
     void save(TransactionLog transactionLog);
     List<TransactionLog> findAll();
     long count();

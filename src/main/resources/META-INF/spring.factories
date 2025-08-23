@@ -1,3 +1,3 @@
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-  com.sdlc.pro.txboard.autoconfigure.SpringTxBoardAutoConfiguration
-  com.sdlc.pro.txboard.autoconfigure.BeanPostProcessorAutoConfiguration
+com.sdlc.pro.txboard.autoconfigure.SpringTxBoardAutoConfiguration,\
+com.sdlc.pro.txboard.autoconfigure.BeanPostProcessorAutoConfiguration

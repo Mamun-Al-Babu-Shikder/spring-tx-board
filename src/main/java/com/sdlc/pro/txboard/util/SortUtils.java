@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.util.Comparator;
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
+
 public class SortUtils {
 
     public static <T> List<T> sort(List<T> data, Sort sort) {
@@ -15,7 +17,7 @@ public class SortUtils {
             Comparator<T> comparator = buildComparator(sort);
             return data.stream()
                     .sorted(comparator)
-                    .toList();
+                    .collect(toList());
         } catch (Exception e) {
             return data; // fail-safe: return unsorted
         }
@@ -52,11 +54,6 @@ public class SortUtils {
         String methodName = "get" + Character.toUpperCase(fieldName.toCharArray()[0]) + fieldName.substring(1);
 
         try {
-            try {
-                if (clazz.isRecord()) {
-                    return clazz.getDeclaredMethod(fieldName);
-                }
-            } catch (NoSuchMethodException ignored) {}
             return clazz.getDeclaredMethod(methodName);
         } catch (NoSuchMethodException ignored) {
             throw new NoSuchMethodException("Method " + methodName + " not found on " + clazz);
