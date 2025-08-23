@@ -5,10 +5,10 @@
 
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sdlc.pro</groupId>
-    <artifactId>spring-tx-board</artifactId>
+    <artifactId>spring-tx-board-boot2</artifactId>
     <version>1.6.0</version>
     <packaging>jar</packaging>
-    <name>Spring Transaction Board</name>
+    <name>Spring Transaction Board (Spring Boot 2.4.x / Java 8)</name>
     <description>Auto-configurable Spring transaction monitoring library</description>
 
     <properties>
