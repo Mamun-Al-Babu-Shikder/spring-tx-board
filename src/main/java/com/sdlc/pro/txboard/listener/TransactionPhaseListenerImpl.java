@@ -151,31 +151,53 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     }
 
     private static String buildDetailedLogMessage(TransactionLog txLog, int acquiredConnections) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("[TX-Board] Transaction Completed:").append(System.lineSeparator())
-          .append("  • ID: ").append(txLog.getTxId()).append(System.lineSeparator())
-          .append("  • Method: ").append(txLog.getMethod()).append(System.lineSeparator())
-          .append("  • Status: ").append(txLog.getStatus()).append(System.lineSeparator())
-          .append("  • Duration: ").append(txLog.getDuration()).append(" ms").append(System.lineSeparator())
-          .append("  • Connections Acquired: ").append(acquiredConnections).append(System.lineSeparator())
-          .append("  • Queries Executed: ").append(txLog.getTotalQueryCount()).append(System.lineSeparator())
-          .append("  • Started At: ").append(txLog.getStartTime()).append(System.lineSeparator())
-          .append("  • Ended At: ").append(txLog.getEndTime()).append(System.lineSeparator());
+        final String lineSep = System.lineSeparator();
+        StringBuilder base = new StringBuilder();
+        base.append("[TX-Board] Transaction Completed:").append(lineSep)
+                .append("  • ID: ").append(txLog.getTxId()).append(lineSep)
+                .append("  • Method: ").append(txLog.getMethod()).append(lineSep)
+                .append("  • Status: ").append(txLog.getStatus()).append(lineSep)
+                .append("  • Duration: ").append(txLog.getDuration()).append(" ms").append(lineSep)
+                .append("  • Connections Acquired: ").append(acquiredConnections).append(lineSep)
+                .append("  • Queries Executed: ").append(txLog.getTotalQueryCount()).append(lineSep)
+                .append("  • Started At: ").append(txLog.getStartTime()).append(lineSep)
+                .append("  • Ended At: ").append(txLog.getEndTime()).append(lineSep);
 
         if (txLog.getChild().isEmpty()) {
-            return sb.toString();
+            return base.toString();
         }
 
-        StringJoiner joiner = new StringJoiner(System.lineSeparator());
-        for (TransactionLog childTx : txLog.getChild()) {
-            String s = "      - " + childTx.getMethod() + " (" + childTx.getDuration() + " ms, " + childTx.getStatus() + ")";
-            joiner.add(s);
-        }
-        String children = joiner.toString();
+        return base.append("  • Inner Transactions:").append(lineSep).append(formatNestedTransactions(txLog)).toString();
+    }
 
-        return sb.append("  • Inner Transactions:").append(System.lineSeparator())
-                 .append(children).append(System.lineSeparator())
-                 .toString();
+    public static String formatNestedTransactions(TransactionLog txLog) {
+        StringBuilder nestedTx = new StringBuilder();
+        appendChildren(txLog, nestedTx, "    ");
+        return nestedTx.toString();
+    }
+
+    private static void appendChildren(TransactionLog txLog, StringBuilder nestedTx, String prefix) {
+        if (txLog.getChild().isEmpty()) {
+            return;
+        }
+
+        List<TransactionLog> children = txLog.getChild();
+        for (int i = 0; i < children.size(); i++) {
+            TransactionLog child = children.get(i);
+            boolean last = (i == children.size() - 1);
+
+            nestedTx.append(prefix)
+                    .append(last ? "└── " : "├── ")
+                    .append(child.getMethod())
+                    .append(" (")
+                    .append(child.getDuration())
+                    .append(" ms, ")
+                    .append(child.getStatus())
+                    .append(")\n");
+
+            String childPrefix = prefix + (last ? "    " : "│   ");
+            appendChildren(child, nestedTx, childPrefix);
+        }
     }
 
     private void publishTransactionLogToListeners(TransactionLog txLog) {
