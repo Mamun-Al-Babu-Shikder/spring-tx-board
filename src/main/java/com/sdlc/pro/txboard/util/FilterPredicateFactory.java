@@ -11,10 +11,10 @@ import java.util.function.Predicate;
 public final class FilterPredicateFactory {
 
     public static <T> Predicate<T> buildPredicate(FilterNode node) {
-        if (node instanceof Filter filter) {
-            return buildPredicateFromFilter(filter);
-        } else if (node instanceof FilterGroup group) {
-            return buildGroupPredicate(group);
+        if (node instanceof Filter) {
+            return buildPredicateFromFilter((Filter) node);
+        } else if (node instanceof FilterGroup) {
+            return buildGroupPredicate((FilterGroup) node);
         }
         return (Predicate<T>) t -> true;
     }
@@ -27,17 +27,28 @@ public final class FilterPredicateFactory {
 
                 if (fieldValue == null) return false;
 
-                return switch (filter.getOperator()) {
-                    case EQUALS -> fieldValue.equals(targetValue);
-                    case NOT_EQUALS -> !fieldValue.equals(targetValue);
-                    case GREATER_THAN -> compare(fieldValue, targetValue) > 0;
-                    case GREATER_THAN_OR_EQUALS -> compare(fieldValue, targetValue) >= 0;
-                    case LESS_THAN -> compare(fieldValue, targetValue) < 0;
-                    case LESS_THAN_OR_EQUALS -> compare(fieldValue, targetValue) <= 0;
-                    case CONTAINS -> contains(fieldValue, targetValue);
-                    case STARTS_WITH -> startsWith(fieldValue, targetValue);
-                    case ENDS_WITH -> endsWith(fieldValue, targetValue);
-                };
+                switch (filter.getOperator()) {
+                    case EQUALS:
+                        return fieldValue.equals(targetValue);
+                    case NOT_EQUALS:
+                        return !fieldValue.equals(targetValue);
+                    case GREATER_THAN:
+                        return compare(fieldValue, targetValue) > 0;
+                    case GREATER_THAN_OR_EQUALS:
+                        return compare(fieldValue, targetValue) >= 0;
+                    case LESS_THAN:
+                        return compare(fieldValue, targetValue) < 0;
+                    case LESS_THAN_OR_EQUALS:
+                        return compare(fieldValue, targetValue) <= 0;
+                    case CONTAINS:
+                        return contains(fieldValue, targetValue);
+                    case STARTS_WITH:
+                        return startsWith(fieldValue, targetValue);
+                    case ENDS_WITH:
+                        return endsWith(fieldValue, targetValue);
+                    default:
+                        return false;
+                }
             } catch (Exception e) {
                 return false;
             }
@@ -75,21 +86,32 @@ public final class FilterPredicateFactory {
     }
 
     private static boolean contains(Object fieldValue, Object value) {
-        if (fieldValue instanceof String s && value instanceof String v) {
+        if (fieldValue instanceof String && value instanceof String) {
+            String s = ((String) fieldValue);
+            String v = ((String) value);
             return s.toLowerCase().contains(v.toLowerCase());
-        } else if (fieldValue instanceof Collection<?> c) {
+        } else if (fieldValue instanceof Collection) {
+            Collection<?> c = (Collection<?>) fieldValue;
             return c.contains(value);
         }
         return false;
     }
 
     private static boolean startsWith(Object fieldValue, Object value) {
-        return (fieldValue instanceof String s && value instanceof String v) &&
-                s.toLowerCase().startsWith(v.toLowerCase());
+        if (fieldValue instanceof String && value instanceof String) {
+            String s = (String) fieldValue;
+            String v = (String) value;
+            return s.toLowerCase().startsWith(v.toLowerCase());
+        }
+        return false;
     }
 
     private static boolean endsWith(Object fieldValue, Object value) {
-        return (fieldValue instanceof String s && value instanceof String v) &&
-                s.toLowerCase().endsWith(v.toLowerCase());
+        if (fieldValue instanceof String && value instanceof String) {
+            String s = (String) fieldValue;
+            String v = (String) value;
+            return s.toLowerCase().endsWith(v.toLowerCase());
+        }
+        return false;
     }
 }

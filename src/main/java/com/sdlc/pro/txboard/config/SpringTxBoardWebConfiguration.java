@@ -22,6 +22,7 @@ import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Configuration(proxyBeanMethods = false)
@@ -36,10 +37,14 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
         TxBoardProperties.StorageType storageType = txBoardProperties.getStorage();
         log.info("Spring Tx Board is configured to use {} storage for transaction logs.", storageType);
 
-        return switch (storageType) {
-            case IN_MEMORY -> new InMemoryTransactionLogRepository(txBoardProperties);
-            case REDIS -> new RedisTransactionLogRepository();
-        };
+        switch (storageType) {
+            case IN_MEMORY:
+                return new InMemoryTransactionLogRepository(txBoardProperties);
+            case REDIS:
+                return new RedisTransactionLogRepository();
+            default:
+                throw new IllegalStateException("Unsupported storage type: " + storageType);
+        }
     }
 
     @Bean("sdlcProTransactionLogPersistenceListener")
@@ -49,11 +54,11 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
 
     @Bean("sdlcProTxBoardRestHandlerMapping")
     public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TransactionLogRepository transactionLogRepository) {
-        return new SimpleUrlHandlerMapping(Map.of(
-                "/api/tx-metrics", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository),
-                "/api/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository),
-                "/api/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository)
-        ), ORDER);
+        Map<String, Object> urlMap = new HashMap<String, Object>();
+        urlMap.put("/api/tx-metrics", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository));
+        return new SimpleUrlHandlerMapping(urlMap, ORDER);
     }
 
     @Override

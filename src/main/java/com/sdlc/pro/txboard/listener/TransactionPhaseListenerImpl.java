@@ -54,7 +54,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     @Override
     public void afterBegin(Throwable throwable) {
         currentTransactionInfo().ifPresent(txInfo -> txInfo.setStartTime(Instant.now()));
-        addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Transaction Start [%s]".formatted(currentTransactionMethodName())));
+        addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, String.format("Transaction Start [%s]", currentTransactionMethodName())));
         if (throwable != null) {
             endWithTransactionStatusAndEvent(TransactionPhaseStatus.ERRORED);
         }
@@ -74,7 +74,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     public void afterAcquiredConnection() {
         if (hasActiveTransaction()) {
             int count = onConnectionAcquired();
-            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.CONNECTION_ACQUIRED, "Connection Acquired [%d]".formatted(count)));
+            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.CONNECTION_ACQUIRED, String.format("Connection Acquired [%d]", count)));
         }
     }
 
@@ -82,7 +82,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     public void afterCloseConnection() {
         if (hasActiveTransaction()) {
             int count = onConnectionReleased();
-            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.CONNECTION_RELEASED, "Connection Released [%d]".formatted(count)));
+            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.CONNECTION_RELEASED, String.format("Connection Released [%d]", count)));
             if (getParentTransactionInfo().isCompleted()) {
                 finish();
             }
@@ -105,7 +105,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         currentTransactionInfo().ifPresent(txInfo -> {
             txInfo.setEndTime(Instant.now());
             txInfo.setStatus(status);
-            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, "Transaction End [%s]".formatted(txInfo.getMethodName())));
+            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, String.format("Transaction End [%s]", txInfo.getMethodName())));
 
             if (txInfo.isMostParent()) {
                 if (!hasActiveConnection()) {
@@ -147,36 +147,27 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     }
 
     private static int getConnectionAcquiredCount(TransactionLog txLog) {
-        return txLog.getConnectionSummary() != null ? txLog.getConnectionSummary().acquisitionCount() : 0;
+        return txLog.getConnectionSummary() != null ? txLog.getConnectionSummary().getAcquisitionCount() : 0;
     }
 
     private static String buildDetailedLogMessage(TransactionLog txLog, int acquiredConnections) {
-        String base = """
-            [TX-Board] Transaction Completed:
-              • ID: %s
-              • Method: %s
-              • Status: %s
-              • Duration: %d ms
-              • Connections Acquired: %d
-              • Queries Executed: %d
-              • Started At: %s
-              • Ended At: %s
-            """.formatted(
-                txLog.getTxId(),
-                txLog.getMethod(),
-                txLog.getStatus(),
-                txLog.getDuration(),
-                acquiredConnections,
-                txLog.getTotalQueryCount(),
-                txLog.getStartTime(),
-                txLog.getEndTime()
-        );
+        final String lineSep = System.lineSeparator();
+        StringBuilder base = new StringBuilder();
+        base.append("[TX-Board] Transaction Completed:").append(lineSep)
+                .append("  • ID: ").append(txLog.getTxId()).append(lineSep)
+                .append("  • Method: ").append(txLog.getMethod()).append(lineSep)
+                .append("  • Status: ").append(txLog.getStatus()).append(lineSep)
+                .append("  • Duration: ").append(txLog.getDuration()).append(" ms").append(lineSep)
+                .append("  • Connections Acquired: ").append(acquiredConnections).append(lineSep)
+                .append("  • Queries Executed: ").append(txLog.getTotalQueryCount()).append(lineSep)
+                .append("  • Started At: ").append(txLog.getStartTime()).append(lineSep)
+                .append("  • Ended At: ").append(txLog.getEndTime()).append(lineSep);
 
         if (txLog.getChild().isEmpty()) {
-            return base;
+            return base.toString();
         }
 
-        return base + "  • Inner Transactions:\n" + formatNestedTransactions(txLog);
+        return base.append("  • Inner Transactions:").append(lineSep).append(formatNestedTransactions(txLog)).toString();
     }
 
     public static String formatNestedTransactions(TransactionLog txLog) {
@@ -200,8 +191,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     .append(child.getMethod())
                     .append(" (")
                     .append(child.getDuration())
-                        .append(" ms, ")
-                        .append(child.getStatus())
+                    .append(" ms, ")
+                    .append(child.getStatus())
                     .append(")\n");
 
             String childPrefix = prefix + (last ? "    " : "│   ");
@@ -352,9 +343,10 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         }
 
         public TransactionLog toTransactionLog() {
-            List<TransactionLog> child = this.child.stream()
-                    .map(TransactionInfo::toTransactionLog)
-                    .toList();
+            List<TransactionLog> child = new ArrayList<TransactionLog>();
+            for (TransactionInfo info : this.child) {
+                child.add(info.toTransactionLog());
+            }
 
             ConnectionSummary connectionSummary = this.isMostParent ? getConnectionRelatedInfo() : null;
 

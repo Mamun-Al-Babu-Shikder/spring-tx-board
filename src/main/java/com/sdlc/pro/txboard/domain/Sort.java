@@ -17,7 +17,7 @@ public class Sort {
     private Sort(String property, Direction direction) {
         Objects.requireNonNull(property);
         Objects.requireNonNull(direction);
-        if (property.isBlank()) {
+        if (property.trim().isEmpty()) {
             throw new IllegalArgumentException("The sort property must not be blank");
         }
         this.property = property;

@@ -1,8 +1,16 @@
 package com.sdlc.pro.txboard.model;
 
-public record DurationRange(long minMillis, long maxMillis) {
+public class DurationRange {
+    private final long minMillis;
+    private final long maxMillis;
+
+    public DurationRange(long minMillis, long maxMillis) {
+        this.minMillis = minMillis;
+        this.maxMillis = maxMillis;
+    }
+
     public static DurationRange of(long minMillis, long maxMillis) {
-        return new DurationRange(minMillis,  maxMillis);
+        return new DurationRange(minMillis, maxMillis);
     }
 
     /**
@@ -12,4 +20,7 @@ public record DurationRange(long minMillis, long maxMillis) {
     public boolean matches(long millis) {
         return millis >= minMillis && millis < maxMillis;
     }
+
+    public long getMinMillis() { return minMillis; }
+    public long getMaxMillis() { return maxMillis; }
 }

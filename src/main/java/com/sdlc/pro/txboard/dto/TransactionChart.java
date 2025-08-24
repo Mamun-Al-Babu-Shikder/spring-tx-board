@@ -4,5 +4,12 @@ import com.sdlc.pro.txboard.model.DurationDistribution;
 
 import java.util.List;
 
-public record TransactionChart(List<DurationDistribution> durationDistribution) {
+public class TransactionChart {
+    private final List<DurationDistribution> durationDistribution;
+
+    public TransactionChart(List<DurationDistribution> durationDistribution) {
+        this.durationDistribution = durationDistribution;
+    }
+
+    public List<DurationDistribution> getDurationDistribution() { return durationDistribution; }
 }

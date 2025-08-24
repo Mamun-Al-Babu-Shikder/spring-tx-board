@@ -2,6 +2,7 @@ package com.sdlc.pro.txboard.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class TxBoardProperties {
     private AlarmingThreshold alarmingThreshold = new AlarmingThreshold();
     private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
-    private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
+    private List<Integer> durationBuckets = Arrays.asList(100, 500, 1000, 2000, 5000);
     private LogType logType = LogType.SIMPLE;
 
     public boolean isEnable() {

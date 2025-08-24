@@ -19,6 +19,9 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
 public final class InMemoryTransactionLogRepository implements TransactionLogRepository, InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(InMemoryTransactionLogRepository.class);
 
@@ -30,7 +33,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
 
     public InMemoryTransactionLogRepository(TxBoardProperties txBoardProperties) {
         this.transactionLogs = new CopyOnWriteArrayList<>();
-        this.durationDistributionMap = new ConcurrentSkipListMap<>(Comparator.comparingLong(DurationRange::minMillis));
+        this.durationDistributionMap = new ConcurrentSkipListMap<>(Comparator.comparingLong(DurationRange::getMinMillis));
         List<Integer> buckets = txBoardProperties.getDurationBuckets();
         this.MAX_DURATION_DIST_RANGE = buckets.get(buckets.size() - 1);
         this.buildDurationBucketRange(buckets);
@@ -69,7 +72,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
     public List<TransactionLog> findAll() {
-        return List.copyOf(transactionLogs);
+        return new ArrayList<TransactionLog>(transactionLogs);
     }
 
     @Override
@@ -96,7 +99,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
         List<TransactionLog> logs = pageRequest.getFilter() == FilterNode.UNFILTERED ? this.transactionLogs :
                 this.transactionLogs.stream()
                         .filter(FilterPredicateFactory.buildPredicate(pageRequest.getFilter()))
-                        .toList();
+                        .collect(toList());
 
         List<TransactionLog> sortedLogs = SortUtils.sort(logs, pageRequest.getSort());
         List<TransactionLog> content = getTransactionLogPage(sortedLogs, pageRequest);
@@ -110,7 +113,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
         return this.durationDistributionMap.entrySet()
                 .stream()
                 .map(e -> new DurationDistribution(e.getKey(), e.getValue().get()))
-                .toList();
+                .collect(toList());
     }
 
 
@@ -120,7 +123,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
             int end = (pageRequest.getPageNumber() + 1) * pageRequest.getPageSize();
             return logs.subList(start, Math.min(end, logs.size()));
         } catch (IndexOutOfBoundsException | IllegalArgumentException ex) {
-            return List.of();
+            return emptyList();
         }
     }
 
