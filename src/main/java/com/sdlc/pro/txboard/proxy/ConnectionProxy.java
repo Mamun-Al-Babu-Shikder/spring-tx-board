@@ -3,10 +3,7 @@ package com.sdlc.pro.txboard.proxy;
 import com.sdlc.pro.txboard.delegator.AbstractConnectionDelegator;
 import com.sdlc.pro.txboard.listener.TransactionPhaseListener;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 public final class ConnectionProxy extends AbstractConnectionDelegator {
     private final TransactionPhaseListener transactionPhaseListener;
@@ -14,6 +11,12 @@ public final class ConnectionProxy extends AbstractConnectionDelegator {
     public ConnectionProxy(Connection connection, TransactionPhaseListener transactionPhaseListener) {
         super(connection);
         this.transactionPhaseListener = transactionPhaseListener;
+    }
+
+    @Override
+    public Statement createStatement() throws SQLException {
+        Statement statement = this.connection.createStatement();
+        return new StatementProxy(statement, this.transactionPhaseListener);
     }
 
     @Override
@@ -81,5 +84,4 @@ public final class ConnectionProxy extends AbstractConnectionDelegator {
         this.transactionPhaseListener.executedQuery(sql);
         return super.prepareCall(sql, resultSetType, resultSetConcurrency);
     }
-
 }
