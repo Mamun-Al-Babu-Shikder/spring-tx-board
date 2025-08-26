@@ -20,6 +20,7 @@ public class TransactionLog implements Serializable {
     private final Instant endTime;
     private final long duration;
     private final ConnectionSummary connectionSummary;
+    private final Boolean connectionOriented;
     private final TransactionPhaseStatus status;
     private final String thread;
     private final List<String> executedQuires;
@@ -42,6 +43,7 @@ public class TransactionLog implements Serializable {
         this.status = status;
         this.duration = Duration.between(startTime, endTime).toMillis();
         this.connectionSummary = connectionSummary;
+        this.connectionOriented = connectionSummary == null ? null : this.connectionSummary.acquisitionCount() > 0;
         this.thread = thread;
         this.child = child;
         this.executedQuires = executedQuires;
@@ -89,6 +91,10 @@ public class TransactionLog implements Serializable {
 
     public ConnectionSummary getConnectionSummary() {
         return this.connectionSummary;
+    }
+
+    public Boolean getConnectionOriented() {
+        return connectionOriented;
     }
 
     public List<TransactionLog> getChild() {
