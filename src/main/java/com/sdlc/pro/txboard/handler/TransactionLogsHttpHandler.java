@@ -1,6 +1,8 @@
 package com.sdlc.pro.txboard.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sdlc.pro.txboard.enums.IsolationLevel;
+import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.domain.*;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
@@ -31,8 +33,11 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
         Sort sort = parseSort(request.getParameter("sort"));
         String search = request.getParameter("search");
         String status = request.getParameter("status");
+        String propagation = request.getParameter("propagation");
+        String isolation = request.getParameter("isolation");
+        String connectionOriented = request.getParameter("connectionOriented");
 
-        FilterNode filter = buildFilter(search, status);
+        FilterNode filter = buildFilter(search, status, propagation, isolation, connectionOriented);
         TransactionLogPageResponse pageResponse = transactionLogRepository.findAll(
                 TransactionLogPageRequest.of(page, size, sort, filter)
         );
@@ -57,7 +62,7 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
         return sort != null ? Sort.from(sort) : Sort.UNSORTED;
     }
 
-    public static FilterNode buildFilter(String search, String status) {
+    public static FilterNode buildFilter(String search, String status, String propagation, String isolation, String connectionOriented) {
         List<FilterNode> filters = new ArrayList<>();
 
         if (search != null && !search.isBlank()) {
@@ -73,8 +78,32 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
         if (status != null && !status.isBlank()) {
             try {
                 filters.add(Filter.of("status", TransactionPhaseStatus.valueOf(status), Filter.Operator.EQUALS));
-            } catch (IllegalArgumentException e) {
+            } catch (Exception e) {
                 throw new IllegalArgumentException("The value of status must be " + Arrays.toString(TransactionPhaseStatus.values()));
+            }
+        }
+
+        if (propagation != null && !propagation.isBlank()) {
+            try {
+                filters.add(Filter.of("propagation", PropagationBehavior.valueOf(propagation), Filter.Operator.EQUALS));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("The value of propagation must be " + Arrays.toString(PropagationBehavior.values()));
+            }
+        }
+
+        if (isolation != null && !isolation.isBlank()) {
+            try {
+                filters.add(Filter.of("isolation", IsolationLevel.valueOf(isolation), Filter.Operator.EQUALS));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("The value of isolation must be " + Arrays.toString(IsolationLevel.values()));
+            }
+        }
+
+        if (connectionOriented != null && !connectionOriented.isBlank()) {
+            try {
+                filters.add(Filter.of("connectionOriented", Boolean.valueOf(connectionOriented), Filter.Operator.EQUALS));
+            } catch (Exception e) {
+                throw new IllegalArgumentException("The value of connectionOriented must be [true or false]");
             }
         }
 
