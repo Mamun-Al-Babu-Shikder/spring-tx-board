@@ -6,6 +6,7 @@ import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.exception.MethodNotImplementedException;
 import com.sdlc.pro.txboard.model.DurationDistribution;
 import com.sdlc.pro.txboard.model.TransactionLog;
+import com.sdlc.pro.txboard.model.TransactionSummary;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -42,6 +43,11 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
 
     @Override
     public TransactionLogPageResponse findAll(TransactionLogPageRequest request) {
+        throw new MethodNotImplementedException();
+    }
+
+    @Override
+    public TransactionSummary getTransactionSummary() {
         throw new MethodNotImplementedException();
     }
 
