@@ -1,390 +1,121 @@
-document.addEventListener('DOMContentLoaded', function() {
+$(document).ready(() => {
     // Global variables
-    var charts = {};
-    var currentPage = 1;
-    var pageSize = 50;
-    var totalPages = 1;
-    var totalElements = 0;
-    var currentSearch = '';
-    var currentStatus = 'all';
-    var currentSortBy = 'startTime';
-    var currentSortOrder = 'desc';
-    var isLoading = false;
+    let transactions = []
+    let totalElements = 0
+    let totalPages = 0
+    let isFirstPage = false
+    let isLastPage = false
+    let currentPage = 1
+    let pageSize = 25
+    let sortField = "startTime"
+    let sortDirection = "desc"
+    const expandedRows = new Set()
+    const timingColorClassMap = {
+        "TRANSACTION_START": "start",
+        "TRANSACTION_END": "end",
+        "CONNECTION_ACQUIRED": "connection-acquired",
+        "CONNECTION_RELEASED": "connection-released"
+    }
+    let charts = {}
 
     // API Configuration
-    var API_BASE_URL = '/api';
-    var ENDPOINTS = {
+    const API_BASE_URL = '/api';
+    const ENDPOINTS = {
         TRANSACTIONS: API_BASE_URL + '/tx-logs',
-        METRICS: API_BASE_URL + '/tx-metrics',
+        SUMMARY: API_BASE_URL + '/tx-summary',
         CHARTS: API_BASE_URL + '/tx-charts'
     };
 
-    // Initialize data
-    function initializeData() {
-        currentPage = 1;
-        loadMetrics();
-        loadChartData();
-        loadTransactions();
+    // Initialize the dashboard
+    initializeDashboard()
+
+    function initializeDashboard() {
+        setupEventListeners()
+        fetchAndUpdateUI()
     }
 
-    // Load metrics from server
-    function loadMetrics() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', ENDPOINTS.METRICS, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var metrics = JSON.parse(xhr.responseText);
-                    updateMetricsDisplay(metrics);
-                    updateStatusChart(metrics.committedCount, metrics.rolledBackCount);
-                } else {
-                    console.error('Error loading metrics:', xhr.statusText);
-                    // Fallback to mock data for demo
-                    updateMetricsDisplay({
-                        totalTransactions: 0,
-                        successRate: 0.0,
-                        committedCount: 0,
-                        rolledBackCount: 0,
-                        avgDuration: 0.0
-                    });
-                    updateStatusChart(0, 0);
-                }
-            }
-        };
-        xhr.send();
+    function fetchAndUpdateUI() {
+        updateSummary()
+        loadDurationChartData()
+        loadTransactions()
     }
 
-    // Load chart data from server
-    function loadChartData() {
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', ENDPOINTS.CHARTS, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                if (xhr.status === 200) {
-                    var chartData = JSON.parse(xhr.responseText);
-                    updateCharts(chartData);
-                } else {
-                    console.error('Error loading chart data:', xhr.statusText);
-                    // Fallback to mock data for demo
-                    updateCharts(generateMockChartData());
-                }
-            }
-        };
-        xhr.send();
-    }
+    // Setup event listeners
+    function setupEventListeners() {
+        console.log("setup event listeners............")
 
-    // Load transactions with server-side pagination, search, and sort
-    function loadTransactions() {
-        if (isLoading) return;
+        // Refresh button
+        $("#refreshBtn").click(function () {
+            $(this).find("i").addClass("loading")
+            setTimeout(() => {
+                fetchAndUpdateUI()
+                $(this).find("i").removeClass("loading")
+            }, 1000)
+        })
 
-        isLoading = true;
-        showTableLoading(true);
+        // Export button
+        $("#exportBtn").click(exportToCSV)
 
-        // Build query parameters
-        var params = [];
-        params.push('page=' + (currentPage - 1)); // Spring Boot pages are 0-indexed
-        params.push('size=' + pageSize);
-        params.push('sort=' + currentSortBy + ',' + currentSortOrder);
+        // Clear filters
+        $("#clearFilters").click(clearAllFilters)
 
-        if (currentSearch) {
-            params.push('search=' + encodeURIComponent(currentSearch));
-        }
-        if (currentStatus !== 'all') {
-            params.push('status=' + currentStatus);
-        }
-
-        var url = ENDPOINTS.TRANSACTIONS + '?' + params.join('&');
-
-        var xhr = new XMLHttpRequest();
-        xhr.open('GET', url, true);
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === 4) {
-                isLoading = false;
-                showTableLoading(false);
-
-                if (xhr.status === 200) {
-                    var data = JSON.parse(xhr.responseText);
-                    updateTransactionTable(data);
-                    updatePaginationInfo(data);
-                    updatePaginationControls(data);
-                } else {
-                    console.error('Error loading transactions:', xhr.statusText);
-                    // Fallback to mock data for demo
-                }
-            }
-        };
-        xhr.send();
-    }
-
-    // Update metrics display
-    function updateMetricsDisplay(metrics) {
-        document.getElementById('totalTransactions').textContent = metrics.totalTransactions.toLocaleString();
-        document.getElementById('successRate').textContent = metrics.successRate.toFixed(1) + '%';
-        document.getElementById('committedCount').textContent = metrics.committedCount.toLocaleString();
-        document.getElementById('rolledBackCount').textContent = metrics.rolledBackCount.toLocaleString();
-        document.getElementById('avgDuration').textContent = formatDuration(metrics.avgDuration);
-    }
-
-    // Update transaction table
-    function updateTransactionTable(data) {
-        var tbody = document.getElementById('transactionTableBody');
-        tbody.innerHTML = '';
-
-        for (var i = 0; i < data.content.length; i++) {
-            var transaction = data.content[i];
-
-            var statusBadge = transaction.status === 'COMMITTED'
-                ? '<span class="badge success"><i class="fas fa-check-circle"></i> Committed</span>'
-                : '<span class="badge error"><i class="fas fa-times-circle"></i> Rolled Back</span>';
-
-            var durationBadge = transaction.alarming
-                ? '<span class="badge warning">' + formatDuration(transaction.duration) + '</span>'
-                : '<span class="badge secondary">' + formatDuration(transaction.duration) + '</span>';
-
-            var row = document.createElement('tr');
-            row.innerHTML =
-                '<td><span class="transaction-id">TX-' + String(transaction.txId).padStart(5, '0') + '</span></td>' +
-                '<td><span class="method-name">' + transaction.method + '</span></td>' +
-                '<td>' + formatTime(transaction.startTime) + '</td>' +
-                '<td>' + formatTime(transaction.endTime) + '</td>' +
-                '<td>' + durationBadge + '</td>' +
-                '<td>' + statusBadge + '</td>' +
-                '<td><span class="thread-id">' + transaction.thread + '</span></td>';
-
-            tbody.appendChild(row);
-        }
-    }
-
-    // Update pagination info
-    function updatePaginationInfo(data) {
-        var startRecord = data.totalElements === 0 ? 0 : data.number * data.size + 1;
-        var endRecord = Math.min((data.number + 1) * data.size, data.totalElements);
-
-        document.getElementById('startRecord').textContent = startRecord.toLocaleString();
-        document.getElementById('endRecord').textContent = endRecord.toLocaleString();
-        document.getElementById('totalResults').textContent = data.totalElements.toLocaleString();
-
-        document.getElementById('tableFooter').style.display = 'flex';
-    }
-
-    // Update pagination controls
-    function updatePaginationControls(data) {
-        totalPages = data.totalPages;
-        totalElements = data.totalElements;
-        currentPage = data.number + 1; // Convert from 0-indexed to 1-indexed
-
-        // Update page jump input
-        var pageJump = document.getElementById('pageJump');
-        pageJump.setAttribute('max', totalPages);
-        pageJump.value = currentPage;
-
-        // Update navigation buttons
-        document.getElementById('firstPage').disabled = data.first;
-        document.getElementById('prevPage').disabled = data.first;
-        document.getElementById('nextPage').disabled = data.last;
-        document.getElementById('lastPage').disabled = data.last;
-
-        // Generate page numbers
-        generatePageNumbers();
-    }
-
-    // Generate page number buttons
-    function generatePageNumbers() {
-        var pageNumbers = document.getElementById('pageNumbers');
-        pageNumbers.innerHTML = '';
-
-        if (totalPages <= 1) return;
-
-        var maxVisiblePages = 5;
-        var startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-        var endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-        // Adjust start page if we're near the end
-        if (endPage - startPage < maxVisiblePages - 1) {
-            startPage = Math.max(1, endPage - maxVisiblePages + 1);
-        }
-
-        // Add ellipsis and first page if needed
-        if (startPage > 1) {
-            var firstBtn = document.createElement('button');
-            firstBtn.className = 'pagination-btn page-number';
-            firstBtn.setAttribute('data-page', '1');
-            firstBtn.textContent = '1';
-            pageNumbers.appendChild(firstBtn);
-
-            if (startPage > 2) {
-                var ellipsis = document.createElement('span');
-                ellipsis.className = 'pagination-ellipsis';
-                ellipsis.textContent = '...';
-                pageNumbers.appendChild(ellipsis);
-            }
-        }
-
-        // Add page numbers
-        for (var i = startPage; i <= endPage; i++) {
-            var btn = document.createElement('button');
-            btn.className = 'pagination-btn page-number' + (i === currentPage ? ' active' : '');
-            btn.setAttribute('data-page', i);
-            btn.textContent = i;
-            pageNumbers.appendChild(btn);
-        }
-
-        // Add ellipsis and last page if needed
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                var ellipsis = document.createElement('span');
-                ellipsis.className = 'pagination-ellipsis';
-                ellipsis.textContent = '...';
-                pageNumbers.appendChild(ellipsis);
-            }
-
-            var lastBtn = document.createElement('button');
-            lastBtn.className = 'pagination-btn page-number';
-            lastBtn.setAttribute('data-page', totalPages);
-            lastBtn.textContent = totalPages;
-            pageNumbers.appendChild(lastBtn);
-        }
-    }
-
-    // Show/hide table loading state
-    function showTableLoading(show) {
-        var tableContainer = document.querySelector('.table-container');
-        if (show) {
-            tableContainer.classList.add('table-loading');
-        } else {
-            tableContainer.classList.remove('table-loading');
-        }
-    }
-
-    // Go to specific page
-    function goToPage(page) {
-        if (page >= 1 && page <= totalPages && page !== currentPage && !isLoading) {
-            currentPage = page;
+        // Filter inputs
+        $("#statusFilter, #propagationFilter, #isolationFilter, #connectionFilter").change(function () {
             loadTransactions();
-        }
-    }
+        })
 
-    // Simple debounce function
-    function debounce(func, wait) {
-        var timeout;
-        return function() {
-            var context = this;
-            var args = arguments;
-            var later = function() {
-                timeout = null;
-                func.apply(context, args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
 
-    // Handle search input with debouncing
-    var debouncedSearch = debounce(function() {
-        currentPage = 1;
-        loadTransactions();
-    }, 500);
+        $("#methodSearch").on("input change", function () {
+            debounce(loadTransactions, 300)
+        })
 
-    // Handle filter/sort changes
-    function handleFilterSortChange() {
-        currentPage = 1;
-        loadTransactions();
-    }
+        // Page size change
+        $("#pageSize").change(function () {
+            pageSize = Number.parseInt($(this).val())
+            currentPage = 1
+            loadTransactions()
+        })
 
-    // Format duration
-    function formatDuration(ms) {
-        if (ms < 1000) return Math.round(ms) + 'ms';
-        return (ms / 1000).toFixed(2) + 's';
-    }
+        // Sorting
+        $(".sortable").click(function () {
+            const field = $(this).data("sort")
+            if (sortField === field) {
+                sortDirection = sortDirection === "asc" ? "desc" : "asc"
+            } else {
+                sortField = field
+                sortDirection = "asc"
+            }
+            updateSortIcons()
+            loadTransactions()
+        })
 
-    // Format time
-    function formatTime(isoString) {
-        return new Date(isoString).toLocaleString();
-    }
+        // Pagination
+        $("#firstPage").click(() => goToPage(1))
+        $("#prevPage").click(() => goToPage(currentPage - 1))
+        $("#nextPage").click(() => goToPage(currentPage + 1))
+        $("#lastPage").click(() => goToPage(totalPages))
 
-    // Generate mock data for fallback (when API is not available)
-    /*
-    function generateMockTransactionData() {
-        var mockTransactions = [];
-        var statuses = ['COMMITTED', 'ROLLED_BACK'];
-        var methods = [
-            'UserService.createUser',
-            'OrderService.processOrder',
-            'PaymentService.processPayment',
-            'InventoryService.updateStock',
-            'NotificationService.sendEmail'
-        ];
+        // Modal
+        $("#closeModal").click(closeModal)
+        $(window).click((e) => {
+            if (e.target.id === "transactionModal") {
+                closeModal()
+            }
+        })
 
-        for (var i = 0; i < pageSize; i++) {
-            var startTime = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000);
-            var duration = Math.random() * 5000 + 50;
-            var endTime = new Date(startTime.getTime() + duration);
-            var status = Math.random() > 0.15 ? 'COMMITTED' : 'ROLLED_BACK';
-
-            mockTransactions.push({
-                txId: 'tx-' + String((currentPage - 1) * pageSize + i + 1).padStart(4, '0'),
-                method: methods[Math.floor(Math.random() * methods.length)],
-                startTime: startTime.toISOString(),
-                endTime: endTime.toISOString(),
-                duration: Math.round(duration),
-                status: status,
-                thread: 'thread-' + (Math.floor(Math.random() * 20) + 1),
-                isolationLevel: 'READ_COMMITTED',
-                propagation: 'REQUIRED'
-            });
-        }
-
-        return {
-            content: mockTransactions,
-            totalElements: 1250,
-            totalPages: Math.ceil(1250 / pageSize),
-            number: currentPage - 1,
-            size: pageSize,
-            first: currentPage === 1,
-            last: currentPage === Math.ceil(1250 / pageSize)
-        };
-    }
-    */
-
-    // Generate mock chart data
-    function generateMockChartData() {
-        var hourlyData = [];
-        for (var hour = 0; hour < 24; hour++) {
-            hourlyData.push({
-                hour: hour + ':00',
-                total: Math.floor(Math.random() * 100) + 20,
-                successRate: Math.random() * 20 + 80
-            });
-        }
-
-        return {
-            statusDistribution: {
-                committed: 0,
-                rolledBack: 0
-            },
-            durationDistribution: [
-                { range: '0-100ms', count: 0 },
-                { range: '100-500ms', count: 0 },
-                { range: '500ms-1s', count: 0 },
-                { range: '1-2s', count: 0 },
-                { range: '2-5s', count: 0 },
-                { range: '5s+', count: 0 }
-            ],
-            hourlyData: hourlyData
-        };
-    }
-
-    // Update charts with server data
-    function updateCharts(chartData) {
-        // updateStatusChart(chartData.statusDistribution);
-        updateDurationChart(chartData.durationDistribution);
-        // updateHourlyChart(chartData.hourlyData);
-        // updateTrendsChart(chartData.hourlyData);
+        // Modal tabs
+        $(".tab-btn").click(function () {
+            const tabId = $(this).data("tab")
+            $(".tab-btn").removeClass("active")
+            $(this).addClass("active")
+            $(".tab-content").removeClass("active")
+            $("#" + tabId).addClass("active")
+        })
     }
 
     // Status distribution pie chart
-    function updateStatusChart(committed, rolledBack) {
-        var ctx = document.getElementById('statusChart').getContext('2d');
+    function updateStatusChart(committed, rolledBack, errored) {
+        let ctx = document.getElementById('statusChart').getContext('2d');
 
         if (charts.statusChart) {
             charts.statusChart.destroy();
@@ -393,10 +124,10 @@ document.addEventListener('DOMContentLoaded', function() {
         charts.statusChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Committed', 'Rolled Back'],
+                labels: ['Committed', 'Rolled Back', 'Errored'],
                 datasets: [{
-                    data: [committed, rolledBack],
-                    backgroundColor: ['#22c55e', '#ef4444'],
+                    data: [committed, rolledBack, errored],
+                    backgroundColor: ['#22c55e', '#fd2c9b', '#ef2b2b'],
                     borderWidth: 2,
                     borderColor: '#ffffff'
                 }]
@@ -426,8 +157,23 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function loadDurationChartData() {
+        $.ajax({
+            url: ENDPOINTS.CHARTS,
+            method: 'GET',
+            success: function (response) {
+                updateDurationChart(response)
+            },
+            error: function (error) {
+                console.error('Error loading duration chart data', error);
+            }
+        });
+    }
+
     // Duration distribution bar chart
     function updateDurationChart(durationData) {
+        console.log(durationData)
+
         var ctx = document.getElementById('durationChart').getContext('2d');
 
         if (charts.durationChart) {
@@ -474,249 +220,504 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Hourly transaction volume chart
-    function updateHourlyChart(hourlyData) {
-        var ctx = document.getElementById('hourlyChart').getContext('2d');
+    // Load transactions (replace with actual API call)
+    function loadTransactions() {
+        const url = buildTxLogFetchingRequestUrl()
 
-        if (charts.hourlyChart) {
-            charts.hourlyChart.destroy();
-        }
-
-        var labels = [];
-        var totalData = [];
-        var successRateData = [];
-
-        for (var i = 0; i < hourlyData.length; i++) {
-            labels.push(hourlyData[i].hour);
-            totalData.push(hourlyData[i].total);
-            successRateData.push(hourlyData[i].successRate);
-        }
-
-        charts.hourlyChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'Total Transactions',
-                        data: totalData,
-                        backgroundColor: 'rgba(59, 130, 246, 0.2)',
-                        borderColor: '#3b82f6',
-                        borderWidth: 2,
-                        fill: true,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Success Rate (%)',
-                        data: successRateData,
-                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                        borderColor: '#22c55e',
-                        borderWidth: 2,
-                        fill: false,
-                        yAxisID: 'y1'
-                    }
-                ]
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function (response) {
+                transactions = response.content
+                totalElements = response.totalElements
+                totalPages = response.totalPages
+                isFirstPage = response.first
+                isLastPage = response.last
+                renderTable()
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: 'Hour'
-                        }
-                    },
-                    y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: {
-                            display: true,
-                            text: 'Transaction Count'
-                        }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: {
-                            display: true,
-                            text: 'Success Rate (%)'
-                        },
-                        grid: {
-                            drawOnChartArea: false
-                        },
-                        min: 0,
-                        max: 100
-                    }
-                }
+            error: function (error) {
+                console.error('Error loading transactions:', error);
             }
         });
     }
 
-    // Success rate trends chart
-    function updateTrendsChart(hourlyData) {
-        var ctx = document.getElementById('trendsChart').getContext('2d');
+    // Apply filters and sorting
+    function buildTxLogFetchingRequestUrl() {
+        const methodSearch = $("#methodSearch").val().toLowerCase()
+        const statusFilter = $("#statusFilter").val()
+        const propagationFilter = $("#propagationFilter").val()
+        const isolationFilter = $("#isolationFilter").val()
+        const connectionFilter = $("#connectionFilter").val()
 
-        if (charts.trendsChart) {
-            charts.trendsChart.destroy();
+        // Build query parameters
+        const params = [];
+        params.push('page=' + (currentPage - 1)); // Spring Boot pages are 0-indexed
+        params.push('size=' + pageSize);
+
+        if (statusFilter) {
+            params.push('status=' + statusFilter)
         }
 
-        var labels = [];
-        var successRateData = [];
-
-        for (var i = 0; i < hourlyData.length; i++) {
-            labels.push(hourlyData[i].hour);
-            successRateData.push(hourlyData[i].successRate);
+        if (propagationFilter) {
+            params.push('propagation=' + propagationFilter)
         }
 
-        charts.trendsChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Success Rate (%)',
-                    data: successRateData,
-                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                    borderColor: '#22c55e',
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4
-                }]
+        if (isolationFilter) {
+            params.push('isolation=' + isolationFilter)
+        }
+
+        if (connectionFilter) {
+            params.push('connectionOriented=' + connectionFilter)
+        }
+
+        if (methodSearch) {
+            params.push('search=' + encodeURIComponent(methodSearch))
+        }
+
+        if (sortField) {
+            params.push('sort=' + sortField + ',' + sortDirection)
+        }
+
+        return ENDPOINTS.TRANSACTIONS + '?' + params.join('&');
+    }
+
+    // Render transaction table
+    function renderTable() {
+        const tbody = $("#transactionTableBody")
+        tbody.empty()
+        if (transactions.length === 0) {
+            tbody.append(`
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 30px;">
+                        No transactions found
+                    </td>
+                </tr>
+            `)
+            return
+        }
+
+        transactions.forEach((tx) => {
+            renderTransaction(tx, tbody, 0)
+        })
+
+        updatePagination()
+    }
+
+    // Render a transaction row with its children
+    function renderTransaction(tx, container, depth, parentId = null) {
+        const txId = generateTransactionId(tx, parentId)
+        const hasChildren = tx.child && tx.child.length > 0
+        const isExpanded = expandedRows.has(txId)
+
+        const row = $(`
+            <tr class="${depth > 0 ? "child-row" : ""}" data-tx-id="${txId}" data-depth="${depth}">
+                <td>
+                    ${
+            hasChildren
+                ? `<button class="expand-button ${isExpanded ? "expanded" : ""}" data-tx-id="${txId}">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>`
+                : ""
+        }
+                </td>
+                <td>
+                    ${generateIndentation(depth)}
+                    <span class="method-name">${tx.method}</span>
+                    ${generateMostParentTransactionId(tx)}
+                </td>
+                <td>${formatDateTime(tx.startTime)}</td>
+                <td>
+                    <span class="badge ${tx.duration > 1000 ? "badge-warning" : "badge-secondary"}">
+                        ${formatDuration(tx.duration)}
+                    </span>
+                </td>
+                <td>${getStatusBadge(tx.status)}</td>
+                <td><span class="badge badge-info">${tx.propagation}</span></td>
+                <td><span class="badge badge-secondary">${tx.isolation}</span></td>
+                <td>
+                    <span class="badge badge-info">${tx.executedQuires ? tx.executedQuires.length : 0}</span>
+                </td>
+                <td>
+                    <button class="btn btn-sm btn-primary view-details" data-tx-id="${txId}" data-depth="${depth}">
+                        <i class="fas fa-eye"></i> View
+                    </button>
+                </td>
+            </tr>
+        `)
+
+        container.append(row)
+
+        // Add event handlers
+        row.find(".expand-button").click((e) => {
+            console.log("clicked on expand button!....")
+            e.stopPropagation()
+            toggleExpand(txId)
+        })
+
+        row.find(".view-details").click(function (e) {
+            e.stopPropagation()
+            showTransactionDetails(tx, Number.parseInt($(this).data("depth")))
+        })
+
+        // Render children if expanded
+        if (hasChildren && isExpanded) {
+            tx.child.forEach((child) => {
+                console.log("rendering child.......")
+                renderTransaction(child, container, depth + 1, txId)
+            })
+        }
+    }
+
+    // Generate a unique ID for a transaction
+    function generateTransactionId(tx, parentId) {
+        const baseId = `${tx.method}-${tx.startTime}`
+        return parentId ? `${parentId}-${baseId}` : baseId
+    }
+
+    // Generate most parent tx-id
+    function generateMostParentTransactionId(tx) {
+        let tx_id = ""
+        if (tx.txId) {
+            const txId = `tx-${String(tx.txId).padStart(5, '0')}`
+            tx_id += '<br><span class="tx-id">ID: ' + txId + '</span>'
+        }
+
+        return tx_id;
+    }
+
+    // Generate indentation for nested transactions
+    function generateIndentation(depth) {
+        let indentation = ""
+        for (let i = 0; i < depth; i++) {
+            indentation += '<span class="child-indent"></span>'
+        }
+        return indentation
+    }
+
+    // Toggle expand/collapse for a transaction
+    function toggleExpand(txId) {
+        if (expandedRows.has(txId)) {
+            expandedRows.delete(txId)
+            // Also remove any children that might be expanded
+            const childPrefix = txId + "-"
+            expandedRows.forEach((id) => {
+                if (id.startsWith(childPrefix)) {
+                    expandedRows.delete(id)
+                }
+            })
+        } else {
+            expandedRows.add(txId)
+        }
+
+        renderTable()
+    }
+
+    // Update pagination
+    function updatePagination() {
+        const startRecord = totalElements === 0 ? 0 : (currentPage - 1) * pageSize + 1
+        const endRecord = Math.min(currentPage * pageSize, totalElements)
+
+        $("#paginationInfo").text(`Showing ${startRecord} to ${endRecord} of ${totalElements} entries`)
+
+        // Update pagination buttons
+        $("#firstPage, #prevPage").prop("disabled", isFirstPage)
+        $("#nextPage, #lastPage").prop("disabled", isLastPage)
+
+        // Generate page numbers
+        const pageNumbers = $("#pageNumbers")
+        pageNumbers.empty()
+
+        const maxVisible = 5
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+        const endPage = Math.min(totalPages, startPage + maxVisible - 1)
+
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1)
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = $(`<button class="page-btn ${i === currentPage ? "active" : ""}">${i}</button>`)
+            pageBtn.click(() => goToPage(i))
+            pageNumbers.append(pageBtn)
+        }
+    }
+
+    // Go to specific page
+    function goToPage(page) {
+        if (page >= 1 && page <= totalPages) {
+            currentPage = page
+            loadTransactions()
+        }
+    }
+
+    // Update summary cards
+    function updateSummary() {
+        $.ajax({
+            url: ENDPOINTS.SUMMARY,
+            method: 'GET',
+            success: function (response) {
+                showTransactionSummary(response)
+                updateStatusChart(response.committedCount, response.rolledBackCount, response.erroredCount)
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 100,
-                        title: {
-                            display: true,
-                            text: 'Success Rate (%)'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Hour'
-                        }
-                    }
-                }
+            error: function (error) {
+                console.error('Error loading summary:', error);
             }
         });
     }
 
-    // Event listeners
-    var tabButtons = document.querySelectorAll('.tab-btn');
-    for (var i = 0; i < tabButtons.length; i++) {
-        tabButtons[i].addEventListener('click', function() {
-            var tabId = this.getAttribute('data-tab');
+    function showTransactionSummary(txSummary) {
+        const totalTx = txSummary.totalTransaction
+        const committedTx = txSummary.committedCount
+        const successRate = (committedTx / totalTx) * 100;
+        const rolledBackAndErroredTx = totalTx - committedTx
 
-            var allTabButtons = document.querySelectorAll('.tab-btn');
-            for (var j = 0; j < allTabButtons.length; j++) {
-                allTabButtons[j].classList.remove('active');
-            }
-            this.classList.add('active');
-
-            var allTabContents = document.querySelectorAll('.tab-content');
-            for (var k = 0; k < allTabContents.length; k++) {
-                allTabContents[k].classList.remove('active');
-            }
-            document.getElementById(tabId).classList.add('active');
-        });
+        $("#totalTransactions").text(totalTx)
+        $("#successRate").text(successRate + "%")
+        $("#committedCount").text(committedTx)
+        $("#rolledBackErroredCount").text(rolledBackAndErroredTx)
+        $("#avgDuration").text(formatDuration(txSummary.averageDuration))
     }
 
-    // Search input with debouncing
-    document.getElementById('searchInput').addEventListener('input', function() {
-        currentSearch = this.value;
-        debouncedSearch();
-    });
+    // Show transaction details modal
+    function showTransactionDetails(tx, depth = 0) {
+        // Overview tab
+        $("#detailMethodName").text(tx.method)
+        $("#detailStatus").removeClass().addClass("badge").addClass(getStatusClass(tx.status)).text(tx.status)
+        $("#detailPropagation").text(tx.propagation)
+        $("#detailIsolation").text(tx.isolation)
+        $("#detailThread").text(tx.thread || "N/A")
+        $("#detailDuration").text(formatDuration(tx.duration))
+        $("#detailTotalTransactions").text(tx.totalTransactionCount || 1)
+        $("#detailTotalQueries").text(tx.totalQueryCount || (tx.executedQuires ? tx.executedQuires.length : 0))
 
-    // Filter and sort event listeners
-    document.getElementById('statusFilter').addEventListener('change', function() {
-        currentStatus = this.value;
-        handleFilterSortChange();
-    });
-
-    document.getElementById('sortBy').addEventListener('change', function() {
-        currentSortBy = this.value;
-        handleFilterSortChange();
-    });
-
-    document.getElementById('sortOrder').addEventListener('click', function() {
-        var currentOrder = this.getAttribute('data-order');
-        var newOrder = currentOrder === 'asc' ? 'desc' : 'asc';
-
-        this.setAttribute('data-order', newOrder);
-        this.innerHTML = '<i class="fas fa-sort-amount-' + (newOrder === 'asc' ? 'up' : 'down') + '"></i> ' + (newOrder === 'asc' ? 'Asc' : 'Desc');
-
-        currentSortOrder = newOrder;
-        handleFilterSortChange();
-    });
-
-    // Pagination event listeners
-    document.getElementById('pageSize').addEventListener('change', function() {
-        pageSize = parseInt(this.value);
-        currentPage = 1;
-        loadTransactions();
-    });
-
-    document.getElementById('firstPage').addEventListener('click', function() {
-        goToPage(1);
-    });
-
-    document.getElementById('prevPage').addEventListener('click', function() {
-        goToPage(currentPage - 1);
-    });
-
-    document.getElementById('nextPage').addEventListener('click', function() {
-        goToPage(currentPage + 1);
-    });
-
-    document.getElementById('lastPage').addEventListener('click', function() {
-        goToPage(totalPages);
-    });
-
-    document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('page-number')) {
-            var page = parseInt(e.target.getAttribute('data-page'));
-            goToPage(page);
+        // Timing tab
+        const timingTab = $("#timingTab")
+        if (depth === 0) {
+            timingTab.show()
+            // Build timing from events
+            buildTimingFromEvents(tx)
+        } else {
+            timingTab.hide()
+            // If timing tab was active, switch to overview
+            if (timingTab.hasClass("active")) {
+                $(".tab-btn").removeClass("active")
+                $(".tab-content").removeClass("active")
+                $('[data-tab="overview"]').addClass("active")
+                $("#overview").addClass("active")
+            }
         }
-    });
 
-    document.getElementById('jumpToPage').addEventListener('click', function() {
-        var page = parseInt(document.getElementById('pageJump').value);
-        goToPage(page);
-    });
+        // SQL tab
+        const queries = tx.executedQuires || []
+        $("#sqlCount").text(`${queries.length} queries`)
+        const sqlList = $("#sqlList")
+        sqlList.empty()
 
-    document.getElementById('pageJump').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter' || e.keyCode === 13) {
-            var page = parseInt(this.value);
-            goToPage(page);
+        if (queries.length === 0) {
+            sqlList.append('<p style="color: #64748b; text-align: center; padding: 20px;">No SQL queries executed</p>')
+        } else {
+            queries.forEach((sql, index) => {
+                const sqlItem = `
+                    <div class="sql-item">
+                        <div class="sql-index">Query #${index + 1}</div>
+                        <div class="sql-query">${sql}</div>
+                    </div>
+                `
+                sqlList.append(sqlItem)
+            })
         }
-    });
 
-    document.getElementById('refreshBtn').addEventListener('click', function() {
-        this.classList.add('loading');
+        // Children tab
+        const children = tx.child || []
+        $("#childrenCount").text(`${children.length} children`)
+        const childrenTree = $("#childrenTree")
+        childrenTree.empty()
 
-        setTimeout(function() {
-            initializeData();
-            document.getElementById('refreshBtn').classList.remove('loading');
-        }, 500);
-    });
+        if (children.length === 0) {
+            childrenTree.append('<p style="color: #64748b; text-align: center; padding: 20px;">No child transactions</p>')
+        } else {
+            children.forEach((child, index) => {
+                const childItem = `
+                    <div class="child-item">
+                        <div class="child-method">${child.method}</div>
+                        <div class="child-details">
+                            <div class="detail">
+                                <span class="label">Status:</span>
+                                <span class="badge ${getStatusClass(child.status)}">${child.status}</span>
+                            </div>
+                            <div class="detail">
+                                <span class="label">Duration:</span>
+                                <span>${formatDuration(child.duration)}</span>
+                            </div>
+                            <div class="detail">
+                                <span class="label">Propagation:</span>
+                                <span>${child.propagation}</span>
+                            </div>
+                            <div class="detail">
+                                <span class="label">SQL Queries:</span>
+                                <span>${child.executedQuires ? child.executedQuires.length : 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `
+                childrenTree.append(childItem)
+            })
+        }
 
-    // Initialize the dashboard
-    initializeData();
-});
+        $("#transactionModal").show()
+    }
+
+    // Close modal
+    function closeModal() {
+        $("#transactionModal").hide()
+    }
+
+    // Clear all filters
+    function clearAllFilters() {
+        $("#methodSearch").val("")
+        $("#statusFilter").val("")
+        $("#propagationFilter").val("")
+        $("#isolationFilter").val("")
+        $("#connectionFilter").val("")
+        loadTransactions()
+    }
+
+    // Export to CSV
+    function exportToCSV() {
+        const headers = [
+            "Method Name",
+            "Start Time",
+            "End Time",
+            "Duration",
+            "Status",
+            "Propagation",
+            "Isolation",
+            "SQL Count",
+        ]
+        const csvContent = [headers.join(",")]
+
+        // Recursive function to add all transactions including children
+        function addTransactionToCSV(tx, depth = 0) {
+            const indent = depth > 0 ? " ".repeat(depth * 2) : ""
+            const row = [
+                `"${indent}${tx.method}"`,
+                `"${formatDateTime(tx.startTime)}"`,
+                `"${formatDateTime(tx.endTime)}"`,
+                tx.duration,
+                tx.status,
+                tx.propagation,
+                tx.isolation,
+                tx.executedQuires ? tx.executedQuires.length : 0,
+            ]
+            csvContent.push(row.join(","))
+
+            if (tx.child && tx.child.length > 0) {
+                tx.child.forEach((child) => addTransactionToCSV(child, depth + 1))
+            }
+        }
+
+        transactions.forEach((tx) => addTransactionToCSV(tx))
+
+        const blob = new Blob([csvContent.join("\n")], {type: "text/csv"})
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `spring-transactions-${new Date().toISOString().split("T")[0]}.csv`
+        a.click()
+        window.URL.revokeObjectURL(url)
+    }
+
+    // Update sort icons
+    function updateSortIcons() {
+        $(".sortable").removeClass("asc desc")
+        $(`.sortable[data-sort="${sortField}"]`).addClass(sortDirection)
+    }
+
+    // Utility functions
+    function getStatusBadge(status) {
+        const statusClass = getStatusClass(status)
+        return `<span class="badge ${statusClass}">${status}</span>`
+    }
+
+    function getStatusClass(status) {
+        switch (status) {
+            case "COMMITTED":
+                return "badge-success"
+            case "ROLLED_BACK":
+                return "badge-error"
+            case "ERRORED":
+                return "badge-error"
+            default:
+                return "badge-secondary"
+        }
+    }
+
+    function formatDuration(ms) {
+        if (ms < 1000) return `${Math.round(ms)}ms`
+        return `${(ms / 1000).toFixed(2)}s`
+    }
+
+    function formatDateTime(date) {
+        return new Date(date).toLocaleString()
+    }
+
+    function debounce(func, wait) {
+        console.log("debouncing.........")
+        let timeout
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout)
+                func(...args)
+            }
+            clearTimeout(timeout)
+            timeout = setTimeout(later, wait)
+        }
+    }
+
+    function buildTimingFromEvents(tx) {
+        const events = tx.events || []
+        const timeline = $(".timing-timeline")
+        timeline.empty()
+
+        if (events.length === 0) {
+            timeline.append('<p style="color: #64748b; text-align: center; padding: 20px;">No timing events available</p>')
+            return
+        }
+
+        const txTimelineStack = []
+        const connTimelineStack = []
+        events.forEach((event) => {
+            let duration = undefined
+            const timelinePointColorClass = timingColorClassMap[event.type];
+
+            if (event.type === 'TRANSACTION_START') {
+                txTimelineStack.push(event)
+            } else if (event.type === 'TRANSACTION_END') {
+                const prevEvent = txTimelineStack.pop()
+                duration = calculateDuration(event, prevEvent)
+            }
+
+            if (event.type === 'CONNECTION_ACQUIRED') {
+                connTimelineStack.push(event);
+            } else if (event.type === 'CONNECTION_RELEASED') {
+                const prevEvent = connTimelineStack.pop()
+                duration = calculateDuration(event, prevEvent)
+            }
+
+            timeline.append(`
+                <div class="timeline-item">
+                    <div class="timeline-marker ${timelinePointColorClass}"></div>
+                    <div class="timeline-content">
+                        <h4>${event.details}</h4>
+                        <p>${formatDateTime(event.timestamp)}</p>
+                        <small>${duration !== undefined ? 'Duration: ' + formatDuration(duration) : ''}</small>
+                    </div>
+                </div>
+            `)
+        })
+    }
+
+    function calculateDuration(currEvent, prevEvent) {
+        return new Date(currEvent.timestamp).getTime() - new Date(prevEvent.timestamp).getTime()
+    }
+})
