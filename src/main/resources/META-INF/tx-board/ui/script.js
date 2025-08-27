@@ -6,7 +6,7 @@ $(document).ready(() => {
     let isFirstPage = false
     let isLastPage = false
     let currentPage = 1
-    let pageSize = 25
+    let pageSize = 10
     let sortField = "startTime"
     let sortDirection = "desc"
     const expandedRows = new Set()
@@ -42,8 +42,6 @@ $(document).ready(() => {
 
     // Setup event listeners
     function setupEventListeners() {
-        console.log("setup event listeners............")
-
         // Refresh button
         $("#refreshBtn").click(function () {
             $(this).find("i").addClass("loading")
@@ -145,9 +143,11 @@ $(document).ready(() => {
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(context) {
-                                var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
-                                var percentage = ((context.parsed / total) * 100).toFixed(1);
+                            label: function (context) {
+                                const total = context.dataset.data.reduce(function (a, b) {
+                                    return a + b;
+                                }, 0);
+                                const percentage = ((context.parsed / total) * 100).toFixed(1);
                                 return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
                             }
                         }
@@ -162,7 +162,7 @@ $(document).ready(() => {
             url: ENDPOINTS.CHARTS,
             method: 'GET',
             success: function (response) {
-                updateDurationChart(response)
+                updateDurationChart(response.durationDistribution)
             },
             error: function (error) {
                 console.error('Error loading duration chart data', error);
@@ -172,18 +172,16 @@ $(document).ready(() => {
 
     // Duration distribution bar chart
     function updateDurationChart(durationData) {
-        console.log(durationData)
-
-        var ctx = document.getElementById('durationChart').getContext('2d');
+        const ctx = document.getElementById('durationChart').getContext('2d');
 
         if (charts.durationChart) {
             charts.durationChart.destroy();
         }
 
-        var labels = [];
-        var data = [];
-        for (var i = 0; i < durationData.length; i++) {
-            var range = durationData[i].range;
+        const labels = [];
+        const data = [];
+        for (let i = 0; i < durationData.length; i++) {
+            const range = durationData[i].range;
             labels.push(range.minMillis + "-" + range.maxMillis + "ms");
             data.push(durationData[i].count);
         }
@@ -311,14 +309,9 @@ $(document).ready(() => {
 
         const row = $(`
             <tr class="${depth > 0 ? "child-row" : ""}" data-tx-id="${txId}" data-depth="${depth}">
-                <td>
-                    ${
-            hasChildren
-                ? `<button class="expand-button ${isExpanded ? "expanded" : ""}" data-tx-id="${txId}">
+                <td> ${hasChildren ? `<button class="expand-button ${isExpanded ? "expanded" : ""}" data-tx-id="${txId}">
                             <i class="fas fa-chevron-right"></i>
-                        </button>`
-                : ""
-        }
+                        </button>` : ""}
                 </td>
                 <td>
                     ${generateIndentation(depth)}
@@ -327,13 +320,14 @@ $(document).ready(() => {
                 </td>
                 <td>${formatDateTime(tx.startTime)}</td>
                 <td>
-                    <span class="badge ${tx.duration > 1000 ? "badge-warning" : "badge-secondary"}">
+                    <span class="badge ${tx.alarmingTransaction ? "badge-warning" : "badge-secondary"}">
                         ${formatDuration(tx.duration)}
                     </span>
                 </td>
                 <td>${getStatusBadge(tx.status)}</td>
                 <td><span class="badge badge-info">${tx.propagation}</span></td>
                 <td><span class="badge badge-secondary">${tx.isolation}</span></td>
+                <td>${tx.thread}</td>
                 <td>
                     <span class="badge badge-info">${tx.executedQuires ? tx.executedQuires.length : 0}</span>
                 </td>
@@ -468,13 +462,14 @@ $(document).ready(() => {
     function showTransactionSummary(txSummary) {
         const totalTx = txSummary.totalTransaction
         const committedTx = txSummary.committedCount
-        const successRate = (committedTx / totalTx) * 100;
-        const rolledBackAndErroredTx = totalTx - committedTx
+        const successRate = (committedTx / totalTx) * 100
+        const rolledBackTx = txSummary.rolledBackCount
+        const erroredTx = txSummary.erroredCount
 
         $("#totalTransactions").text(totalTx)
-        $("#successRate").text(successRate + "%")
+        $("#successRate").text(successRate.toFixed(2) + "%")
         $("#committedCount").text(committedTx)
-        $("#rolledBackErroredCount").text(rolledBackAndErroredTx)
+        $("#rolledBackErroredCount").text(rolledBackTx + " / " + erroredTx)
         $("#avgDuration").text(formatDuration(txSummary.averageDuration))
     }
 
@@ -489,6 +484,26 @@ $(document).ready(() => {
         $("#detailDuration").text(formatDuration(tx.duration))
         $("#detailTotalTransactions").text(tx.totalTransactionCount || 1)
         $("#detailTotalQueries").text(tx.totalQueryCount || (tx.executedQuires ? tx.executedQuires.length : 0))
+
+        // Connection summary tab
+         const connSummaryTab = $("#connectionSummaryTab")
+        if (depth === 0 && tx.connectionOriented) {
+            connSummaryTab.show()
+            // Build connection summary from events
+            const summary = tx.connectionSummary
+            $("#totalAcquiredConnection").text(summary.acquisitionCount)
+            $("#alarmingConnection").text(summary.alarmingConnectionCount)
+            $("#occupiedTime").text(formatDuration(summary.occupiedTime))
+        } else {
+            connSummaryTab.hide()
+            // If connection summary tab was active, switch to overview
+            if (connSummaryTab.hasClass("active")) {
+                $(".tab-btn").removeClass("active")
+                $(".tab-content").removeClass("active")
+                $('[data-tab="overview"]').addClass("active")
+                $("#overview").addClass("active")
+            }
+        }
 
         // Timing tab
         const timingTab = $("#timingTab")

@@ -63,7 +63,7 @@
                     <span class="summary-title">Rolled Back & Errored</span>
                     <i class="fas fa-times-circle error"></i>
                 </div>
-                <div class="summary-value error" id="rolledBackErroredCount">0</div>
+                <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
                 <div class="summary-subtitle">Failed transactions</div>
             </div>
 
@@ -81,10 +81,10 @@
         <div class="charts-section">
             <div class="tabs">
                 <div class="tab-buttons">
-                    <button class="tab-btn active" data-tab="overview">Distribution Chart</button>
+                    <button class="chart-tab-btn active" data-tab="overview">Distribution Chart</button>
                 </div>
 
-                <div class="tab-content active" id="distributionChart">
+                <div class="chart-tab-content active" id="distributionChart">
                     <div class="charts-grid">
                         <div class="chart-card">
                             <div class="chart-header">
@@ -175,10 +175,12 @@
                     <h3><i class="fas fa-list"></i> Transaction Details</h3>
                     <div class="table-actions filter-group">
                         <select id="pageSize">
-                            <option value="10">10 per page</option>
-                            <option value="25" selected>25 per page</option>
+                            <option value="10" selected>10 per page</option>
+                            <option value="20">20 per page</option>
+                            <option value="25">25 per page</option>
+                            <option value="30">30 per page</option>
+                            <option value="40">40 per page</option>
                             <option value="50">50 per page</option>
-                            <option value="100">100 per page</option>
                         </select>
                     </div>
                 </div>
@@ -206,6 +208,7 @@
                                 <th class="sortable" data-sort="isolation">
                                     Isolation <i class="fas fa-sort"></i>
                                 </th>
+                                <th>Thread</th>
                                 <th>SQL Count</th>
                                 <th>Actions</th>
                             </tr>
@@ -254,6 +257,7 @@
                 <div class="detail-tabs">
                     <button class="tab-btn active" data-tab="overview">Overview</button>
                     <button class="tab-btn" data-tab="timing" id="timingTab">Timing</button>
+                    <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection Summary</button>
                     <button class="tab-btn" data-tab="sql">SQL Queries</button>
                     <button class="tab-btn" data-tab="children">Child Transactions</button>
                 </div>
@@ -274,7 +278,7 @@
                         </div>
                         <div class="detail-item">
                             <label>Isolation Level:</label>
-                            <span id="detailIsolation" class="badge badge-warning">-</span>
+                            <span id="detailIsolation" class="badge badge-info">-</span>
                         </div>
                         <div class="detail-item">
                             <label>Thread:</label>
@@ -311,6 +315,23 @@
                                 <p id="timingEndTime">-</p>
                                 <small id="timingTotalDuration">-</small>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="connectionSummary">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Total Acquired Connections:</label>
+                            <span id="totalAcquiredConnection">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Alarming Connections:</label>
+                            <span class="badge badge-warning" id="alarmingConnection">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Occupied Time:</label>
+                            <span id="occupiedTime">-</span>
                         </div>
                     </div>
                 </div>
