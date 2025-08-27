@@ -371,8 +371,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     executedQuires,
                     child,
                     events,
-                    this.alarmingThreshold.getTransaction(),
-                    this.alarmingThreshold.getConnection()
+                    this.alarmingThreshold.getTransaction()
             );
         }
 
