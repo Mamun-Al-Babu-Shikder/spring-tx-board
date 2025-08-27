@@ -50,7 +50,7 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
     @Bean("sdlcProTxBoardRestHandlerMapping")
     public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TransactionLogRepository transactionLogRepository) {
         return new SimpleUrlHandlerMapping(Map.of(
-                "/api/tx-metrics", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository),
+                "/api/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository),
                 "/api/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository),
                 "/api/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository)
         ), ORDER);
