@@ -20,6 +20,7 @@ public class TransactionLog implements Serializable {
     private final Instant endTime;
     private final long duration;
     private final ConnectionSummary connectionSummary;
+    private final Boolean connectionOriented;
     private final TransactionPhaseStatus status;
     private final String thread;
     private final List<String> executedQuires;
@@ -31,8 +32,7 @@ public class TransactionLog implements Serializable {
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
-                          List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
-                          long conAlarmingThreshold) {
+                          List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold) {
         this.txId = txId;
         this.method = method;
         this.propagation = propagation;
@@ -42,13 +42,14 @@ public class TransactionLog implements Serializable {
         this.status = status;
         this.duration = Duration.between(startTime, endTime).toMillis();
         this.connectionSummary = connectionSummary;
+        this.connectionOriented = connectionSummary == null ? null : this.connectionSummary.acquisitionCount() > 0;
         this.thread = thread;
         this.child = child;
         this.executedQuires = executedQuires;
         this.events = events;
         this.alarmingTransaction = this.duration > txAlarmingThreshold;
         this.havingAlarmingConnection = this.connectionSummary != null ?
-                this.connectionSummary.occupiedTime() > conAlarmingThreshold : null;
+                this.connectionSummary.alarmingConnectionCount() > 0 : null;
     }
 
     public Integer getTxId() {
@@ -89,6 +90,10 @@ public class TransactionLog implements Serializable {
 
     public ConnectionSummary getConnectionSummary() {
         return this.connectionSummary;
+    }
+
+    public Boolean getConnectionOriented() {
+        return connectionOriented;
     }
 
     public List<TransactionLog> getChild() {

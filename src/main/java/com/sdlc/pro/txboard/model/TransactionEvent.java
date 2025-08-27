@@ -14,6 +14,12 @@ public class TransactionEvent {
         this.details = details;
     }
 
+    public TransactionEvent(Type type, Instant timestamp, String details) {
+        this.type = Objects.requireNonNull(type, "Must be valid transaction event type");
+        this.timestamp = Objects.requireNonNull(timestamp, "Must be valid event timestamp");
+        this.details = details;
+    }
+
     public Type getType() {
         return type;
     }
