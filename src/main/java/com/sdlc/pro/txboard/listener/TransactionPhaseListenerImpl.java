@@ -53,8 +53,9 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     @Override
     public void afterBegin(Throwable throwable) {
-        currentTransactionInfo().ifPresent(txInfo -> txInfo.setStartTime(Instant.now()));
-        addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Transaction Start [%s]".formatted(currentTransactionMethodName())));
+        Instant timestamp = Instant.now();
+        currentTransactionInfo().ifPresent(txInfo -> txInfo.setStartTime(timestamp));
+        addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, timestamp, "Transaction Start [%s]".formatted(currentTransactionMethodName())));
         if (throwable != null) {
             endWithTransactionStatusAndEvent(TransactionPhaseStatus.ERRORED);
         }
@@ -103,9 +104,10 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     private void endWithTransactionStatusAndEvent(TransactionPhaseStatus status) {
         currentTransactionInfo().ifPresent(txInfo -> {
-            txInfo.setEndTime(Instant.now());
+            Instant timestamp = Instant.now();
+            txInfo.setEndTime(timestamp);
             txInfo.setStatus(status);
-            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, "Transaction End [%s]".formatted(txInfo.getMethodName())));
+            addTransactionEvent(new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, timestamp, "Transaction End [%s]".formatted(txInfo.getMethodName())));
 
             if (txInfo.isMostParent()) {
                 if (!hasActiveConnection()) {
