@@ -17,10 +17,15 @@ $(document).ready(() => {
         "CONNECTION_RELEASED": "connection-released"
     }
     let charts = {}
+    let alarmingThreshold = {
+        transaction: 1000,
+        connection: 1000
+    }
 
     // API Configuration
-    const API_BASE_URL = '/api';
+    const API_BASE_URL = '/api/spring-tx-board';
     const ENDPOINTS = {
+        ALARMING_THRESHOLD: API_BASE_URL + '/config/alarming-threshold',
         TRANSACTIONS: API_BASE_URL + '/tx-logs',
         SUMMARY: API_BASE_URL + '/tx-summary',
         CHARTS: API_BASE_URL + '/tx-charts'
@@ -31,6 +36,7 @@ $(document).ready(() => {
 
     function initializeDashboard() {
         setupEventListeners()
+        fetchAlarmingThreshold()
         fetchAndUpdateUI()
     }
 
@@ -62,10 +68,8 @@ $(document).ready(() => {
             loadTransactions();
         })
 
-
-        $("#methodSearch").on("input change", function () {
-            debounce(loadTransactions, 300)
-        })
+        document.getElementById("methodSearch")
+            .addEventListener("input", debounce(loadTransactions, 500));
 
         // Page size change
         $("#pageSize").change(function () {
@@ -153,6 +157,20 @@ $(document).ready(() => {
                         }
                     }
                 }
+            }
+        });
+    }
+
+    function fetchAlarmingThreshold() {
+        $.ajax({
+            url: ENDPOINTS.ALARMING_THRESHOLD,
+            method: 'GET',
+            success: function (response) {
+                alarmingThreshold.transaction = response.transaction
+                alarmingThreshold.connection = response.connection
+            },
+            error: function (error) {
+                console.error('Error to load alarming threshold values', error);
             }
         });
     }
@@ -471,6 +489,7 @@ $(document).ready(() => {
         $("#committedCount").text(committedTx)
         $("#rolledBackErroredCount").text(rolledBackTx + " / " + erroredTx)
         $("#avgDuration").text(formatDuration(txSummary.averageDuration))
+        $("#avgConnOccupied").text(formatDuration(txSummary.averageConnectionOccupiedTime))
     }
 
     // Show transaction details modal
@@ -486,7 +505,7 @@ $(document).ready(() => {
         $("#detailTotalQueries").text(tx.totalQueryCount || (tx.executedQuires ? tx.executedQuires.length : 0))
 
         // Connection summary tab
-         const connSummaryTab = $("#connectionSummaryTab")
+        const connSummaryTab = $("#connectionSummaryTab")
         if (depth === 0 && tx.connectionOriented) {
             connSummaryTab.show()
             // Build connection summary from events
@@ -622,6 +641,7 @@ $(document).ready(() => {
                 tx.status,
                 tx.propagation,
                 tx.isolation,
+                tx.thread,
                 tx.executedQuires ? tx.executedQuires.length : 0,
             ]
             csvContent.push(row.join(","))
@@ -676,17 +696,12 @@ $(document).ready(() => {
         return new Date(date).toLocaleString()
     }
 
-    function debounce(func, wait) {
-        console.log("debouncing.........")
-        let timeout
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout)
-                func(...args)
-            }
-            clearTimeout(timeout)
-            timeout = setTimeout(later, wait)
-        }
+    function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
     }
 
     function buildTimingFromEvents(tx) {
@@ -719,13 +734,23 @@ $(document).ready(() => {
                 duration = calculateDuration(event, prevEvent)
             }
 
+            let isAlarming = false;
+            if (duration !== undefined) {
+                isAlarming = (event.type === 'TRANSACTION_END' && duration > alarmingThreshold.transaction) ||
+                    (event.type === 'CONNECTION_RELEASED' && duration > alarmingThreshold.connection)
+            }
+
             timeline.append(`
                 <div class="timeline-item">
                     <div class="timeline-marker ${timelinePointColorClass}"></div>
                     <div class="timeline-content">
                         <h4>${event.details}</h4>
                         <p>${formatDateTime(event.timestamp)}</p>
-                        <small>${duration !== undefined ? 'Duration: ' + formatDuration(duration) : ''}</small>
+                        ${duration === undefined ? '' : `
+                            <small>
+                                <span class="badge ${isAlarming ? 'badge-warning' : 'badge-secondary'}" >Duration: ${formatDuration(duration)}</span>
+                            </small>
+                        `}
                     </div>
                 </div>
             `)

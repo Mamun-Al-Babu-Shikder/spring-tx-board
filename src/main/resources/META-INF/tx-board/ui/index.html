@@ -76,6 +76,14 @@
                 <div class="summary-subtitle">Average execution time</div>
             </div>
 
+            <div class="summary-card">
+                <div class="summary-header">
+                    <span class="summary-title">Connection Occupied</span>
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="summary-value" id="avgConnOccupied">0.00s</div>
+                <div class="summary-subtitle">Average connection occupied</div>
+            </div>
         </div>
 
         <div class="charts-section">
@@ -121,7 +129,7 @@
                 <div class="filters-content">
                     <div class="filter-group">
                         <label>Search Method</label>
-                        <input type="text" id="methodSearch" placeholder="Search by method name...">
+                        <input type="text" id="methodSearch" placeholder="Search by method, thread name...">
                     </div>
                     <div class="filter-group">
                         <label>Status</label>
@@ -184,7 +192,7 @@
                         </select>
                     </div>
                 </div>
-                
+
                 <div class="table-container">
                     <table id="transactionTable">
                         <thead>
@@ -208,7 +216,9 @@
                                 <th class="sortable" data-sort="isolation">
                                     Isolation <i class="fas fa-sort"></i>
                                 </th>
-                                <th>Thread</th>
+                                <th class="sortable" data-sort="thread">
+                                    Thread <i class="fas fa-sort"></i>
+                                </th>
                                 <th>SQL Count</th>
                                 <th>Actions</th>
                             </tr>

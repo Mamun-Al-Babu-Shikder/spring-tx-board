@@ -11,11 +11,11 @@ import org.springframework.web.HttpRequestHandler;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-public class TransactionMetricsHttpHandler implements HttpRequestHandler {
+public class TransactionSummaryHttpHandler implements HttpRequestHandler {
     private final ObjectMapper objectMapper;
     private final TransactionLogRepository transactionLogRepository;
 
-    public TransactionMetricsHttpHandler(ObjectMapper objectMapper, TransactionLogRepository transactionLogRepository) {
+    public TransactionSummaryHttpHandler(ObjectMapper objectMapper, TransactionLogRepository transactionLogRepository) {
         this.objectMapper = objectMapper;
         this.transactionLogRepository = transactionLogRepository;
     }
