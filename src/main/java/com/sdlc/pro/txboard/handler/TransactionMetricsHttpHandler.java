@@ -1,8 +1,7 @@
 package com.sdlc.pro.txboard.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
-import com.sdlc.pro.txboard.dto.TransactionMetrics;
+import com.sdlc.pro.txboard.model.TransactionSummary;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -25,15 +24,8 @@ public class TransactionMetricsHttpHandler implements HttpRequestHandler {
     public void handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         PrintWriter writer = response.getWriter();
-
-        long totalTransactions = transactionLogRepository.count();
-        long committedCount = transactionLogRepository.countByTransactionStatus(TransactionPhaseStatus.COMMITTED);
-        long rolledBackCount = totalTransactions - committedCount;
-        double successRate = (committedCount * 100.0) / totalTransactions;
-        double avgDuration = transactionLogRepository.averageDuration();
-        TransactionMetrics metrics = new TransactionMetrics(totalTransactions, committedCount, rolledBackCount, successRate, avgDuration);
-
-        String json = objectMapper.writeValueAsString(metrics);
+        TransactionSummary transactionSummary = transactionLogRepository.getTransactionSummary();
+        String json = objectMapper.writeValueAsString(transactionSummary);
         writer.write(json);
         writer.flush();
     }
