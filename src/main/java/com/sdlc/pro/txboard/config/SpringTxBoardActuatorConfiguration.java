@@ -13,15 +13,8 @@ import com.sdlc.pro.txboard.actuator.TxBoardActuatorEndpoint;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({PlatformTransactionManager.class, Endpoint.class})
-@ConditionalOnProperty(
-    name = {
-        "sdlc.pro.spring.tx.board.enable",
-        "sdlc.pro.spring.tx.board.actuator.enable"
-    },
-    havingValue = "true",
-    matchIfMissing = true
-)
+@ConditionalOnClass({ PlatformTransactionManager.class, Endpoint.class })
+@ConditionalOnProperty(name = "sdlc.pro.spring.tx.board.actuator.enable", havingValue = "true", matchIfMissing = true)
 public class SpringTxBoardActuatorConfiguration {
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardActuatorConfiguration.class);
 

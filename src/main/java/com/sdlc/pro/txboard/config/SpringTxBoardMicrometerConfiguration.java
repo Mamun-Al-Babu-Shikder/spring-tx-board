@@ -15,22 +15,16 @@ import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({PlatformTransactionManager.class, MeterRegistry.class})
-@ConditionalOnProperty(
-    name = {
-        "sdlc.pro.spring.tx.board.enable",
-        "sdlc.pro.spring.tx.board.actuator.enable"
-    },
-    havingValue = "true",
-    matchIfMissing = true
-)
+@ConditionalOnClass({ PlatformTransactionManager.class, MeterRegistry.class })
+@ConditionalOnProperty(name = "sdlc.pro.spring.tx.board.actuator.enable", havingValue = "true", matchIfMissing = true)
 public class SpringTxBoardMicrometerConfiguration {
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardMicrometerConfiguration.class);
 
     @Bean("sdlcProTxBoardMicrometerMetrics")
     @ConditionalOnBean(MeterRegistry.class)
-    public TxBoardMicrometerMetrics txBoardMicrometerMetrics(MeterRegistry meterRegistry, 
-                                                             TransactionLogRepository transactionLogRepository) {
+    public TxBoardMicrometerMetrics txBoardMicrometerMetrics(MeterRegistry meterRegistry,
+            TransactionLogRepository transactionLogRepository) {
+
         log.info("TX Board Micrometer metrics enabled at /actuator/metrics/txboard.*");
         return new TxBoardMicrometerMetrics(meterRegistry, transactionLogRepository);
     }
