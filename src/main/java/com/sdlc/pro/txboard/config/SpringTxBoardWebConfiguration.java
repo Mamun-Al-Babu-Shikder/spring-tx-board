@@ -1,9 +1,10 @@
 package com.sdlc.pro.txboard.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sdlc.pro.txboard.handler.AlarmingThresholdHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionMetricsHttpHandler;
+import com.sdlc.pro.txboard.handler.TransactionSummaryHttpHandler;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
@@ -48,11 +49,14 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
     }
 
     @Bean("sdlcProTxBoardRestHandlerMapping")
-    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TransactionLogRepository transactionLogRepository) {
+    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper,
+                                                    TxBoardProperties txBoardProperties,
+                                                    TransactionLogRepository transactionLogRepository) {
         return new SimpleUrlHandlerMapping(Map.of(
-                "/api/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository),
-                "/api/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository),
-                "/api/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository)
+                "/api/spring-tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties.getAlarmingThreshold()),
+                "/api/spring-tx-board/tx-summary", new TransactionSummaryHttpHandler(objectMapper, transactionLogRepository),
+                "/api/spring-tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository),
+                "/api/spring-tx-board/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository)
         ), ORDER);
     }
 

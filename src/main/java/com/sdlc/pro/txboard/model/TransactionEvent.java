@@ -9,9 +9,7 @@ public class TransactionEvent {
     private final String details;
 
     public TransactionEvent(Type type, String details) {
-        this.type = Objects.requireNonNull(type, "Must be valid transaction event type");
-        this.timestamp = Instant.now();
-        this.details = details;
+        this(type, Instant.now(), details);
     }
 
     public TransactionEvent(Type type, Instant timestamp, String details) {
