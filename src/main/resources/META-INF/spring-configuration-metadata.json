@@ -47,6 +47,12 @@
       "type": "com.sdlc.pro.txboard.config.TxBoardProperties.LogType",
       "defaultValue": "SIMPLE",
       "description": "Logging mode for transaction completion logs. Options: SIMPLE, DETAILS."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.actuator.enable",
+      "type": "java.lang.Boolean",
+      "defaultValue": true,
+      "description": "Enable or disable the actuator integration"
     }
   ]
 }
