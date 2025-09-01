@@ -1,6 +1,7 @@
 package com.sdlc.pro.txboard.autoconfigure;
 
 import com.sdlc.pro.txboard.config.SpringTxBoardActuatorConfiguration;
+import com.sdlc.pro.txboard.config.SpringTxBoardMicrometerConfiguration;
 import com.sdlc.pro.txboard.config.SpringTxBoardWebConfiguration;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
@@ -22,7 +23,7 @@ import java.util.List;
 )
 @ConditionalOnClass(PlatformTransactionManager.class)
 @EnableConfigurationProperties(TxBoardProperties.class)
-@Import({SpringTxBoardWebConfiguration.class, SpringTxBoardActuatorConfiguration.class})
+@Import({SpringTxBoardWebConfiguration.class, SpringTxBoardActuatorConfiguration.class, SpringTxBoardMicrometerConfiguration.class})
 @ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
 public class SpringTxBoardAutoConfiguration {
 
