@@ -1,10 +1,14 @@
 package com.sdlc.pro.txboard.autoconfigure;
 
+import com.sdlc.pro.txboard.config.SpringTxBoardActuatorConfiguration;
+import com.sdlc.pro.txboard.config.SpringTxBoardMicrometerConfiguration;
 import com.sdlc.pro.txboard.config.SpringTxBoardWebConfiguration;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionPhaseListener;
 import com.sdlc.pro.txboard.listener.TransactionPhaseListenerImpl;
+
+import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,11 +21,14 @@ import java.util.List;
 
 @AutoConfiguration(
         value = "com.sdlc.pro.txboard.autoconfigure.SpringTxBoardAutoConfiguration",
-        after = BeanPostProcessorAutoConfiguration.class
+        after = {
+            BeanPostProcessorAutoConfiguration.class,
+            CompositeMeterRegistryAutoConfiguration.class
+        }
 )
 @ConditionalOnClass(PlatformTransactionManager.class)
 @EnableConfigurationProperties(TxBoardProperties.class)
-@Import({SpringTxBoardWebConfiguration.class})
+@Import({SpringTxBoardWebConfiguration.class, SpringTxBoardActuatorConfiguration.class, SpringTxBoardMicrometerConfiguration.class})
 @ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
 public class SpringTxBoardAutoConfiguration {
 

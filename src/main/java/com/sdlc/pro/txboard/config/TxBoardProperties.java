@@ -13,6 +13,7 @@ public class TxBoardProperties {
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
     private LogType logType = LogType.SIMPLE;
+    private Actuator actuator = new Actuator();
 
     public boolean isEnable() {
         return enable;
@@ -71,6 +72,14 @@ public class TxBoardProperties {
         this.logType = logType == null ? LogType.SIMPLE : logType;
     }
 
+    public Actuator getActuator() {
+        return actuator;
+    }
+
+    public void setActuator(Actuator actuator) {
+        this.actuator = actuator;
+    }
+
     public enum StorageType {
         IN_MEMORY, REDIS
     }
@@ -97,6 +106,18 @@ public class TxBoardProperties {
 
         public void setConnection(long connection) {
             this.connection = connection;
+        }
+    }
+
+    public static class Actuator {
+        private boolean enable = true;
+
+        public boolean isEnable() {
+            return enable;
+        }
+
+        public void setEnable(boolean enable) {
+            this.enable = enable;
         }
     }
 }

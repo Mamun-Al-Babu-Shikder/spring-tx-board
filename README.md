@@ -62,6 +62,57 @@ If your application includes Spring Web, a minimal built-in UI is accessible at:
 
 This dashboard provides a real-time view of transaction activity including filtering, status, execution time, and more.
 
+## Spring Boot Actuator Integration
+
+When Spring Boot Actuator is available, TX Board automatically exposes additional monitoring endpoints:
+
+### Custom Actuator Endpoint
+
+Access comprehensive transaction metrics at:
+> http://localhost:8080/actuator/txboard
+
+Returns JSON with transaction counts, duration metrics, connection statistics, and duration distributions.
+
+### Micrometer Metrics
+
+TX Board automatically registers metrics with Micrometer when available:
+
+- `txboard.transactions.total` - Total number of transactions
+- `txboard.transactions.committed` - Number of committed transactions  
+- `txboard.transactions.rolled_back` - Number of rolled back transactions
+- `txboard.transactions.errored` - Number of errored transactions
+- `txboard.transactions.alarming` - Number of slow transactions
+- `txboard.transactions.duration.total` - Total duration (ms)
+- `txboard.transactions.duration.average` - Average duration (ms)
+- `txboard.connections.acquisitions` - Total connection acquisitions
+- `txboard.connections.occupied_time.total` - Total connection time (ms)
+- `txboard.connections.occupied_time.average` - Average connection time (ms)
+- `txboard.connections.alarming` - Number of long-held connections
+
+Access these at:
+> http://localhost:8080/actuator/metrics/<trx metrics>
+
+Example:
+> http://localhost:8080/actuator/metrics/txboard.transactions.total
+
+### Configuration
+
+To enable actuator, add the following to your `application.yml` or `application.properties`:
+
+```yaml
+sdlc.pro.spring.tx.board.actuator.enable: true # Enable custom actuator endpoint
+management.endpoints.web.exposure.include: metrics,txboard # Enable actuator and metrics endpoint
+```
+
+**Requirements**: Add `spring-boot-starter-actuator` dependency for actuator integration.
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+
 ## Storage Options
 
 * **IN\_MEMORY** (default): Simple, thread-safe `List` with in-memory counters
