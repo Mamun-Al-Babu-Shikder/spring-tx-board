@@ -169,12 +169,12 @@ public abstract class AbstractConnectionDelegator implements Connection {
 
     @Override
     public PreparedStatement prepareStatement(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return this.connection.prepareStatement(sql, resultSetType, resultSetConcurrency);
+        return this.connection.prepareStatement(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
     public CallableStatement prepareCall(String sql, int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
-        return this.connection.prepareCall(sql, resultSetType, resultSetConcurrency);
+        return this.connection.prepareCall(sql, resultSetType, resultSetConcurrency, resultSetHoldability);
     }
 
     @Override
