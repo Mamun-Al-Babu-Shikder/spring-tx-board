@@ -8,7 +8,7 @@
   ],
   "properties": [
     {
-      "name": "sdlc.pro.spring.tx.board.enable",
+      "name": "sdlc.pro.spring.tx.board.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": true,
       "description": "Enable or disable the transaction board feature."
@@ -20,7 +20,7 @@
       "description": "Storage type for transaction logs. Options: IN_MEMORY, REDIS."
     },
     {
-      "name": "sdlc.pro.spring.tx.board.enable-listener-log",
+      "name": "sdlc.pro.spring.tx.board.enabled-listener-log",
       "type": "java.lang.Boolean",
       "defaultValue": false,
       "description": "Enable logging transaction start/end debug messages."
