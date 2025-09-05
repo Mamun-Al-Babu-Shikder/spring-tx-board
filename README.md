@@ -192,11 +192,7 @@ Spring Boot metadata support for IDE auto-completion is provided via `spring-con
 
 ## Contribution
 
-Pull requests and feedback are welcome!
-
-```
-git clone https://github.com/Mamun-Al-Babu-Shikder/spring-tx-board
-```
+Pull requests and feedback are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Maintainer
 

@@ -61,6 +61,23 @@ mvn test
 
 ---
 
+### Using Local Version
+To use your local version of the library in another project, install it to your local Maven repository:
+
+```bash
+mvn install
+```
+Then add the dependency in your project's `pom.xml`:
+
+```xml
+<dependency>
+   <groupId>com.sdlc.pro</groupId>
+   <artifactId>spring-tx-board</artifactId>
+   <version>${project.version}</version>
+</dependency>
+```
+Change `${project.version}` to the version you built.
+
 ## Coding Standards
 
 * Follow **Java Code Conventions**.
