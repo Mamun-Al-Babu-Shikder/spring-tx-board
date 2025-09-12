@@ -45,8 +45,8 @@ public abstract class AbstractStatementDelegator implements Statement {
     }
 
     @Override
-    public void setEscapeProcessing(boolean enabled) throws SQLException {
-        this.statement.setEscapeProcessing(enabled);
+    public void setEscapeProcessing(boolean enable) throws SQLException {
+        this.statement.setEscapeProcessing(enable);
     }
 
     @Override
