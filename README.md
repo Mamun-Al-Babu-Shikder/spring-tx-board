@@ -48,7 +48,7 @@ sdlc.pro.spring.tx.board:
   enabled: true
   alarming-threshold: 1000
   storage: IN_MEMORY  # or REDIS
-  enabled-listener-log: true
+  enable-listener-log: true
   duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
 ```
 

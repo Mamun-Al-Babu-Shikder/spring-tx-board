@@ -20,7 +20,7 @@
       "description": "Storage type for transaction logs. Options: IN_MEMORY, REDIS."
     },
     {
-      "name": "sdlc.pro.spring.tx.board.enabled-listener-log",
+      "name": "sdlc.pro.spring.tx.board.enable-listener-log",
       "type": "java.lang.Boolean",
       "defaultValue": false,
       "description": "Enable logging transaction start/end debug messages."
