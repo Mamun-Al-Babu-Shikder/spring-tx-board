@@ -45,7 +45,7 @@ Add the following dependency to your `pom.xml`:
 
 ```yaml
 sdlc.pro.spring.tx.board:
-  enable: true
+  enabled: true
   alarming-threshold: 1000
   storage: IN_MEMORY  # or REDIS
   enable-listener-log: true
@@ -82,7 +82,7 @@ Spring Tx Board emits a completion log when a transaction ends. You can choose b
 
 ```yaml
 sdlc.pro.spring.tx.board:
-  enable: true
+  enabled: true
   # select logging style
   log-type: DETAILS   # SIMPLE | DETAILS
   # thresholds used to determine INFO vs WARN
