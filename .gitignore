@@ -4,13 +4,23 @@ target/
 !**/src/test/**/target/
 
 ### IntelliJ IDEA ###
-.idea/modules.xml
-.idea/jarRepositories.xml
-.idea/compiler.xml
-.idea/libraries/
+.idea
 *.iws
 *.iml
 *.ipr
+
+# optionally,ignore workspace-specific files
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries/
+.idea/vcs.xml
+.idea/scopes/
+.idea/caches/
+.idea/libraries/
+.idea/modules.xml
+.idea/jarRepositories.xml
+.idea/compiler.xml
+
 out/
 
 ### Eclipse ###
