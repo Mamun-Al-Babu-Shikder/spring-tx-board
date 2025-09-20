@@ -8,7 +8,7 @@
   ],
   "properties": [
     {
-      "name": "sdlc.pro.spring.tx.board.enable",
+      "name": "sdlc.pro.spring.tx.board.enabled",
       "type": "java.lang.Boolean",
       "defaultValue": true,
       "description": "Enable or disable the transaction board feature."
