@@ -10,6 +10,8 @@ import integration.entity.Order;
 import integration.entity.Product;
 import integration.entity.User;
 import integration.listener.TestTransactionLogListener;
+import integration.repository.OrderRepository;
+import integration.repository.OutboxMessageRepository;
 import integration.repository.ProductRepository;
 import integration.repository.UserRepository;
 import integration.service.OrderService;
@@ -43,6 +45,12 @@ public class TransactionalAnnotatedIntegrationTest {
     private ProductRepository productRepository;
 
     @Autowired
+    private OrderRepository orderRepository;
+
+    @Autowired
+    private OutboxMessageRepository outboxMessageRepository;
+
+    @Autowired
     private OrderService orderService;
 
     @Autowired
@@ -59,6 +67,10 @@ public class TransactionalAnnotatedIntegrationTest {
 
     @AfterEach
     void cleanup() {
+        orderRepository.deleteAll();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
+        outboxMessageRepository.deleteAll();
         logListener.clear();
     }
 
