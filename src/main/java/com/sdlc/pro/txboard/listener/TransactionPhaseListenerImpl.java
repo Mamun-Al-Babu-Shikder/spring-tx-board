@@ -181,7 +181,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         return base + "  • Inner Transactions:\n" + formatNestedTransactions(txLog);
     }
 
-    public static String formatNestedTransactions(TransactionLog txLog) {
+    private static String formatNestedTransactions(TransactionLog txLog) {
         StringBuilder nestedTx = new StringBuilder();
         appendChildren(txLog, nestedTx, "    ");
         return nestedTx.toString();
@@ -248,19 +248,19 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     }
 
 
-    public int onConnectionAcquired() {
+    private int onConnectionAcquired() {
         int count = activeConnectionCount.get() + 1;
         activeConnectionCount.set(count);
         return count;
     }
 
-    public int onConnectionReleased() {
+    private int onConnectionReleased() {
         int count = activeConnectionCount.get();
         activeConnectionCount.set(count - 1);
         return count;
     }
 
-    public boolean hasActiveConnection() {
+    private boolean hasActiveConnection() {
         return activeConnectionCount.get() > 0;
     }
 

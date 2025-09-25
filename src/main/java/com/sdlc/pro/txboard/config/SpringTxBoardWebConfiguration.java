@@ -26,7 +26,7 @@ import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 import java.util.Map;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({WebMvcConfigurer.class, HttpRequestHandler.class})
+@ConditionalOnClass({WebMvcConfigurer.class, HttpRequestHandler.class, ObjectMapper.class})
 public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
     private static final int ORDER = 0;
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardWebConfiguration.class);
