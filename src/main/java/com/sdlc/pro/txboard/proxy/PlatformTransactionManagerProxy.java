@@ -1,10 +1,8 @@
 package com.sdlc.pro.txboard.proxy;
 
 import com.sdlc.pro.txboard.listener.TransactionPhaseListener;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionException;
-import org.springframework.transaction.TransactionStatus;
+import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.transaction.*;
 
 public class PlatformTransactionManagerProxy implements PlatformTransactionManager {
     private final PlatformTransactionManager transactionManager;
@@ -32,9 +30,23 @@ public class PlatformTransactionManagerProxy implements PlatformTransactionManag
     public void commit(TransactionStatus status) throws TransactionException {
         try {
             this.transactionManager.commit(status);
-            this.transactionPhaseListener.afterCommit();
+            if (status.isRollbackOnly()) {
+                this.transactionPhaseListener.afterRollback();
+            } else {
+                this.transactionPhaseListener.afterCommit();
+            }
+        } catch (UnexpectedRollbackException exception) {
+            this.transactionPhaseListener.afterRollback();
+            throw exception;
+        } catch (TransactionException | UncategorizedDataAccessException exception) {
+            this.transactionPhaseListener.errorOccurredAtTransactionPhase(exception);
+            throw exception;
+        } catch (RuntimeException | Error e) {
+            this.transactionPhaseListener.afterRollback();
+            throw e;
         } catch (Throwable throwable) {
             this.transactionPhaseListener.errorOccurredAtTransactionPhase(throwable);
+            throw throwable;
         }
     }
 
@@ -45,6 +57,7 @@ public class PlatformTransactionManagerProxy implements PlatformTransactionManag
             this.transactionPhaseListener.afterRollback();
         } catch (Throwable throwable) {
             this.transactionPhaseListener.errorOccurredAtTransactionPhase(throwable);
+            throw throwable;
         }
     }
 }
