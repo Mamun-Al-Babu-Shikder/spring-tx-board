@@ -28,11 +28,20 @@ public class TransactionLog implements Serializable {
     private final List<TransactionEvent> events;
     private final boolean alarmingTransaction;
     private final Boolean havingAlarmingConnection;
+    private final boolean nPlusOneDetected;
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold) {
+        this(txId, method, propagation, isolation, startTime, endTime, connectionSummary, status, thread, executedQuires, child, events, txAlarmingThreshold, false);
+    }
+
+    public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
+                          Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
+                          TransactionPhaseStatus status, String thread, List<String> executedQuires,
+                          List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
+                          boolean nPlusOneDetected) {
         this.txId = txId;
         this.method = method;
         this.propagation = propagation;
@@ -50,6 +59,7 @@ public class TransactionLog implements Serializable {
         this.alarmingTransaction = this.duration > txAlarmingThreshold;
         this.havingAlarmingConnection = this.connectionSummary != null ?
                 this.connectionSummary.alarmingConnectionCount() > 0 : null;
+        this.nPlusOneDetected = nPlusOneDetected;
     }
 
     public Integer getTxId() {
@@ -134,5 +144,9 @@ public class TransactionLog implements Serializable {
         }
 
         return !this.alarmingTransaction && !this.havingAlarmingConnection;
+    }
+
+    public boolean isNPlusOneDetected() {
+        return nPlusOneDetected;
     }
 }

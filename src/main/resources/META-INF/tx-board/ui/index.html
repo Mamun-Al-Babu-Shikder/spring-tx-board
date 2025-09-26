@@ -220,6 +220,7 @@
                                     Thread <i class="fas fa-sort"></i>
                                 </th>
                                 <th>SQL Count</th>
+                                <th>N+1</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -305,6 +306,10 @@
                         <div class="detail-item">
                             <label>Total Queries:</label>
                             <span id="detailTotalQueries">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>N+1 Detected:</label>
+                            <span id="detailNPlusOne" class="badge">-</span>
                         </div>
                     </div>
                 </div>
