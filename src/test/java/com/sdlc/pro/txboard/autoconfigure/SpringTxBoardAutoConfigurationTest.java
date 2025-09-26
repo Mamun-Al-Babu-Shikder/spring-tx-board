@@ -73,7 +73,7 @@ class SpringTxBoardAutoConfigurationTest {
     void shouldCreateTransactionPhaseListenerWithoutWebContextIfNotConfigured() {
         contextRunner
                 .withPropertyValues("sdlc.pro.spring.tx.board.enable=true")
-                .withClassLoader(new FilteredClassLoader(ObjectMapper.class, WebMvcConfigurer.class, HttpRequestHandler.class))
+                .withClassLoader(new FilteredClassLoader(WebMvcConfigurer.class))
                 .run(context -> assertThat(context).hasBean("sdlcProTxPhaseListener"));
     }
 
