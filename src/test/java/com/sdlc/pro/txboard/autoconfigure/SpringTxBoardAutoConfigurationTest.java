@@ -3,10 +3,6 @@ package com.sdlc.pro.txboard.autoconfigure;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdlc.pro.txboard.config.SpringTxBoardWebConfiguration;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
-import com.sdlc.pro.txboard.handler.AlarmingThresholdHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionSummaryHttpHandler;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
@@ -22,11 +18,7 @@ import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.HttpRequestHandler;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
-
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -122,21 +114,6 @@ class SpringTxBoardAutoConfigurationTest {
 
                 TransactionLogRepository repo = context.getBean(TransactionLogRepository.class);
                 assertThat(logListener).extracting("repository").isEqualTo(repo);
-            });
-        }
-
-        @Test
-        void shouldCreateHandlerMappingWithAPIsHandler() {
-            contextRunner.run(context -> {
-                HandlerMapping handlerMapping = context.getBean("sdlcProTxBoardRestHandlerMapping", HandlerMapping.class);
-                assertThat(handlerMapping).isNotNull();
-                assertThat(handlerMapping).isInstanceOf(SimpleUrlHandlerMapping.class);
-                Map<String, Object> urlMap = ((SimpleUrlHandlerMapping) handlerMapping).getHandlerMap();
-
-                assertThat(urlMap.get("/api/spring-tx-board/config/alarming-threshold")).isInstanceOf(AlarmingThresholdHttpHandler.class);
-                assertThat(urlMap.get("/api/spring-tx-board/tx-summary")).isInstanceOf(TransactionSummaryHttpHandler.class);
-                assertThat(urlMap.get("/api/spring-tx-board/tx-logs")).isInstanceOf(TransactionLogsHttpHandler.class);
-                assertThat(urlMap.get("/api/spring-tx-board/tx-charts")).isInstanceOf(TransactionChartHttpHandler.class);
             });
         }
     }

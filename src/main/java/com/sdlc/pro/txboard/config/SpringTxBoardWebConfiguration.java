@@ -1,10 +1,6 @@
 package com.sdlc.pro.txboard.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sdlc.pro.txboard.handler.AlarmingThresholdHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionSummaryHttpHandler;
+import com.sdlc.pro.txboard.controller.SpringTxBoardController;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
@@ -16,19 +12,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.web.HttpRequestHandler;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
-
-import java.util.Map;
 
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({WebMvcConfigurer.class, HttpRequestHandler.class, ObjectMapper.class})
+@ConditionalOnClass({WebMvcConfigurer.class, HttpRequestHandler.class})
+@Import(SpringTxBoardController.class)
 public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
-    private static final int ORDER = 0;
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardWebConfiguration.class);
 
     @Bean("sdlcProSpringTxLogRepository")
@@ -46,18 +39,6 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
     @Bean("sdlcProTransactionLogPersistenceListener")
     public TransactionLogListener transactionLogPersistenceListener(TransactionLogRepository transactionLogRepository) {
         return new TransactionLogPersistenceListener(transactionLogRepository);
-    }
-
-    @Bean("sdlcProTxBoardRestHandlerMapping")
-    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper,
-                                                    TxBoardProperties txBoardProperties,
-                                                    TransactionLogRepository transactionLogRepository) {
-        return new SimpleUrlHandlerMapping(Map.of(
-                "/api/spring-tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties.getAlarmingThreshold()),
-                "/api/spring-tx-board/tx-summary", new TransactionSummaryHttpHandler(objectMapper, transactionLogRepository),
-                "/api/spring-tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository),
-                "/api/spring-tx-board/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository)
-        ), ORDER);
     }
 
     @Override
