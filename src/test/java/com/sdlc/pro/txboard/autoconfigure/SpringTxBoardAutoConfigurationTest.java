@@ -42,10 +42,31 @@ class SpringTxBoardAutoConfigurationTest {
     }
 
     @Test
+    void shouldCreateTxBoardPropertiesWhenPropertyMissing() {
+        // Test matchIfMissing = true behavior
+        contextRunner
+                .run(context -> assertThat(context).hasSingleBean(TxBoardProperties.class));
+    }
+
+    @Test
+    void shouldNotCreateTxBoardPropertiesWhenDisabled() {
+        contextRunner
+                .withPropertyValues("sdlc.pro.spring.tx.board.enable=false")
+                .run(context -> assertThat(context).doesNotHaveBean(TxBoardProperties.class));
+    }
+
+    @Test
     void shouldCreateTransactionPhaseListenerWhenEnabled() {
         contextRunner
                 .withPropertyValues("sdlc.pro.spring.tx.board.enable=true")
                 .run(context -> assertThat(context).hasBean("sdlcProTxPhaseListener"));
+    }
+
+    @Test
+    void shouldNotCreateTransactionPhaseListenerWhenDisabled() {
+        contextRunner
+                .withPropertyValues("sdlc.pro.spring.tx.board.enable=false")
+                .run(context -> assertThat(context).doesNotHaveBean("sdlcProTxPhaseListener"));
     }
 
     @Test
@@ -54,6 +75,13 @@ class SpringTxBoardAutoConfigurationTest {
                 .withPropertyValues("sdlc.pro.spring.tx.board.enable=true")
                 .withClassLoader(new FilteredClassLoader(ObjectMapper.class, WebMvcConfigurer.class, HttpRequestHandler.class))
                 .run(context -> assertThat(context).hasBean("sdlcProTxPhaseListener"));
+    }
+
+    @Test
+    void shouldNotCreateWebConfigurationWhenDisabled() {
+        contextRunner
+                .withPropertyValues("sdlc.pro.spring.tx.board.enable=false")
+                .run(context -> assertThat(context).doesNotHaveBean(SpringTxBoardWebConfiguration.class));
     }
 
     @Nested
@@ -65,6 +93,13 @@ class SpringTxBoardAutoConfigurationTest {
             contextRunner
                     .withPropertyValues("sdlc.pro.spring.tx.board.enable=true")
                     .run(context -> assertThat(context).hasSingleBean(SpringTxBoardWebConfiguration.class));
+        }
+
+        @Test
+        void shouldNotCreateSpringTxBoardWebConfigurationWhenDisabled() {
+            contextRunner
+                    .withPropertyValues("sdlc.pro.spring.tx.board.enable=false")
+                    .run(context -> assertThat(context).doesNotHaveBean(SpringTxBoardWebConfiguration.class));
         }
 
         @Test
