@@ -371,7 +371,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             for (TransactionLog c : child) {
                 allQueries.addAll(c.getExecutedQuires());
             }
-            boolean nPlusOne = new NPlusOneAnalyzer().detectPotentialNPlusOne(allQueries);
+            boolean nPlusOne = NPlusOneAnalyzer.detectPotentialNPlusOne(allQueries);
 
             return new TransactionLog(
                     this.txId,
