@@ -57,28 +57,50 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
                                                     TxBoardProperties txBoardProperties,
                                                     TransactionLogRepository transactionLogRepository) {
         // Prefer a Jackson2ObjectMapperBuilder when available so we respect user customizations
-        // (modules, property naming strategies, etc). Otherwise use any ObjectMapper bean or
-        // create a default one.
+        // (modules, property naming strategies, etc). Otherwise clone the app's ObjectMapper
+        // when present (so we don't mutate it), or create a fresh one.
         Jackson2ObjectMapperBuilder builder = builderProvider.getIfAvailable();
-        ObjectMapper objectMapper = (builder != null)
-                ? builder.build()
-                : objectMapperProvider.getIfAvailable(ObjectMapper::new);
-
-        // Best-effort: register available modules (including JSR-310) and prefer ISO-8601
-        try {
-            objectMapper.findAndRegisterModules();
-            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            try {
-                Class.forName("com.fasterxml.jackson.datatype.jsr310.JavaTimeModule");
-            } catch (ClassNotFoundException e) {
-                objectMapper.registerModule(new TxBoardFallbackJavaTimeModule());
-                log.info("SpringTxBoard: registered fallback TxBoardFallbackJavaTimeModule because jackson-datatype-jsr310 was not found on the classpath");
+        ObjectMapper objectMapper;
+        if (builder != null) {
+            objectMapper = builder.build();
+        } else {
+            ObjectMapper provided = objectMapperProvider.getIfAvailable();
+            if (provided != null) {
+                try {
+                    // clone the provided mapper so we don't mutate application configuration
+                    objectMapper = provided.copy();
+                    log.debug("SpringTxBoard: cloned application ObjectMapper for local use");
+                } catch (UnsupportedOperationException ex) {
+                    // copy not supported: create a fresh mapper and attempt to register modules
+                    objectMapper = new ObjectMapper();
+                    try {
+                        objectMapper.findAndRegisterModules();
+                        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+                    } catch (Exception ignored) {
+                        // best-effort only
+                    }
+                    log.debug("SpringTxBoard: could not clone application ObjectMapper; using a fresh mapper instead");
+                }
+            } else {
+                objectMapper = new ObjectMapper();
             }
-        } catch (NoClassDefFoundError | Exception ignored) {
-            // ignore - best-effort only
         }
 
-        return new SimpleUrlHandlerMapping(Map.of(
+         // Best-effort: register available modules (including JSR-310) and prefer ISO-8601
+         try {
+             objectMapper.findAndRegisterModules();
+             objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+             try {
+                 Class.forName("com.fasterxml.jackson.datatype.jsr310.JavaTimeModule");
+             } catch (ClassNotFoundException e) {
+                 objectMapper.registerModule(new TxBoardFallbackJavaTimeModule());
+                 log.info("SpringTxBoard: registered fallback TxBoardFallbackJavaTimeModule because jackson-datatype-jsr310 was not found on the classpath");
+             }
+         } catch (NoClassDefFoundError | Exception ignored) {
+             // ignore - best-effort only
+         }
+
+         return new SimpleUrlHandlerMapping(Map.of(
                 "/api/spring-tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties.getAlarmingThreshold()),
                 "/api/spring-tx-board/tx-summary", new TransactionSummaryHttpHandler(objectMapper, transactionLogRepository),
                 "/api/spring-tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository),
