@@ -487,8 +487,13 @@ $(document).ready(() => {
         const rolledBackTx = txSummary.rolledBackCount
         const erroredTx = txSummary.erroredCount
 
+        let displaySuccessRate = "N/A"
+        if (!isNaN(successRate)) {
+            displaySuccessRate = `${successRate.toFixed(2)}%`
+        }
+
         $("#totalTransactions").text(totalTx)
-        $("#successRate").text(successRate.toFixed(2) + "%")
+        $("#successRate").text(displaySuccessRate)
         $("#committedCount").text(committedTx)
         $("#rolledBackErroredCount").text(rolledBackTx + " / " + erroredTx)
         $("#avgDuration").text(formatDuration(txSummary.averageDuration))
