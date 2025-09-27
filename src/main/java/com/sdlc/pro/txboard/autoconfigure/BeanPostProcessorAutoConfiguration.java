@@ -17,7 +17,7 @@ import javax.sql.DataSource;
         value = "com.sdlc.pro.txboard.autoconfigure.BeanPostProcessorAutoConfiguration",
         before = SpringTxBoardAutoConfiguration.class
 )
-@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class BeanPostProcessorAutoConfiguration implements BeanPostProcessor, ApplicationContextAware {
     private ApplicationContext applicationContext;
 
