@@ -1,6 +1,5 @@
 package com.sdlc.pro.txboard.autoconfigure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdlc.pro.txboard.config.SpringTxBoardWebConfiguration;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
@@ -13,19 +12,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.web.HttpRequestHandler;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SpringTxBoardAutoConfigurationTest {
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(SpringTxBoardAutoConfiguration.class))
-            .withBean(ObjectMapper.class, ObjectMapper::new);
+    private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(SpringTxBoardAutoConfiguration.class));
 
     @Test
     void shouldNotAutoConfigWhenPlatformTransactionManagerClassMissing() {

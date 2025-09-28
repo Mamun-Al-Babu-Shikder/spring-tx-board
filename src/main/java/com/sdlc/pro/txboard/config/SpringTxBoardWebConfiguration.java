@@ -8,20 +8,28 @@ import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.web.HttpRequestHandler;
+import org.springframework.http.CacheControl;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
+import org.springframework.web.reactive.function.server.RouterFunction;
+import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.net.URI;
+
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
+import static org.springframework.web.reactive.function.server.RouterFunctions.route;
+
 @Configuration(proxyBeanMethods = false)
-@ConditionalOnClass({WebMvcConfigurer.class, HttpRequestHandler.class})
+@ConditionalOnWebApplication
 @Import(SpringTxBoardController.class)
-public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
+public class SpringTxBoardWebConfiguration {
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardWebConfiguration.class);
 
     @Bean("sdlcProSpringTxLogRepository")
@@ -41,15 +49,36 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
         return new TransactionLogPersistenceListener(transactionLogRepository);
     }
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/tx-board/ui/**")
-                .addResourceLocations("classpath:/META-INF/tx-board/ui/")
-                .setCachePeriod(0);
+    @Configuration
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public static class WebMvcConfig implements WebMvcConfigurer {
+        @Override
+        public void addResourceHandlers(ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/tx-board/ui/**")
+                    .addResourceLocations("classpath:/META-INF/tx-board/ui/")
+                    .setCachePeriod(0);
+        }
+
+        @Override
+        public void addViewControllers(ViewControllerRegistry registry) {
+            registry.addRedirectViewController("/tx-board/ui", "/tx-board/ui/index.html");
+        }
     }
 
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/tx-board/ui", "/tx-board/ui/index.html");
+    @Configuration
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
+    public static class WebFluxConfig implements WebFluxConfigurer {
+        @Override
+        public void addResourceHandlers(org.springframework.web.reactive.config.ResourceHandlerRegistry registry) {
+            registry.addResourceHandler("/tx-board/ui/**")
+                    .addResourceLocations("classpath:/META-INF/tx-board/ui/")
+                    .setCacheControl(CacheControl.noCache());
+        }
+
+        @Bean
+        public RouterFunction<ServerResponse> redirectUI() {
+            return route(GET("/tx-board/ui"),
+                    req -> ServerResponse.permanentRedirect(URI.create("/tx-board/ui/index.html")).build());
+        }
     }
 }
