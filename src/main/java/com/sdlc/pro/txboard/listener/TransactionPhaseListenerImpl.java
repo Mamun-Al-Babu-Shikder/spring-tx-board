@@ -7,6 +7,7 @@ import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.ConnectionSummary;
 import com.sdlc.pro.txboard.model.TransactionEvent;
 import com.sdlc.pro.txboard.model.TransactionLog;
+import com.sdlc.pro.txboard.util.NPlusOneAnalyzer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.TransactionDefinition;
@@ -128,20 +129,25 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
             int acquiredConnections = getConnectionAcquiredCount(txLog);
 
+            boolean nPlusOne = txLog.isNPlusOneDetected();
             if (detailedLoggingEnabled) {
                 String message = buildDetailedLogMessage(txLog, acquiredConnections);
-                if (healthyTransaction) {
+                if (healthyTransaction && !nPlusOne) {
                     log.info("{}", message);
                 } else {
                     log.warn("{}", message);
                 }
             } else {
-                if (healthyTransaction) {
+                if (healthyTransaction && !nPlusOne) {
                     log.info("Transaction [{}] took {} ms, Status: {}", txLog.getMethod(), txLog.getDuration(), txLog.getStatus());
                 } else {
                     log.warn("Transaction [{}] took {} ms, Status: {}, Connections: {}, Queries: {}",
                             txLog.getMethod(), txLog.getDuration(), txLog.getStatus(), acquiredConnections, txLog.getTotalQueryCount());
                 }
+            }
+
+            if (nPlusOne) {
+                log.warn("[TX-Board] Potential N+1 query pattern detected in transaction [{}]. Repeated child queries observed.", txLog.getMethod());
             }
 
             this.publishTransactionLogToListeners(txLog);
@@ -360,6 +366,13 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
             ConnectionSummary connectionSummary = this.isMostParent ? getConnectionRelatedInfo() : null;
 
+            // Aggregate executed queries from this node and children for N+1 analysis
+            List<String> allQueries = new LinkedList<>(this.executedQuires);
+            for (TransactionLog c : child) {
+                allQueries.addAll(c.getExecutedQuires());
+            }
+            boolean nPlusOne = NPlusOneAnalyzer.detectPotentialNPlusOne(allQueries);
+
             return new TransactionLog(
                     this.txId,
                     this.methodName,
@@ -373,7 +386,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     executedQuires,
                     child,
                     events,
-                    this.alarmingThreshold.getTransaction()
+                    this.alarmingThreshold.getTransaction(),
+                    nPlusOne
             );
         }
 
