@@ -170,6 +170,14 @@ public class OrderService {
 
 No additional annotations or API calls required.
 
+## Using the demo project for development
+
+You can use the community demo project at `https://github.com/jamilxt/tx-board-banking-demo.git` to develop and test
+changes to this library quickly. The demo is a small Spring Boot application that integrates `spring-tx-board` so you can
+see the UI, logs, and transaction traces locally.
+
+Follow the demo project's `README.md` for setup and usage instructions: https://github.com/jamilxt/tx-board-banking-demo.git
+
 ## Utilities
 
 ### Duration Distribution
