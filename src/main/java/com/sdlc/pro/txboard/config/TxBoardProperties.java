@@ -7,7 +7,7 @@ import java.util.List;
 
 @ConfigurationProperties(prefix = "sdlc.pro.spring.tx.board")
 public class TxBoardProperties {
-    private boolean enable = true;
+    private boolean enabled = true;
     private AlarmingThreshold alarmingThreshold = new AlarmingThreshold();
     private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
@@ -15,11 +15,11 @@ public class TxBoardProperties {
     private LogType logType = LogType.SIMPLE;
 
     public boolean isEnable() {
-        return enable;
+        return enabled;
     }
 
-    public void setEnable(boolean enable) {
-        this.enable = enable;
+    public void setEnable(boolean enabled) {
+        this.enabled = enabled;
     }
 
     public AlarmingThreshold getAlarmingThreshold() {

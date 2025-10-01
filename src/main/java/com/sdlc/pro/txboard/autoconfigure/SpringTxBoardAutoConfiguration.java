@@ -22,7 +22,7 @@ import java.util.List;
 @ConditionalOnClass(PlatformTransactionManager.class)
 @EnableConfigurationProperties(TxBoardProperties.class)
 @Import({SpringTxBoardWebConfiguration.class})
-@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enable", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SpringTxBoardAutoConfiguration {
 
     @Bean("sdlcProTxPhaseListener")
