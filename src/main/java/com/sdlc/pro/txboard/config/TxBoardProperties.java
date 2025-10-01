@@ -14,11 +14,11 @@ public class TxBoardProperties {
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
     private LogType logType = LogType.SIMPLE;
 
-    public boolean isEnable() {
+    public boolean isEnabled() {
         return enabled;
     }
 
-    public void setEnable(boolean enabled) {
+    public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
 
