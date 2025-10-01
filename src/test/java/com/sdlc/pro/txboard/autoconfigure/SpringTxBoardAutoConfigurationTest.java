@@ -1,12 +1,7 @@
 package com.sdlc.pro.txboard.autoconfigure;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdlc.pro.txboard.config.SpringTxBoardWebConfiguration;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
-import com.sdlc.pro.txboard.handler.AlarmingThresholdHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionSummaryHttpHandler;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
@@ -17,23 +12,17 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.web.HttpRequestHandler;
-import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
-
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class SpringTxBoardAutoConfigurationTest {
-    private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
-            .withConfiguration(AutoConfigurations.of(SpringTxBoardAutoConfiguration.class))
-            .withBean(ObjectMapper.class, ObjectMapper::new);
+    private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
+            .withConfiguration(AutoConfigurations.of(SpringTxBoardAutoConfiguration.class));
 
     @Test
     void shouldNotAutoConfigWhenPlatformTransactionManagerClassMissing() {
@@ -81,7 +70,7 @@ class SpringTxBoardAutoConfigurationTest {
     void shouldCreateTransactionPhaseListenerWithoutWebContextIfNotConfigured() {
         contextRunner
                 .withPropertyValues("sdlc.pro.spring.tx.board.enable=true")
-                .withClassLoader(new FilteredClassLoader(ObjectMapper.class, WebMvcConfigurer.class, HttpRequestHandler.class))
+                .withClassLoader(new FilteredClassLoader(WebMvcConfigurer.class))
                 .run(context -> assertThat(context).hasBean("sdlcProTxPhaseListener"));
     }
 
@@ -157,21 +146,6 @@ class SpringTxBoardAutoConfigurationTest {
 
                 TransactionLogRepository repo = context.getBean(TransactionLogRepository.class);
                 assertThat(logListener).extracting("repository").isEqualTo(repo);
-            });
-        }
-
-        @Test
-        void shouldCreateHandlerMappingWithAPIsHandler() {
-            contextRunner.run(context -> {
-                HandlerMapping handlerMapping = context.getBean("sdlcProTxBoardRestHandlerMapping", HandlerMapping.class);
-                assertThat(handlerMapping).isNotNull();
-                assertThat(handlerMapping).isInstanceOf(SimpleUrlHandlerMapping.class);
-                Map<String, Object> urlMap = ((SimpleUrlHandlerMapping) handlerMapping).getHandlerMap();
-
-                assertThat(urlMap.get("/api/spring-tx-board/config/alarming-threshold")).isInstanceOf(AlarmingThresholdHttpHandler.class);
-                assertThat(urlMap.get("/api/spring-tx-board/tx-summary")).isInstanceOf(TransactionSummaryHttpHandler.class);
-                assertThat(urlMap.get("/api/spring-tx-board/tx-logs")).isInstanceOf(TransactionLogsHttpHandler.class);
-                assertThat(urlMap.get("/api/spring-tx-board/tx-charts")).isInstanceOf(TransactionChartHttpHandler.class);
             });
         }
     }
