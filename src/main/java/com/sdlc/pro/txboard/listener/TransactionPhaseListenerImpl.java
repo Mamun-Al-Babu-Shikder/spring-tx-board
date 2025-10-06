@@ -96,7 +96,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     @Override
     public void executedQuery(String query) {
-        if (hasActiveConnection()) {
+        if (hasActiveTransaction()) {
             currentTransactionInfo().ifPresent(txInfo -> {
                 if (txInfo.isMostParent() && txInfo.isCompleted()) {
                     txInfo.addPostTransactionQuery(query);
