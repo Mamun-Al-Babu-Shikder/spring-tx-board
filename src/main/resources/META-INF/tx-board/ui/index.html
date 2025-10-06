@@ -271,6 +271,7 @@
                     <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection Summary</button>
                     <button class="tab-btn" data-tab="sql">SQL Queries</button>
                     <button class="tab-btn" data-tab="children">Child Transactions</button>
+                    <button class="tab-btn" data-tab="post-tx-quires" id="postTxQuiresTab">Post Transactions Queries</button>
                 </div>
 
                 <div class="tab-content active" id="overview">
@@ -371,6 +372,18 @@
                         </div>
                         <div class="children-tree" id="childrenTree">
                             <!-- Child transactions will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="post-tx-quires">
+                    <div class="sql-container">
+                        <div class="sql-header">
+                            <h4>Executed SQL Queries</h4>
+                            <span id="postTxSqlCount" class="badge badge-info">0 queries</span>
+                        </div>
+                        <div class="sql-list" id="postTxSqlList">
+                            <!-- Post transaction SQL queries will be populated here -->
                         </div>
                     </div>
                 </div>

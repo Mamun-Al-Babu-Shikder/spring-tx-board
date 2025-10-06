@@ -14,7 +14,10 @@ import org.springframework.transaction.TransactionDefinition;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sdlc.pro.txboard.config.TxBoardProperties.AlarmingThreshold;
@@ -94,7 +97,13 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     @Override
     public void executedQuery(String query) {
         if (hasActiveConnection()) {
-            currentTransactionInfo().ifPresent(txInfo -> txInfo.addExecutedQuery(query));
+            currentTransactionInfo().ifPresent(txInfo -> {
+                if (txInfo.isMostParent() && txInfo.isCompleted()) {
+                    txInfo.addPostTransactionQuery(query);
+                } else {
+                    txInfo.addExecutedQuery(query);
+                }
+            });
         }
     }
 
@@ -160,16 +169,16 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     private static String buildDetailedLogMessage(TransactionLog txLog, int acquiredConnections) {
         String base = """
-            [TX-Board] Transaction Completed:
-              • ID: %s
-              • Method: %s
-              • Status: %s
-              • Duration: %d ms
-              • Connections Acquired: %d
-              • Queries Executed: %d
-              • Started At: %s
-              • Ended At: %s
-            """.formatted(
+                [TX-Board] Transaction Completed:
+                  • ID: %s
+                  • Method: %s
+                  • Status: %s
+                  • Duration: %d ms
+                  • Connections Acquired: %d
+                  • Queries Executed: %d
+                  • Started At: %s
+                  • Ended At: %s
+                """.formatted(
                 txLog.getTxId(),
                 txLog.getMethod(),
                 txLog.getStatus(),
@@ -208,8 +217,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     .append(child.getMethod())
                     .append(" (")
                     .append(child.getDuration())
-                        .append(" ms, ")
-                        .append(child.getStatus())
+                    .append(" ms, ")
+                    .append(child.getStatus())
                     .append(")\n");
 
             String childPrefix = prefix + (last ? "    " : "│   ");
@@ -304,6 +313,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         private final List<String> executedQuires;
         private final List<TransactionEvent> events;
         private final AlarmingThreshold alarmingThreshold;
+        private final List<String> postTransactionQuires;
 
         public TransactionInfo(String methodName, PropagationBehavior propagation, IsolationLevel isolation,
                                AlarmingThreshold alarmingThreshold, boolean isMostParent) {
@@ -317,6 +327,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             this.executedQuires = new LinkedList<>();
             this.events = this.isMostParent ? new LinkedList<>() : null;
             this.alarmingThreshold = alarmingThreshold;
+            this.postTransactionQuires = this.isMostParent ? new LinkedList<>() : null;
         }
 
         public String getMethodName() {
@@ -359,6 +370,10 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             return this.isMostParent;
         }
 
+        public void addPostTransactionQuery(String query) {
+            this.postTransactionQuires.add(query);
+        }
+
         public TransactionLog toTransactionLog() {
             List<TransactionLog> child = this.child.stream()
                     .map(TransactionInfo::toTransactionLog)
@@ -387,7 +402,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     child,
                     events,
                     this.alarmingThreshold.getTransaction(),
-                    nPlusOne
+                    nPlusOne,
+                    this.postTransactionQuires
             );
         }
 

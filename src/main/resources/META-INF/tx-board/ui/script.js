@@ -613,6 +613,39 @@ $(document).ready(() => {
             })
         }
 
+        const postTxQuiresTab = $("#postTxQuiresTab")
+        if (depth === 0) {
+            postTxQuiresTab.show()
+            // Build post transaction quires events
+            const queries = tx.postTransactionQuires || []
+            $("#postTxSqlCount").text(`${queries.length} queries`)
+            const postTxSqlList = $("#postTxSqlList")
+            postTxSqlList.empty()
+
+            if (queries.length === 0) {
+                postTxSqlList.append('<p style="color: #64748b; text-align: center; padding: 20px;">No post transaction SQL queries executed</p>')
+            } else {
+                queries.forEach((sql, index) => {
+                    const sqlItem = `
+                    <div class="sql-item">
+                        <div class="sql-index">Query #${index + 1}</div>
+                        <div class="sql-query">${sql}</div>
+                    </div>
+                `
+                    postTxSqlList.append(sqlItem)
+                })
+            }
+        } else {
+            postTxQuiresTab.hide()
+            // If post transaction quires tab was active, switch to overview
+            if (postTxQuiresTab.hasClass("active")) {
+                $(".tab-btn").removeClass("active")
+                $(".tab-content").removeClass("active")
+                $('[data-tab="overview"]').addClass("active")
+                $("#overview").addClass("active")
+            }
+        }
+
         $("#transactionModal").show()
     }
 
