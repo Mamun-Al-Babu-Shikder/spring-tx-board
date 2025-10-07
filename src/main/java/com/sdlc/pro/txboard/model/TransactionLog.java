@@ -29,19 +29,22 @@ public class TransactionLog implements Serializable {
     private final boolean alarmingTransaction;
     private final Boolean havingAlarmingConnection;
     private final boolean nPlusOneDetected;
+    private final List<String> postTransactionQuires;
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold) {
-        this(txId, method, propagation, isolation, startTime, endTime, connectionSummary, status, thread, executedQuires, child, events, txAlarmingThreshold, false);
+        this(txId, method, propagation, isolation, startTime, endTime, connectionSummary, status, thread,
+                executedQuires, child, events, txAlarmingThreshold, false,
+                txId == null ? null : List.of());
     }
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
-                          boolean nPlusOneDetected) {
+                          boolean nPlusOneDetected, List<String> postTransactionQuires) {
         this.txId = txId;
         this.method = method;
         this.propagation = propagation;
@@ -60,6 +63,7 @@ public class TransactionLog implements Serializable {
         this.havingAlarmingConnection = this.connectionSummary != null ?
                 this.connectionSummary.alarmingConnectionCount() > 0 : null;
         this.nPlusOneDetected = nPlusOneDetected;
+        this.postTransactionQuires = postTransactionQuires;
     }
 
     public Integer getTxId() {
@@ -148,5 +152,9 @@ public class TransactionLog implements Serializable {
 
     public boolean isNPlusOneDetected() {
         return nPlusOneDetected;
+    }
+
+    public List<String> getPostTransactionQuires() {
+        return postTransactionQuires;
     }
 }
