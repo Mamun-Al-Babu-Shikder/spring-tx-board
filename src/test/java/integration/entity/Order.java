@@ -1,5 +1,6 @@
 package integration.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -10,6 +11,7 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnoreProperties("orders")
     @ManyToOne(fetch = FetchType.LAZY)
     private User user;
 

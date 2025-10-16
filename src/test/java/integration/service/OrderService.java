@@ -10,6 +10,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
@@ -30,13 +31,13 @@ public class OrderService {
     private OutboxMessageService outboxMessageService;
 
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void placeOrder(Order order) {
         productService.deductStock(order.getProduct().getId(), order.getQuantity());
         orderRepository.save(order);
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
     public void placeOrderWithAwareUser(Order order) {
         OutboxMessage outboxMessage = new OutboxMessage();
         outboxMessage.setTopic("order.product");
@@ -56,7 +57,7 @@ public class OrderService {
     }
 
 
-    @Transactional(transactionManager = "jdbcTransactionManager")
+    @Transactional(transactionManager = "jdbcTransactionManager", isolation = Isolation.REPEATABLE_READ)
     public void placeOrderWithNestedUserAwareness(Order order) {
         OutboxMessage outboxMessage = new OutboxMessage();
         outboxMessage.setTopic("order.product");

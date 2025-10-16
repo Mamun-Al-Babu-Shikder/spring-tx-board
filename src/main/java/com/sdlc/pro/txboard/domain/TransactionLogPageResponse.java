@@ -33,7 +33,7 @@ public class TransactionLogPageResponse implements Serializable {
         return totalElements;
     }
 
-    public int getNumber() {
+    public int getPage() {
         return pageRequest.getPageNumber();
     }
 
@@ -46,11 +46,11 @@ public class TransactionLogPageResponse implements Serializable {
     }
 
     public boolean hasPrevious() {
-        return getNumber() > 0;
+        return getPage() > 0;
     }
 
     public boolean hasNext() {
-        return getNumber() + 1 < getTotalPages();
+        return getPage() + 1 < getTotalPages();
     }
 
     public boolean isFirst() {
