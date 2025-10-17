@@ -175,9 +175,10 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                   • Status: %s
                   • Duration: %d ms
                   • Connections Acquired: %d
-                  • Queries Executed: %d
+                  • Executed Queries : %d
                   • Started At: %s
                   • Ended At: %s
+                  • Post Transaction Queries: %d
                 """.formatted(
                 txLog.getTxId(),
                 txLog.getMethod(),
@@ -186,7 +187,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                 acquiredConnections,
                 txLog.getTotalQueryCount(),
                 txLog.getStartTime(),
-                txLog.getEndTime()
+                txLog.getEndTime(),
+                txLog.getPostTransactionQuires().size()
         );
 
         if (txLog.getChild().isEmpty()) {
