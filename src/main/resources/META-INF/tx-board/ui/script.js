@@ -304,7 +304,7 @@ $(document).ready(() => {
         if (transactions.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="11" style="text-align: center; padding: 30px;">
+                    <td colspan="9" style="text-align: center; padding: 30px;">
                         No transactions found
                     </td>
                 </tr>
@@ -348,9 +348,6 @@ $(document).ready(() => {
                 <td>${tx.thread}</td>
                 <td>
                     <span class="badge badge-info">${tx.executedQuires ? tx.executedQuires.length : 0}</span>
-                </td>
-                <td>
-                    ${tx.nplusOneDetected ? '<span class="badge badge-warning"><i class="fas fa-triangle-exclamation"></i></span>' : ''}
                 </td>
                 <td>
                     <button class="btn btn-sm btn-primary view-details" data-tx-id="${txId}" data-depth="${depth}">
@@ -511,13 +508,6 @@ $(document).ready(() => {
         $("#detailDuration").text(formatDuration(tx.duration))
         $("#detailTotalTransactions").text(tx.totalTransactionCount || 1)
         $("#detailTotalQueries").text(tx.totalQueryCount || (tx.executedQuires ? tx.executedQuires.length : 0))
-        const n1 = !!tx.nplusOneDetected
-        const n1El = $("#detailNPlusOne")
-        if (n1) {
-            n1El.removeClass().addClass("badge badge-warning").text("Yes")
-        } else {
-            n1El.removeClass().addClass("badge badge-secondary").text("No")
-        }
 
         // Connection summary tab
         const connSummaryTab = $("#connectionSummaryTab")
