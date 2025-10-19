@@ -28,7 +28,6 @@ public class TransactionLog implements Serializable {
     private final List<TransactionEvent> events;
     private final boolean alarmingTransaction;
     private final Boolean havingAlarmingConnection;
-    private final boolean nPlusOneDetected;
     private final List<String> postTransactionQuires;
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
@@ -36,7 +35,7 @@ public class TransactionLog implements Serializable {
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold) {
         this(txId, method, propagation, isolation, startTime, endTime, connectionSummary, status, thread,
-                executedQuires, child, events, txAlarmingThreshold, false,
+                executedQuires, child, events, txAlarmingThreshold,
                 txId == null ? null : List.of());
     }
 
@@ -44,7 +43,7 @@ public class TransactionLog implements Serializable {
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
-                          boolean nPlusOneDetected, List<String> postTransactionQuires) {
+                          List<String> postTransactionQuires) {
         this.txId = txId;
         this.method = method;
         this.propagation = propagation;
@@ -62,7 +61,6 @@ public class TransactionLog implements Serializable {
         this.alarmingTransaction = this.duration > txAlarmingThreshold;
         this.havingAlarmingConnection = this.connectionSummary != null ?
                 this.connectionSummary.alarmingConnectionCount() > 0 : null;
-        this.nPlusOneDetected = nPlusOneDetected;
         this.postTransactionQuires = postTransactionQuires;
     }
 
@@ -148,10 +146,6 @@ public class TransactionLog implements Serializable {
         }
 
         return !this.alarmingTransaction && !this.havingAlarmingConnection;
-    }
-
-    public boolean isNPlusOneDetected() {
-        return nPlusOneDetected;
     }
 
     public List<String> getPostTransactionQuires() {
