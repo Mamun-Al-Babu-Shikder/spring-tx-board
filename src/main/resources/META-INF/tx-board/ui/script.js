@@ -366,7 +366,6 @@ $(document).ready(() => {
 
         // Add event handlers
         row.find(".expand-button").click((e) => {
-            console.log("clicked on expand button!....")
             e.stopPropagation()
             toggleExpand(txId)
         })
@@ -379,7 +378,6 @@ $(document).ready(() => {
         // Render children if expanded
         if (hasChildren && isExpanded) {
             tx.child.forEach((child) => {
-                console.log("rendering child.......")
                 renderTransaction(child, container, depth + 1, txId)
             })
         }
