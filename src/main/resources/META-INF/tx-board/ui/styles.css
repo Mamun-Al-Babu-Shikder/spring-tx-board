@@ -531,10 +531,17 @@ tr:hover {
   color: #ef4444 !important;
 }
 
+.thread-id {
+  font-family: 'Courier New', monospace;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
 /* Pagination */
-.pagination-section {
+.table-footer {
   padding: 16px 20px;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -543,44 +550,111 @@ tr:hover {
 }
 
 .pagination-info {
-  color: #64748b;
+  color: #6b7280;
   font-size: 0.875rem;
 }
 
 .pagination-controls {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
-.page-numbers {
+.page-size-selector {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.page-size-selector select {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+  cursor: pointer;
+}
+
+.pagination-buttons {
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
 
-.page-btn {
-  width: 32px;
-  height: 32px;
+.pagination-btn {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 36px;
+  height: 36px;
   border: 1px solid #d1d5db;
   background: white;
-  color: #374151;
+  color: #6b7280;
   border-radius: 6px;
   cursor: pointer;
   font-size: 0.875rem;
   transition: all 0.2s;
 }
 
-.page-btn:hover {
+.pagination-btn:hover:not(:disabled) {
   background: #f3f4f6;
+  border-color: #9ca3af;
 }
 
-.page-btn.active {
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-btn.active {
   background: #3b82f6;
   color: white;
   border-color: #3b82f6;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 2px;
+}
+
+.pagination-ellipsis {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.page-jump {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.page-jump input {
+  width: 60px;
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.page-jump input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.page-jump button {
+  width: auto;
+  padding: 6px 12px;
+  font-size: 0.875rem;
 }
 
 /* Modal */
