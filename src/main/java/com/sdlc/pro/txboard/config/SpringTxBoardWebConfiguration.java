@@ -1,6 +1,7 @@
 package com.sdlc.pro.txboard.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sdlc.pro.txboard.handler.AlarmingThresholdHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
 import com.sdlc.pro.txboard.handler.TransactionMetricsHttpHandler;
@@ -53,11 +54,12 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
     }
 
     @Bean("sdlcProTxBoardRestHandlerMapping")
-    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TransactionLogRepository transactionLogRepository) {
+    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TxBoardProperties txBoardProperties, TransactionLogRepository transactionLogRepository) {
         Map<String, Object> urlMap = new HashMap<String, Object>();
-        urlMap.put("/api/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository));
-        urlMap.put("/api/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository));
-        urlMap.put("/api/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/spring-tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties));
+        urlMap.put("/api/spring-tx-board/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/spring-tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/spring-tx-board/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository));
         return new SimpleUrlHandlerMapping(urlMap, ORDER);
     }
 
