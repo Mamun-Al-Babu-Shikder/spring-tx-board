@@ -17,10 +17,20 @@ $(document).ready(() => {
         "CONNECTION_RELEASED": "connection-released"
     }
     let charts = {}
+    let alarmingThreshold = {
+        transaction: 1000,
+        connection: 1000
+    }
 
     // API Configuration
-    const API_BASE_URL = '/api';
+    // Extract the current full pathname
+    const pathname = window.location.pathname;
+
+    // Find the context path by trimming '/tx-board/ui/index.html'
+    const CONTEXT_PATH = pathname.replace("/tx-board/ui/index.html", "")
+    const API_BASE_URL = CONTEXT_PATH + '/api/spring-tx-board'
     const ENDPOINTS = {
+        ALARMING_THRESHOLD: API_BASE_URL + '/config/alarming-threshold',
         TRANSACTIONS: API_BASE_URL + '/tx-logs',
         SUMMARY: API_BASE_URL + '/tx-summary',
         CHARTS: API_BASE_URL + '/tx-charts'
@@ -31,6 +41,7 @@ $(document).ready(() => {
 
     function initializeDashboard() {
         setupEventListeners()
+        fetchAlarmingThreshold()
         fetchAndUpdateUI()
     }
 
@@ -62,10 +73,8 @@ $(document).ready(() => {
             loadTransactions();
         })
 
-
-        $("#methodSearch").on("input change", function () {
-            debounce(loadTransactions, 300)
-        })
+        document.getElementById("methodSearch")
+            .addEventListener("input", debounce(loadTransactions, 500));
 
         // Page size change
         $("#pageSize").change(function () {
@@ -92,6 +101,11 @@ $(document).ready(() => {
         $("#prevPage").click(() => goToPage(currentPage - 1))
         $("#nextPage").click(() => goToPage(currentPage + 1))
         $("#lastPage").click(() => goToPage(totalPages))
+
+        $("#jumpToPage").click(() => {
+            const page = parseInt($('#pageJump').val())
+            goToPage(page)
+        })
 
         // Modal
         $("#closeModal").click(closeModal)
@@ -153,6 +167,20 @@ $(document).ready(() => {
                         }
                     }
                 }
+            }
+        });
+    }
+
+    function fetchAlarmingThreshold() {
+        $.ajax({
+            url: ENDPOINTS.ALARMING_THRESHOLD,
+            method: 'GET',
+            success: function (response) {
+                alarmingThreshold.transaction = response.transaction
+                alarmingThreshold.connection = response.connection
+            },
+            error: function (error) {
+                console.error('Error to load alarming threshold values', error);
             }
         });
     }
@@ -232,6 +260,8 @@ $(document).ready(() => {
                 isFirstPage = response.first
                 isLastPage = response.last
                 renderTable()
+                updatePaginationInfo(response)
+                updatePaginationControls(response)
             },
             error: function (error) {
                 console.error('Error loading transactions:', error);
@@ -297,8 +327,6 @@ $(document).ready(() => {
         transactions.forEach((tx) => {
             renderTransaction(tx, tbody, 0)
         })
-
-        updatePagination()
     }
 
     // Render a transaction row with its children
@@ -327,7 +355,7 @@ $(document).ready(() => {
                 <td>${getStatusBadge(tx.status)}</td>
                 <td><span class="badge badge-info">${tx.propagation}</span></td>
                 <td><span class="badge badge-secondary">${tx.isolation}</span></td>
-                <td>${tx.thread}</td>
+                <td class="thread-id">${tx.thread}</td>
                 <td>
                     <span class="badge badge-info">${tx.executedQuires ? tx.executedQuires.length : 0}</span>
                 </td>
@@ -343,7 +371,6 @@ $(document).ready(() => {
 
         // Add event handlers
         row.find(".expand-button").click((e) => {
-            console.log("clicked on expand button!....")
             e.stopPropagation()
             toggleExpand(txId)
         })
@@ -356,7 +383,6 @@ $(document).ready(() => {
         // Render children if expanded
         if (hasChildren && isExpanded) {
             tx.child.forEach((child) => {
-                console.log("rendering child.......")
                 renderTransaction(child, container, depth + 1, txId)
             })
         }
@@ -406,39 +432,104 @@ $(document).ready(() => {
         renderTable()
     }
 
-    // Update pagination
-    function updatePagination() {
-        const startRecord = totalElements === 0 ? 0 : (currentPage - 1) * pageSize + 1
-        const endRecord = Math.min(currentPage * pageSize, totalElements)
+    // Update pagination info
+    function updatePaginationInfo(data) {
+        const startRecord = data.totalElements === 0 ? 0 : data.page * data.size + 1
+        const endRecord = Math.min((data.page + 1) * data.size, data.totalElements)
 
-        $("#paginationInfo").text(`Showing ${startRecord} to ${endRecord} of ${totalElements} entries`)
+        $('#startRecord').text(startRecord.toLocaleString())
+        $('#endRecord').text(endRecord.toLocaleString())
+        $('#totalResults').text(data.totalElements.toLocaleString())
 
-        // Update pagination buttons
-        $("#firstPage, #prevPage").prop("disabled", isFirstPage)
-        $("#nextPage, #lastPage").prop("disabled", isLastPage)
+        $('#tableFooter').css('display', 'flex')
+    }
+
+    // Update pagination controls
+    function updatePaginationControls(data) {
+        totalPages = data.totalPages
+        totalElements = data.totalElements
+        currentPage = data.page + 1 // Convert from 0-indexed to 1-indexed
+
+        // Update page jump input
+        const pageJump = $('#pageJump');
+        pageJump.attr('max', totalPages)
+        pageJump.val(currentPage);
+
+        // Update navigation buttons
+        $('#firstPage, #prevPage').prop('disabled', data.first)
+        $('#nextPage, #lastPage').prop('disabled', data.last)
 
         // Generate page numbers
-        const pageNumbers = $("#pageNumbers")
+        generatePageNumbers()
+    }
+
+    // Generate page number buttons
+    function generatePageNumbers() {
+        const pageNumbers = $('#pageNumbers')
         pageNumbers.empty()
 
-        const maxVisible = 5
-        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
-        const endPage = Math.min(totalPages, startPage + maxVisible - 1)
+        if (totalPages <= 1) return
 
-        if (endPage - startPage < maxVisible - 1) {
-            startPage = Math.max(1, endPage - maxVisible + 1)
+        const maxVisiblePages = 5
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2))
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1)
+
+        // Adjust start page if we're near the end
+        if (endPage - startPage < maxVisiblePages - 1) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1)
         }
 
+        // Add ellipsis and first page if needed
+        if (startPage > 1) {
+            $('<button>')
+                .addClass('pagination-btn page-number')
+                .attr('data-page', '1')
+                .text('1')
+                .appendTo(pageNumbers)
+
+            if (startPage > 2) {
+                $('<span>')
+                    .addClass('pagination-ellipsis')
+                    .text('...')
+                    .appendTo(pageNumbers)
+            }
+        }
+
+        // Add page numbers
         for (let i = startPage; i <= endPage; i++) {
-            const pageBtn = $(`<button class="page-btn ${i === currentPage ? "active" : ""}">${i}</button>`)
-            pageBtn.click(() => goToPage(i))
-            pageNumbers.append(pageBtn)
+            $('<button>')
+                .addClass('pagination-btn page-number' + (i === currentPage ? ' active' : ''))
+                .attr('data-page', i)
+                .text(i)
+                .appendTo(pageNumbers)
         }
+
+        // Add ellipsis and last page if needed
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                $('<span>')
+                    .addClass('pagination-ellipsis')
+                    .text('...')
+                    .appendTo(pageNumbers)
+            }
+
+            $('<button>')
+                .addClass('pagination-btn page-number')
+                .attr('data-page', totalPages)
+                .text(totalPages)
+                .appendTo(pageNumbers)
+        }
+
+        // Attach click handler
+        $('.page-number').off('click').on('click', function () {
+            const page = parseInt($(this).attr('data-page'), 10)
+            goToPage(page)
+        })
     }
 
     // Go to specific page
     function goToPage(page) {
-        if (page >= 1 && page <= totalPages) {
+        if (page >= 1 && page <= totalPages && page !== currentPage) {
             currentPage = page
             loadTransactions()
         }
@@ -466,11 +557,17 @@ $(document).ready(() => {
         const rolledBackTx = txSummary.rolledBackCount
         const erroredTx = txSummary.erroredCount
 
+        let displaySuccessRate = "N/A"
+        if (!isNaN(successRate)) {
+            displaySuccessRate = `${successRate.toFixed(2)}%`
+        }
+
         $("#totalTransactions").text(totalTx)
-        $("#successRate").text(successRate.toFixed(2) + "%")
+        $("#successRate").text(displaySuccessRate)
         $("#committedCount").text(committedTx)
         $("#rolledBackErroredCount").text(rolledBackTx + " / " + erroredTx)
         $("#avgDuration").text(formatDuration(txSummary.averageDuration))
+        $("#avgConnOccupied").text(formatDuration(txSummary.averageConnectionOccupiedTime))
     }
 
     // Show transaction details modal
@@ -486,7 +583,7 @@ $(document).ready(() => {
         $("#detailTotalQueries").text(tx.totalQueryCount || (tx.executedQuires ? tx.executedQuires.length : 0))
 
         // Connection summary tab
-         const connSummaryTab = $("#connectionSummaryTab")
+        const connSummaryTab = $("#connectionSummaryTab")
         if (depth === 0 && tx.connectionOriented) {
             connSummaryTab.show()
             // Build connection summary from events
@@ -579,6 +676,39 @@ $(document).ready(() => {
             })
         }
 
+        const postTxQuiresTab = $("#postTxQuiresTab")
+        if (depth === 0) {
+            postTxQuiresTab.show()
+            // Build post transaction quires events
+            const queries = tx.postTransactionQuires || []
+            $("#postTxSqlCount").text(`${queries.length} queries`)
+            const postTxSqlList = $("#postTxSqlList")
+            postTxSqlList.empty()
+
+            if (queries.length === 0) {
+                postTxSqlList.append('<p style="color: #64748b; text-align: center; padding: 20px;">No post transaction SQL queries executed</p>')
+            } else {
+                queries.forEach((sql, index) => {
+                    const sqlItem = `
+                    <div class="sql-item">
+                        <div class="sql-index">Query #${index + 1}</div>
+                        <div class="sql-query">${sql}</div>
+                    </div>
+                `
+                    postTxSqlList.append(sqlItem)
+                })
+            }
+        } else {
+            postTxQuiresTab.hide()
+            // If post transaction quires tab was active, switch to overview
+            if (postTxQuiresTab.hasClass("active")) {
+                $(".tab-btn").removeClass("active")
+                $(".tab-content").removeClass("active")
+                $('[data-tab="overview"]').addClass("active")
+                $("#overview").addClass("active")
+            }
+        }
+
         $("#transactionModal").show()
     }
 
@@ -622,6 +752,7 @@ $(document).ready(() => {
                 tx.status,
                 tx.propagation,
                 tx.isolation,
+                tx.thread,
                 tx.executedQuires ? tx.executedQuires.length : 0,
             ]
             csvContent.push(row.join(","))
@@ -651,7 +782,9 @@ $(document).ready(() => {
     // Utility functions
     function getStatusBadge(status) {
         const statusClass = getStatusClass(status)
-        return `<span class="badge ${statusClass}">${status}</span>`
+        return `<span class="badge ${statusClass}">
+                    <i class="fas fa-${status === 'COMMITTED' ? 'check' : 'times'}-circle"></i>${status}
+                </span>`
     }
 
     function getStatusClass(status) {
@@ -676,17 +809,12 @@ $(document).ready(() => {
         return new Date(date).toLocaleString()
     }
 
-    function debounce(func, wait) {
-        console.log("debouncing.........")
-        let timeout
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout)
-                func(...args)
-            }
-            clearTimeout(timeout)
-            timeout = setTimeout(later, wait)
-        }
+    function debounce(func, delay) {
+        let timeout;
+        return function (...args) {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(this, args), delay);
+        };
     }
 
     function buildTimingFromEvents(tx) {
@@ -719,13 +847,23 @@ $(document).ready(() => {
                 duration = calculateDuration(event, prevEvent)
             }
 
+            let isAlarming = false;
+            if (duration !== undefined) {
+                isAlarming = (event.type === 'TRANSACTION_END' && duration > alarmingThreshold.transaction) ||
+                    (event.type === 'CONNECTION_RELEASED' && duration > alarmingThreshold.connection)
+            }
+
             timeline.append(`
                 <div class="timeline-item">
                     <div class="timeline-marker ${timelinePointColorClass}"></div>
                     <div class="timeline-content">
                         <h4>${event.details}</h4>
                         <p>${formatDateTime(event.timestamp)}</p>
-                        <small>${duration !== undefined ? 'Duration: ' + formatDuration(duration) : ''}</small>
+                        ${duration === undefined ? '' : `
+                            <small>
+                                <span class="badge ${isAlarming ? 'badge-warning' : 'badge-secondary'}" >Duration: ${formatDuration(duration)}</span>
+                            </small>
+                        `}
                     </div>
                 </div>
             `)
