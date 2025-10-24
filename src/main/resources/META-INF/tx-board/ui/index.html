@@ -10,359 +10,402 @@
     <link href="font-awesome-6.0.0.min.css" rel="stylesheet">
 </head>
 <body>
-    <div class="dashboard">
-        <!-- Header -->
-        <div class="header">
-            <div class="header-content">
-                <div class="header-text">
-                    <h1><i class="fas fa-database"></i> Spring Tx Board</h1>
-                    <p>Advanced transaction monitoring and analysis dashboard</p>
-                </div>
-                <div class="header-actions">
-                    <button class="btn btn-secondary" id="exportBtn">
-                        <i class="fas fa-download"></i> Export
-                    </button>
-                    <button class="btn btn-primary" id="refreshBtn">
-                        <i class="fas fa-sync-alt"></i> Refresh
-                    </button>
-                </div>
+<div class="dashboard">
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div class="header-text">
+                <h1><i class="fas fa-database"></i> Spring Tx Board</h1>
+                <p>Advanced transaction monitoring and analysis dashboard</p>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-secondary" id="exportBtn">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-primary" id="refreshBtn">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- Summary Cards -->
-        <div class="summary-grid">
-            <div class="summary-card">
-                <div class="summary-header">
-                    <span class="summary-title">Total Transactions</span>
-                    <i class="fas fa-database"></i>
-                </div>
-                <div class="summary-value" id="totalTransactions">0</div>
-                <div class="summary-subtitle">Lifetime</div>
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-header">
+                <span class="summary-title">Total Transactions</span>
+                <i class="fas fa-database"></i>
             </div>
-
-            <div class="summary-card">
-                <div class="summary-header">
-                    <span class="summary-title">Success Rate</span>
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="summary-value success" id="successRate">0%</div>
-                <div class="summary-subtitle">Commit rate</div>
-            </div>
-
-            <div class="summary-card">
-                <div class="summary-header">
-                    <span class="summary-title">Committed</span>
-                    <i class="fas fa-check-circle success"></i>
-                </div>
-                <div class="summary-value success" id="committedCount">0</div>
-                <div class="summary-subtitle">Successful transactions</div>
-            </div>
-
-            <div class="summary-card">
-                <div class="summary-header">
-                    <span class="summary-title">Rolled Back & Errored</span>
-                    <i class="fas fa-times-circle error"></i>
-                </div>
-                <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
-                <div class="summary-subtitle">Failed transactions</div>
-            </div>
-
-            <div class="summary-card">
-                <div class="summary-header">
-                    <span class="summary-title">Avg Duration</span>
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="summary-value" id="avgDuration">0.00s</div>
-                <div class="summary-subtitle">Average execution time</div>
-            </div>
-
+            <div class="summary-value" id="totalTransactions">0</div>
+            <div class="summary-subtitle">Lifetime</div>
         </div>
 
-        <div class="charts-section">
-            <div class="tabs">
-                <div class="tab-buttons">
-                    <button class="chart-tab-btn active" data-tab="overview">Distribution Chart</button>
-                </div>
+        <div class="summary-card">
+            <div class="summary-header">
+                <span class="summary-title">Success Rate</span>
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="summary-value success" id="successRate">0%</div>
+            <div class="summary-subtitle">Commit rate</div>
+        </div>
 
-                <div class="chart-tab-content active" id="distributionChart">
-                    <div class="charts-grid">
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Transaction Status Distribution</h3>
-                                <p>Commit vs Rollback ratio</p>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="statusChart" width="782" height="600" style="display: block; box-sizing: border-box; height: 300px; width: 391px;"></canvas>
-                            </div>
+        <div class="summary-card">
+            <div class="summary-header">
+                <span class="summary-title">Committed</span>
+                <i class="fas fa-check-circle success"></i>
+            </div>
+            <div class="summary-value success" id="committedCount">0</div>
+            <div class="summary-subtitle">Successful transactions</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-header">
+                <span class="summary-title">Rolled Back & Errored</span>
+                <i class="fas fa-times-circle error"></i>
+            </div>
+            <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
+            <div class="summary-subtitle">Failed transactions</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-header">
+                <span class="summary-title">Avg Duration</span>
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="summary-value" id="avgDuration">0.00s</div>
+            <div class="summary-subtitle">Average execution time</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-header">
+                <span class="summary-title">Connection Occupied</span>
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="summary-value" id="avgConnOccupied">0.00s</div>
+            <div class="summary-subtitle">Average connection occupied</div>
+        </div>
+    </div>
+
+    <div class="charts-section">
+        <div class="tabs">
+            <div class="tab-buttons">
+                <button class="chart-tab-btn active" data-tab="overview">Distribution Chart</button>
+            </div>
+
+            <div class="chart-tab-content active" id="distributionChart">
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Transaction Status Distribution</h3>
+                            <p>Commit vs Rollback ratio</p>
                         </div>
-
-                        <div class="chart-card">
-                            <div class="chart-header">
-                                <h3>Duration Distribution</h3>
-                                <p>Transaction execution time ranges</p>
-                            </div>
-                            <div class="chart-container">
-                                <canvas id="durationChart" width="782" height="600" style="display: block; box-sizing: border-box; height: 300px; width: 391px;"></canvas>
-                            </div>
+                        <div class="chart-container">
+                            <canvas id="statusChart" width="782" height="600"
+                                    style="display: block; box-sizing: border-box; height: 300px; width: 391px;"></canvas>
                         </div>
                     </div>
-                </div>
 
-            </div>
-        </div>
-
-        <!-- Filters -->
-        <div class="filters-section">
-            <div class="filters-card">
-                <div class="filters-header">
-                    <h3><i class="fas fa-filter"></i> Filters</h3>
-                    <button class="btn btn-primary" id="clearFilters">Clear All</button>
-                </div>
-                <div class="filters-content">
-                    <div class="filter-group">
-                        <label>Search Method</label>
-                        <input type="text" id="methodSearch" placeholder="Search by method name...">
-                    </div>
-                    <div class="filter-group">
-                        <label>Status</label>
-                        <select id="statusFilter">
-                            <option value="">All Status</option>
-                            <option value="COMMITTED">Committed</option>
-                            <option value="ROLLED_BACK">Rolled Back</option>
-                            <option value="ERRORED">Errored</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Propagation</label>
-                        <select id="propagationFilter">
-                            <option value="">All Propagation</option>
-                            <option value="REQUIRED">Required</option>
-                            <option value="REQUIRES_NEW">Requires New</option>
-                            <option value="NESTED">Nested</option>
-                            <option value="SUPPORTS">Supports</option>
-                            <option value="NOT_SUPPORTED">Not Supported</option>
-                            <option value="NEVER">Never</option>
-                            <option value="MANDATORY">Mandatory</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Isolation Level</label>
-                        <select id="isolationFilter">
-                            <option value="">All Isolation</option>
-                            <option value="DEFAULT">Default</option>
-                            <option value="READ_UNCOMMITTED">Read Uncommitted</option>
-                            <option value="READ_COMMITTED">Read Committed</option>
-                            <option value="REPEATABLE_READ">Repeatable Read</option>
-                            <option value="SERIALIZABLE">Serializable</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label>Connection Oriented</label>
-                        <select id="connectionFilter">
-                            <option value="">All</option>
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                        </select>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3>Duration Distribution</h3>
+                            <p>Transaction execution time ranges</p>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="durationChart" width="782" height="600"
+                                    style="display: block; box-sizing: border-box; height: 300px; width: 391px;"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Transaction Table -->
-        <div class="table-section">
-            <div class="table-card">
-                <div class="table-header">
-                    <h3><i class="fas fa-list"></i> Transaction Details</h3>
-                    <div class="table-actions filter-group">
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="filters-card">
+            <div class="filters-header">
+                <h3><i class="fas fa-filter"></i> Filters</h3>
+                <button class="btn btn-primary" id="clearFilters">Clear All</button>
+            </div>
+            <div class="filters-content">
+                <div class="filter-group">
+                    <label>Search Method</label>
+                    <input type="text" id="methodSearch" placeholder="Search by method, thread name...">
+                </div>
+                <div class="filter-group">
+                    <label>Status</label>
+                    <select id="statusFilter">
+                        <option value="">All Status</option>
+                        <option value="COMMITTED">Committed</option>
+                        <option value="ROLLED_BACK">Rolled Back</option>
+                        <option value="ERRORED">Errored</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Propagation</label>
+                    <select id="propagationFilter">
+                        <option value="">All Propagation</option>
+                        <option value="REQUIRED">Required</option>
+                        <option value="REQUIRES_NEW">Requires New</option>
+                        <option value="NESTED">Nested</option>
+                        <option value="SUPPORTS">Supports</option>
+                        <option value="NOT_SUPPORTED">Not Supported</option>
+                        <option value="NEVER">Never</option>
+                        <option value="MANDATORY">Mandatory</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Isolation Level</label>
+                    <select id="isolationFilter">
+                        <option value="">All Isolation</option>
+                        <option value="DEFAULT">Default</option>
+                        <option value="READ_UNCOMMITTED">Read Uncommitted</option>
+                        <option value="READ_COMMITTED">Read Committed</option>
+                        <option value="REPEATABLE_READ">Repeatable Read</option>
+                        <option value="SERIALIZABLE">Serializable</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Connection Oriented</label>
+                    <select id="connectionFilter">
+                        <option value="">All</option>
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Table -->
+    <div class="table-section">
+        <div class="table-card">
+            <div class="table-header">
+                <h3><i class="fas fa-list"></i> Transaction Details</h3>
+            </div>
+
+            <div class="table-container">
+                <table id="transactionTable">
+                    <thead>
+                    <tr>
+                        <th style="width: 30px;"></th>
+                        <th class="sortable" data-sort="method">
+                            Method Name <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-sort="startTime">
+                            Start Time <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-sort="duration">
+                            Duration <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-sort="status">
+                            Status <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-sort="propagation">
+                            Propagation <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-sort="isolation">
+                            Isolation <i class="fas fa-sort"></i>
+                        </th>
+                        <th class="sortable" data-sort="thread">
+                            Thread <i class="fas fa-sort"></i>
+                        </th>
+                        <th>SQL Count</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="transactionTableBody">
+                    <!-- Rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="table-footer" id="tableFooter">
+                <div class="pagination-info">
+                    <p>Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span
+                            id="totalResults">0</span> transactions</p>
+                </div>
+                <div class="pagination-controls">
+                    <div class="page-size-selector">
+                        <label for="pageSize">Show:</label>
                         <select id="pageSize">
-                            <option value="10" selected>10 per page</option>
-                            <option value="20">20 per page</option>
-                            <option value="25">25 per page</option>
-                            <option value="30">30 per page</option>
-                            <option value="40">40 per page</option>
-                            <option value="50">50 per page</option>
+                            <option value="10" selected>10</option>
+                            <option value="15">15</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="30">30</option>
+                            <option value="35">35</option>
+                            <option value="40">40</option>
+                            <option value="45">45</option>
+                            <option value="50">50</option>
+                            <option value="75">75</option>
+                            <option value="100">100</option>
                         </select>
+                        <span>per page</span>
                     </div>
-                </div>
-                
-                <div class="table-container">
-                    <table id="transactionTable">
-                        <thead>
-                            <tr>
-                                <th style="width: 30px;"></th>
-                                <th class="sortable" data-sort="method">
-                                    Method Name <i class="fas fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="startTime">
-                                    Start Time <i class="fas fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="duration">
-                                    Duration <i class="fas fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="status">
-                                    Status <i class="fas fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="propagation">
-                                    Propagation <i class="fas fa-sort"></i>
-                                </th>
-                                <th class="sortable" data-sort="isolation">
-                                    Isolation <i class="fas fa-sort"></i>
-                                </th>
-                                <th>Thread</th>
-                                <th>SQL Count</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="transactionTableBody">
-                            <!-- Rows will be populated by JavaScript -->
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Pagination -->
-                <div class="pagination-section">
-                    <div class="pagination-info">
-                        <span id="paginationInfo">Showing 0 to 0 of 0 entries</span>
-                    </div>
-                    <div class="pagination-controls">
-                        <button class="btn btn-sm" id="firstPage" disabled>
+                    <div class="pagination-buttons">
+                        <button id="firstPage" class="pagination-btn" title="First Page">
                             <i class="fas fa-angle-double-left"></i>
                         </button>
-                        <button class="btn btn-sm" id="prevPage" disabled>
+                        <button id="prevPage" class="pagination-btn" title="Previous Page">
                             <i class="fas fa-angle-left"></i>
                         </button>
-                        <div class="page-numbers" id="pageNumbers"></div>
-                        <button class="btn btn-sm" id="nextPage">
+                        <div class="page-numbers" id="pageNumbers">
+                            <!-- Page numbers will be generated by JavaScript -->
+                        </div>
+                        <button id="nextPage" class="pagination-btn" title="Next Page">
                             <i class="fas fa-angle-right"></i>
                         </button>
-                        <button class="btn btn-sm" id="lastPage">
+                        <button id="lastPage" class="pagination-btn" title="Last Page">
                             <i class="fas fa-angle-double-right"></i>
                         </button>
                     </div>
+                    <div class="page-jump">
+                        <span>Go to page:</span>
+                        <input type="number" id="pageJump" min="1" max="1" value="1">
+                        <button id="jumpToPage" class="pagination-btn">Go</button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Transaction Detail Modal -->
-    <div id="transactionModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2><i class="fas fa-info-circle"></i> Transaction Details</h2>
-                <button class="modal-close" id="closeModal">
-                    <i class="fas fa-times"></i>
+<!-- Transaction Detail Modal -->
+<div id="transactionModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-info-circle"></i> Transaction Details</h2>
+            <button class="modal-close" id="closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="detail-tabs">
+                <button class="tab-btn active" data-tab="overview">Overview</button>
+                <button class="tab-btn" data-tab="timing" id="timingTab">Timing</button>
+                <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection Summary
                 </button>
+                <button class="tab-btn" data-tab="sql">SQL Queries</button>
+                <button class="tab-btn" data-tab="children">Child Transactions</button>
+                <button class="tab-btn" data-tab="post-tx-quires" id="postTxQuiresTab">Post Transaction Queries</button>
             </div>
-            <div class="modal-body">
-                <div class="detail-tabs">
-                    <button class="tab-btn active" data-tab="overview">Overview</button>
-                    <button class="tab-btn" data-tab="timing" id="timingTab">Timing</button>
-                    <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection Summary</button>
-                    <button class="tab-btn" data-tab="sql">SQL Queries</button>
-                    <button class="tab-btn" data-tab="children">Child Transactions</button>
-                </div>
 
-                <div class="tab-content active" id="overview">
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label>Method Name:</label>
-                            <span id="detailMethodName">-</span>
+            <div class="tab-content active" id="overview">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Method Name:</label>
+                        <span id="detailMethodName">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Status:</label>
+                        <span id="detailStatus" class="badge">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Propagation:</label>
+                        <span id="detailPropagation" class="badge badge-info">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Isolation Level:</label>
+                        <span id="detailIsolation" class="badge badge-info">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Thread:</label>
+                        <span id="detailThread">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Total Duration:</label>
+                        <span id="detailDuration">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Total Transactions:</label>
+                        <span id="detailTotalTransactions">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>SQL Query Count:</label>
+                        <span id="detailTotalQueries">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="timing">
+                <div class="timing-timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker start"></div>
+                        <div class="timeline-content">
+                            <h4>Transaction Start</h4>
+                            <p id="timingStartTime">-</p>
                         </div>
-                        <div class="detail-item">
-                            <label>Status:</label>
-                            <span id="detailStatus" class="badge">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Propagation:</label>
-                            <span id="detailPropagation" class="badge badge-info">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Isolation Level:</label>
-                            <span id="detailIsolation" class="badge badge-info">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Thread:</label>
-                            <span id="detailThread">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Total Duration:</label>
-                            <span id="detailDuration">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Total Transactions:</label>
-                            <span id="detailTotalTransactions">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Total Queries:</label>
-                            <span id="detailTotalQueries">-</span>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-marker end"></div>
+                        <div class="timeline-content">
+                            <h4>Transaction End</h4>
+                            <p id="timingEndTime">-</p>
+                            <small id="timingTotalDuration">-</small>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="tab-content" id="timing">
-                    <div class="timing-timeline">
-                        <div class="timeline-item">
-                            <div class="timeline-marker start"></div>
-                            <div class="timeline-content">
-                                <h4>Transaction Start</h4>
-                                <p id="timingStartTime">-</p>
-                            </div>
-                        </div>
-                        <div class="timeline-item">
-                            <div class="timeline-marker end"></div>
-                            <div class="timeline-content">
-                                <h4>Transaction End</h4>
-                                <p id="timingEndTime">-</p>
-                                <small id="timingTotalDuration">-</small>
-                            </div>
-                        </div>
+            <div class="tab-content" id="connectionSummary">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Total Acquired Connections:</label>
+                        <span id="totalAcquiredConnection">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Alarming Connections:</label>
+                        <span class="badge badge-warning" id="alarmingConnection">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Occupied Time:</label>
+                        <span id="occupiedTime">-</span>
                     </div>
                 </div>
+            </div>
 
-                <div class="tab-content" id="connectionSummary">
-                    <div class="detail-grid">
-                        <div class="detail-item">
-                            <label>Total Acquired Connections:</label>
-                            <span id="totalAcquiredConnection">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Alarming Connections:</label>
-                            <span class="badge badge-warning" id="alarmingConnection">-</span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Occupied Time:</label>
-                            <span id="occupiedTime">-</span>
-                        </div>
+            <div class="tab-content" id="sql">
+                <div class="sql-container">
+                    <div class="sql-header">
+                        <h4>Executed SQL Queries</h4>
+                        <span id="sqlCount" class="badge badge-info">0 queries</span>
+                    </div>
+                    <div class="sql-list" id="sqlList">
+                        <!-- SQL queries will be populated here -->
                     </div>
                 </div>
+            </div>
 
-                <div class="tab-content" id="sql">
-                    <div class="sql-container">
-                        <div class="sql-header">
-                            <h4>Executed SQL Queries</h4>
-                            <span id="sqlCount" class="badge badge-info">0 queries</span>
-                        </div>
-                        <div class="sql-list" id="sqlList">
-                            <!-- SQL queries will be populated here -->
-                        </div>
+            <div class="tab-content" id="children">
+                <div class="children-container">
+                    <div class="children-header">
+                        <h4>Child Transactions</h4>
+                        <span id="childrenCount" class="badge badge-success">0 children</span>
+                    </div>
+                    <div class="children-tree" id="childrenTree">
+                        <!-- Child transactions will be populated here -->
                     </div>
                 </div>
+            </div>
 
-                <div class="tab-content" id="children">
-                    <div class="children-container">
-                        <div class="children-header">
-                            <h4>Child Transactions</h4>
-                            <span id="childrenCount" class="badge badge-success">0 children</span>
-                        </div>
-                        <div class="children-tree" id="childrenTree">
-                            <!-- Child transactions will be populated here -->
-                        </div>
+            <div class="tab-content" id="post-tx-quires">
+                <div class="sql-container">
+                    <div class="sql-header">
+                        <h4>Executed SQL Queries</h4>
+                        <span id="postTxSqlCount" class="badge badge-info">0 queries</span>
+                    </div>
+                    <div class="sql-list" id="postTxSqlList">
+                        <!-- Post transaction SQL queries will be populated here -->
                     </div>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
