@@ -30,11 +30,22 @@ public class TransactionLog implements Serializable {
     private final List<TransactionEvent> events;
     private final boolean alarmingTransaction;
     private final Boolean havingAlarmingConnection;
+    private final List<String> postTransactionQuires;
 
     public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold) {
+        this(txId, method, propagation, isolation, startTime, endTime, connectionSummary, status, thread,
+                executedQuires, child, events, txAlarmingThreshold,
+                txId == null ? null : emptyList());
+    }
+
+    public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
+                          Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
+                          TransactionPhaseStatus status, String thread, List<String> executedQuires,
+                          List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
+                          List<String> postTransactionQuires) {
         this.txId = txId;
         this.method = method;
         this.propagation = propagation;
@@ -52,6 +63,7 @@ public class TransactionLog implements Serializable {
         this.alarmingTransaction = this.duration > txAlarmingThreshold;
         this.havingAlarmingConnection = this.connectionSummary != null ?
                 this.connectionSummary.getAlarmingConnectionCount() > 0 : null;
+        this.postTransactionQuires = postTransactionQuires;
     }
 
     public Integer getTxId() {
@@ -136,5 +148,9 @@ public class TransactionLog implements Serializable {
         }
 
         return !this.alarmingTransaction && !this.havingAlarmingConnection;
+    }
+
+    public List<String> getPostTransactionQuires() {
+        return postTransactionQuires;
     }
 }

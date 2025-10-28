@@ -91,8 +91,14 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
     @Override
     public void executedQuery(String query) {
-        if (hasActiveConnection()) {
-            currentTransactionInfo().ifPresent(txInfo -> txInfo.addExecutedQuery(query));
+        if (hasActiveTransaction()) {
+            currentTransactionInfo().ifPresent(txInfo -> {
+                if (txInfo.isMostParent() && txInfo.isCompleted()) {
+                    txInfo.addPostTransactionQuery(query);
+                } else {
+                    txInfo.addExecutedQuery(query);
+                }
+            });
         }
     }
 
@@ -157,11 +163,12 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                 .append("  • ID: ").append(txLog.getTxId()).append(lineSep)
                 .append("  • Method: ").append(txLog.getMethod()).append(lineSep)
                 .append("  • Status: ").append(txLog.getStatus()).append(lineSep)
+                .append("  • Started At: ").append(txLog.getStartTime()).append(lineSep)
+                .append("  • Ended At: ").append(txLog.getEndTime()).append(lineSep)
                 .append("  • Duration: ").append(txLog.getDuration()).append(" ms").append(lineSep)
                 .append("  • Connections Acquired: ").append(acquiredConnections).append(lineSep)
-                .append("  • Queries Executed: ").append(txLog.getTotalQueryCount()).append(lineSep)
-                .append("  • Started At: ").append(txLog.getStartTime()).append(lineSep)
-                .append("  • Ended At: ").append(txLog.getEndTime()).append(lineSep);
+                .append("  • Executed Query Count: ").append(txLog.getTotalQueryCount()).append(lineSep)
+                .append("  • Post Transaction Query Count: ").append(txLog.getPostTransactionQuires().size());
 
         if (txLog.getChild().isEmpty()) {
             return base.toString();
@@ -287,6 +294,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         private final List<String> executedQuires;
         private final List<TransactionEvent> events;
         private final AlarmingThreshold alarmingThreshold;
+        private final List<String> postTransactionQuires;
 
         public TransactionInfo(String methodName, PropagationBehavior propagation, IsolationLevel isolation,
                                AlarmingThreshold alarmingThreshold, boolean isMostParent) {
@@ -300,6 +308,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             this.executedQuires = new LinkedList<>();
             this.events = this.isMostParent ? new LinkedList<>() : null;
             this.alarmingThreshold = alarmingThreshold;
+            this.postTransactionQuires = this.isMostParent ? new LinkedList<>() : null;
         }
 
         public String getMethodName() {
@@ -342,6 +351,10 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             return this.isMostParent;
         }
 
+        public void addPostTransactionQuery(String query) {
+            this.postTransactionQuires.add(query);
+        }
+
         public TransactionLog toTransactionLog() {
             List<TransactionLog> child = new ArrayList<TransactionLog>();
             for (TransactionInfo info : this.child) {
@@ -363,7 +376,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     executedQuires,
                     child,
                     events,
-                    this.alarmingThreshold.getTransaction()
+                    this.alarmingThreshold.getTransaction(),
+                    this.postTransactionQuires
             );
         }
 
