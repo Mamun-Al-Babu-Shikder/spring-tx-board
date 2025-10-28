@@ -166,6 +166,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                 [TX-Board] Transaction Completed:
                   • ID: %s
                   • Method: %s
+                  • Propagation: %s
+                  • Isolation: %s
                   • Status: %s
                   • Started At: %s
                   • Ended At: %s
@@ -176,6 +178,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                 """.formatted(
                 txLog.getTxId(),
                 txLog.getMethod(),
+                txLog.getPropagation(),
+                txLog.getIsolation(),
                 txLog.getStatus(),
                 txLog.getStartTime(),
                 txLog.getEndTime(),
@@ -211,9 +215,16 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             nestedTx.append(prefix)
                     .append(last ? "└── " : "├── ")
                     .append(child.getMethod())
-                    .append(" (")
+                    .append(" (Duration: ")
                     .append(child.getDuration())
                     .append(" ms, ")
+                    .append("Propagation: ")
+                    .append(child.getPropagation())
+                    .append(", ")
+                    .append("Isolation: ")
+                    .append(child.getIsolation())
+                    .append(", ")
+                    .append("Status: ")
                     .append(child.getStatus())
                     .append(")\n");
 
