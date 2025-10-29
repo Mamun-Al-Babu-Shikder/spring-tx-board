@@ -1,6 +1,6 @@
 package integration.service;
 
-import com.sdlc.pro.txboard.util.Utils;
+import integration.util.Utils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;

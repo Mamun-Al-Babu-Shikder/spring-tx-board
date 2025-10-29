@@ -1,10 +1,10 @@
 package integration.service;
 
-import com.sdlc.pro.txboard.util.Utils;
 import integration.entity.OutboxMessage;
 import integration.entity.User;
 import integration.model.UserRegisterPayload;
 import integration.repository.UserRepository;
+import integration.util.Utils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
