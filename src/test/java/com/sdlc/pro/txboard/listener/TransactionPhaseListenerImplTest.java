@@ -2,19 +2,29 @@ package com.sdlc.pro.txboard.listener;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
+import com.sdlc.pro.txboard.enums.IsolationLevel;
+import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.TransactionLog;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.TransactionDefinition;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.stream.Collectors;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,7 +39,11 @@ class TransactionPhaseListenerImplTest {
     private ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender;
 
     private void sleep(long ms) {
-        try { Thread.sleep(ms); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+        try {
+            Thread.sleep(ms);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @BeforeEach
@@ -164,50 +178,97 @@ class TransactionPhaseListenerImplTest {
     }
 
     @Nested
-    class ListenerFailureAndLoggingTests {
-
-        @Test
-        void shouldLogErrorIfListenerFails() {
-            doThrow(new RuntimeException("Listener failed")).when(txLogListener).listen(any());
+    class IsolationAndPropagationBehaviorTests {
+        @ParameterizedTest
+        @EnumSource(IsolationLevel.class)
+        void shouldHandleAllIsolationLevels(IsolationLevel isolation) {
+            when(txDefinition.getIsolationLevel()).thenReturn(isolation.value());
 
             txListener.beforeBegin(txDefinition);
-            txListener.afterBegin(null);
             txListener.afterAcquiredConnection();
+            txListener.afterBegin(null);
             txListener.afterCommit();
             txListener.afterCloseConnection();
 
-            List<ch.qos.logback.classic.spi.ILoggingEvent> errorLogs = appender.list.stream()
-                    .filter(e -> e.getLevel() == Level.ERROR)
-                    .collect(Collectors.toList());
+            ArgumentCaptor<TransactionLog> txLogCaptor = ArgumentCaptor.forClass(TransactionLog.class);
+            verify(txLogListener).listen(txLogCaptor.capture());
 
-            assertTrue(errorLogs.stream().anyMatch(e -> e.getFormattedMessage().contains("Failed to publish transaction log")));
+            TransactionLog transactionLog = txLogCaptor.getValue();
+            assertEquals(isolation, transactionLog.getIsolation());
         }
 
-        @Test
-        void shouldContinueTransactionEvenIfListenerFails() {
-            doThrow(new RuntimeException("Listener failed")).when(txLogListener).listen(any());
+        @ParameterizedTest
+        @EnumSource(PropagationBehavior.class)
+        void shouldHandleAllPropagationBehaviors(PropagationBehavior propagation) {
+            when(txDefinition.getPropagationBehavior()).thenReturn(propagation.value());
 
             txListener.beforeBegin(txDefinition);
             txListener.afterBegin(null);
-            txListener.afterAcquiredConnection();
             txListener.afterCommit();
-            txListener.afterCloseConnection();
+
+            ArgumentCaptor<TransactionLog> txLogCaptor = ArgumentCaptor.forClass(TransactionLog.class);
+            verify(txLogListener).listen(txLogCaptor.capture());
+
+            TransactionLog transactionLog = txLogCaptor.getValue();
+            assertEquals(propagation, transactionLog.getPropagation());
+        }
+    }
+
+    @Nested
+    class TransactionListenerErrorHandlingTests {
+
+        @Test
+        void shouldHandleListenerExceptionsGracefully() {
+            TransactionLogListener failingListener = mock(TransactionLogListener.class);
+            doThrow(new RuntimeException("Listener failed!")).when(failingListener).listen(any());
+
+            TransactionPhaseListenerImpl listenerWithFailingCallback = new TransactionPhaseListenerImpl(
+                    Arrays.asList(txLogListener, failingListener), txBoardProperties);
+
+            assertDoesNotThrow(() -> {
+                listenerWithFailingCallback.beforeBegin(txDefinition);
+                listenerWithFailingCallback.afterBegin(null);
+                listenerWithFailingCallback.afterAcquiredConnection();
+                listenerWithFailingCallback.afterCloseConnection();
+                listenerWithFailingCallback.afterCommit();
+            });
+
+            // Should still call the working listener
+            verify(txLogListener).listen(any(TransactionLog.class));
+
+            // Should log the error
+            List<ILoggingEvent> loggingEvents = appender.list;
+            assertTrue(loggingEvents.stream().anyMatch(e -> e.getLevel() == Level.ERROR &&
+                    e.getMessage().contains("Failed to publish transaction log to listener")
+            ));
         }
 
         @Test
-        void shouldLogErrorDuringRollbackIfListenerFails() {
-            doThrow(new RuntimeException("Listener failed")).when(txLogListener).listen(any());
+        void shouldHandleEmptyListenersList() {
+            TransactionPhaseListenerImpl listenerWithEmptyCallbacks = new TransactionPhaseListenerImpl(
+                    Collections.emptyList(), txBoardProperties);
 
-            txListener.beforeBegin(txDefinition);
-            txListener.afterBegin(null);
-            txListener.afterAcquiredConnection();
-            txListener.afterRollback();
-            txListener.afterCloseConnection();
+            assertDoesNotThrow(() -> {
+                listenerWithEmptyCallbacks.beforeBegin(txDefinition);
+                listenerWithEmptyCallbacks.afterBegin(null);
+                listenerWithEmptyCallbacks.afterAcquiredConnection();
+                listenerWithEmptyCallbacks.afterCloseConnection();
+                listenerWithEmptyCallbacks.afterCommit();
+            });
+        }
 
-            List<ch.qos.logback.classic.spi.ILoggingEvent> errors = appender.list.stream()
-                    .filter(e -> e.getLevel() == Level.ERROR)
-                    .collect(Collectors.toList());
-            assertFalse(errors.isEmpty());
+        @Test
+        void shouldHandleNullListenersList() {
+            TransactionPhaseListenerImpl listenerWithoutCallbacks = new TransactionPhaseListenerImpl(
+                    null, txBoardProperties);
+
+            assertDoesNotThrow(() -> {
+                listenerWithoutCallbacks.beforeBegin(txDefinition);
+                listenerWithoutCallbacks.afterBegin(null);
+                listenerWithoutCallbacks.afterAcquiredConnection();
+                listenerWithoutCallbacks.afterCloseConnection();
+                listenerWithoutCallbacks.afterCommit();
+            });
         }
     }
 
