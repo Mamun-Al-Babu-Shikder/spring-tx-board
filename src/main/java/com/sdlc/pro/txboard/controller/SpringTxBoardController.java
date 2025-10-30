@@ -20,7 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/spring-tx-board")
+@RequestMapping("/api/tx-board")
 public class SpringTxBoardController {
 
     private final TxBoardProperties txBoardProperties;
