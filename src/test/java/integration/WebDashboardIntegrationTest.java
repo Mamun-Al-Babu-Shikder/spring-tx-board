@@ -77,7 +77,7 @@ public class WebDashboardIntegrationTest {
     @Test
     void testAlarmingThresholdEndpoint() {
         ResponseEntity<JsonNode> response = restTemplate.getForEntity(
-                baseUrl + "/api/spring-tx-board/config/alarming-threshold",
+                baseUrl + "/api/tx-board/config/alarming-threshold",
                 JsonNode.class
         );
 
@@ -164,7 +164,7 @@ public class WebDashboardIntegrationTest {
         @Test
         void testTransactionSummaryEndpoint() {
             ResponseEntity<JsonNode> response = restTemplate.getForEntity(
-                    baseUrl + "/api/spring-tx-board/tx-summary",
+                    baseUrl + "/api/tx-board/tx-summary",
                     JsonNode.class
             );
 
@@ -189,7 +189,7 @@ public class WebDashboardIntegrationTest {
         @Test
         void testTransactionChartEndpoint() {
             ResponseEntity<JsonNode> response = restTemplate.getForEntity(
-                    baseUrl + "/api/spring-tx-board/tx-charts",
+                    baseUrl + "/api/tx-board/tx-charts",
                     JsonNode.class
             );
 
@@ -221,7 +221,7 @@ public class WebDashboardIntegrationTest {
         @Test
         void testTransactionLogsEndpoint() {
             ResponseEntity<JsonNode> response = restTemplate.getForEntity(
-                    baseUrl + "/api/spring-tx-board/tx-logs",
+                    baseUrl + "/api/tx-board/tx-logs",
                     JsonNode.class
             );
 
@@ -294,7 +294,7 @@ public class WebDashboardIntegrationTest {
         @MethodSource(value = "pageDataProvider")
         void testTransactionLogsEndpointWithPagination(PageData data) {
             JsonNode json = restTemplate.getForObject(
-                    baseUrl + String.format("/api/spring-tx-board/tx-logs?page=%d&size=%d", data.getPage(), data.getSize()),
+                    baseUrl + String.format("/api/tx-board/tx-logs?page=%d&size=%d", data.getPage(), data.getSize()),
                     JsonNode.class
             );
 
@@ -319,7 +319,7 @@ public class WebDashboardIntegrationTest {
         @EnumSource(TransactionPhaseStatus.class)
         void testTransactionLogsFilterByStatus(TransactionPhaseStatus status) {
             JsonNode response = restTemplate.getForObject(
-                    baseUrl + "/api/spring-tx-board/tx-logs?status=" + status,
+                    baseUrl + "/api/tx-board/tx-logs?status=" + status,
                     JsonNode.class
             );
 
@@ -343,7 +343,7 @@ public class WebDashboardIntegrationTest {
         @EnumSource(PropagationBehavior.class)
         void testTransactionLogsFilterByPropagation(PropagationBehavior propagation) {
             JsonNode response = restTemplate.getForObject(
-                    baseUrl + "/api/spring-tx-board/tx-logs?propagation=" + propagation,
+                    baseUrl + "/api/tx-board/tx-logs?propagation=" + propagation,
                     JsonNode.class
             );
 
@@ -365,7 +365,7 @@ public class WebDashboardIntegrationTest {
         @EnumSource(IsolationLevel.class)
         void testTransactionLogsFilterByIsolationLevel(IsolationLevel isolation) {
             JsonNode response = restTemplate.getForObject(
-                    baseUrl + "/api/spring-tx-board/tx-logs?isolation=" + isolation,
+                    baseUrl + "/api/tx-board/tx-logs?isolation=" + isolation,
                     JsonNode.class
             );
 
@@ -383,7 +383,7 @@ public class WebDashboardIntegrationTest {
         @ValueSource(booleans = {true, false})
         void testTransactionLogsFilterByConnectionOriented(boolean connection) {
             JsonNode response = restTemplate.getForObject(
-                    baseUrl + "/api/spring-tx-board/tx-logs?connectionOriented=" + connection,
+                    baseUrl + "/api/tx-board/tx-logs?connectionOriented=" + connection,
                     JsonNode.class
             );
 
@@ -412,7 +412,7 @@ public class WebDashboardIntegrationTest {
         })
         void testTransactionLogsFilterBySearchValue(String searchValue) {
             JsonNode response = restTemplate.getForObject(
-                    baseUrl + "/api/spring-tx-board/tx-logs?search=" + searchValue,
+                    baseUrl + "/api/tx-board/tx-logs?search=" + searchValue,
                     JsonNode.class
             );
 
@@ -423,7 +423,7 @@ public class WebDashboardIntegrationTest {
         @Test
         void testOSIVEffectForLazyQueries() {
             JsonNode txLogJson = restTemplate.getForObject(
-                    baseUrl + "/api/spring-tx-board/tx-logs?page=0&size=1&sort=startTime,desc",
+                    baseUrl + "/api/tx-board/tx-logs?page=0&size=1&sort=startTime,desc",
                     JsonNode.class
             );
 

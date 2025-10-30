@@ -56,10 +56,10 @@ public class SpringTxBoardWebConfiguration implements WebMvcConfigurer {
     @Bean("sdlcProTxBoardRestHandlerMapping")
     public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TxBoardProperties txBoardProperties, TransactionLogRepository transactionLogRepository) {
         Map<String, Object> urlMap = new HashMap<String, Object>();
-        urlMap.put("/api/spring-tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties));
-        urlMap.put("/api/spring-tx-board/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository));
-        urlMap.put("/api/spring-tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository));
-        urlMap.put("/api/spring-tx-board/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties));
+        urlMap.put("/api/tx-board/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/tx-board/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository));
         return new SimpleUrlHandlerMapping(urlMap, ORDER);
     }
 
