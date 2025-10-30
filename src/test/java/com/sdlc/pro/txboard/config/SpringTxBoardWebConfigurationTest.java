@@ -27,7 +27,7 @@ public class SpringTxBoardWebConfigurationTest {
 
     @Test
     void shouldReturnAlarmingThresholdJsonWithCorrectFormat() throws Exception {
-        mockMvc.perform(get("/api/spring-tx-board/config/alarming-threshold"))
+        mockMvc.perform(get("/api/tx-board/config/alarming-threshold"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.transaction").exists())
@@ -38,7 +38,7 @@ public class SpringTxBoardWebConfigurationTest {
 
     @Test
     void shouldReturnTxSummaryJsonWithCorrectFormat() throws Exception {
-        mockMvc.perform(get("/api/spring-tx-board/tx-summary"))
+        mockMvc.perform(get("/api/tx-board/tx-summary"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.committedCount").exists())
                 .andExpect(jsonPath("$.rolledBackCount").exists())
@@ -55,7 +55,7 @@ public class SpringTxBoardWebConfigurationTest {
 
     @Test
     void shouldReturnTxLogJsonWithCorrectFormat() throws Exception {
-        mockMvc.perform(get("/api/spring-tx-board/tx-logs"))
+        mockMvc.perform(get("/api/tx-board/tx-logs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").exists())
                 .andExpect(jsonPath("$.content").isArray())
@@ -76,7 +76,7 @@ public class SpringTxBoardWebConfigurationTest {
 
     @Test
     void shouldReturnChartJsonCorrectFormat() throws Exception {
-        mockMvc.perform(get("/api/spring-tx-board/tx-charts"))
+        mockMvc.perform(get("/api/tx-board/tx-charts"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.durationDistribution").exists())
                 .andExpect(jsonPath("$.durationDistribution").isArray())
