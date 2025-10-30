@@ -9,11 +9,14 @@ and status—all without requiring heavy instrumentation.
 ## Features
 
 * Autoconfigures itself when added as a dependency
-* Captures transaction start/end time, duration, thread, and method
+* Captures transaction start/end time, duration, thread, method and others info
+* Can observe the complex hierarchy of inner transactions
+* Track each step of transactions and database connections
 * In-memory and Redis-based storage support
-* Alarming threshold to flag slow transactions
+* Alarming threshold to flag slow transactions and database connections
 * Lightweight API endpoint for fetching transaction logs
 * Supports filtering, sorting, pagination, and duration distribution
+* Export transactions with CSV formated file
 
 ---
 
@@ -35,24 +38,31 @@ Add the following dependency to your `pom.xml`:
     <dependency>
         <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
         <artifactId>spring-tx-board</artifactId>
-        <version>1.5.0</version>
+        <version>1.6.0</version>
     </dependency>
 </dependencies>
 ```
-> Published via JitPack.io
 
 ### 2. Configuration
 
 ```yaml
-sdlc.pro.spring.tx.board:
-  enabled: true
-  alarming-threshold: 1000
-  storage: IN_MEMORY  # or REDIS
-  enable-listener-log: true
-  duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
+sdlc:
+  pro:
+    spring:
+      tx:
+        board:
+          enabled: true
+          log-type: simple # simple | details
+          storage: in_memory # in_memory | redis
+          alarming-threshold:
+            transaction: 1000 # 1000 ms
+            connection: 1000 # 1000 ms
+          duration-buckets: [100, 500, 1000, 2000, 5000]
 ```
 
-> `alarming-threshold`: Transaction duration (ms) above which the transaction will be highlighted
+> `alarming-threshold.transaction`: If any transaction duration (ms) took more than the configured value then the transaction will be highlighted.
+> `alarming-threshold.connection`: The database connection will be highlighted if the connection lease duration (ms) took higher than configured value.
+
 
 ## Web UI
 
@@ -84,11 +94,11 @@ Spring Tx Board emits a completion log when a transaction ends. You can choose b
 sdlc.pro.spring.tx.board:
   enabled: true
   # select logging style
-  log-type: DETAILS   # SIMPLE | DETAILS
+  log-type: details  # simple | details
   # thresholds used to determine INFO vs WARN
   alarming-threshold:
-    transaction: 1000   # ms
-    connection: 1000    # ms
+    transaction: 1000   # 1000 ms
+    connection: 1000    # 1000 ms
 ```
 
 ### Examples
@@ -108,12 +118,15 @@ Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connection
 [TX-Board] Transaction Completed:
   • ID: 123
   • Method: UserService.createUser
+  • Propagation: REQUIRED
+  • Isolation: DEFAULT
   • Status: COMMITTED
-  • Duration: 152 ms
-  • Connections Acquired: 2
-  • Queries Executed: 5
   • Started At: 2025-08-17T10:15:30.123Z
   • Ended At: 2025-08-17T10:15:30.275Z
+  • Duration: 152 ms
+  • Connections Acquired: 2
+  • Executed Query Count: 5
+  • Post Transaction Query Count: 0
 ```
 
 **DETAILS** (with inner transactions, unhealthy -> WARN)
@@ -121,16 +134,19 @@ Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connection
 [TX-Board] Transaction Completed:
   • ID: 789
   • Method: CheckoutService.checkout
+  • Propagation: REQUIRED
+  • Isolation: DEFAULT
   • Status: COMMITTED
-  • Duration: 2200 ms
-  • Connections Acquired: 4
-  • Queries Executed: 18
   • Started At: 2025-08-17T10:15:30.123Z
   • Ended At: 2025-08-17T10:15:32.323Z
+  • Duration: 2200 ms
+  • Connections Acquired: 4
+  • Executed Query Count: 18
+  • Post Transaction Query Count: 0
   • Inner Transactions:
-      - InventoryService.reserveStock (450 ms, COMMITTED)
-      - PaymentService.charge (1200 ms, COMMITTED)
-      - EmailService.sendReceipt (120 ms, COMMITTED)
+    ├── InventoryService.reserveStock (Duration: 450 ms, Propagation: MANDATORY, Isolation: DEFAULT, Status: COMMITTED)
+    ├── PaymentService.charge (Duration: 1200 ms, Propagation: MANDATORY, Isolation: DEFAULT, Status: COMMITTED)
+    └── EmailService.sendReceipt (Duration: 120 ms, Propagation: MANDATORY, Isolation: DEFAULT, Status: COMMITTED)
 ```
 
 ## Developer Usage
@@ -195,7 +211,6 @@ Spring Boot metadata support for IDE auto-completion is provided via `spring-con
 ## Future Enhancements
 
 * Redis-backed storage with TTL
-* Export to `CSV/JSON`
 * Spring Boot Admin integration
 
 ## Contribution
