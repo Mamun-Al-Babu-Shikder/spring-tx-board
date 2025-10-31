@@ -25,18 +25,6 @@ or modifying existing code.
 
 ## Getting Started
 
-Good question — your current README is **already quite good**, but yes, it can be improved slightly to make the
-compatibility information **clearer and more professional**.
-
-Right now, it tells users which dependency to use, but it doesn’t explicitly explain *why* there are two versions or
-*which one* to pick beyond the section titles.
-
-Here’s how you can **update and finalize your README.md section** so it’s crystal clear and developer-friendly 👇
-
----
-
-## Getting Started
-
 ### 1. Add Dependency
 
 Add the following dependency to your `pom.xml`, based on your **Spring Boot** version.
