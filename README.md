@@ -46,8 +46,8 @@ Add the following dependency to your `pom.xml`, based on your **Spring Boot** ve
 <dependencies>
     <dependency>
         <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
-        <artifactId>spring-tx-board-boot2</artifactId>
-        <version>1.6.0</version>
+        <artifactId>spring-tx-board</artifactId>
+        <version>1.6.0-boot2</version>
     </dependency>
 </dependencies>
 ```
