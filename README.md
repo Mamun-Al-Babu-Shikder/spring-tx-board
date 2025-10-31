@@ -1,9 +1,12 @@
 # Spring Tx Board
 
-**Spring Tx Board** is a lightweight, auto-configurable transaction monitoring library for Spring-based applications. It
-allows developers to capture, analyze, and visualize transaction execution metrics such as duration, thread information,
-and status—all without requiring heavy instrumentation.
+**Spring Tx Board** is an intelligent, auto-configurable transaction monitoring and diagnostics tool for Spring-based
+applications. It provides **deep visibility** into transactional behavior — capturing execution time, nested
+transactions, executed SQL queries, connection usage, and post-transaction activity for Spring-based applications.
 
+With both **in-console logs** and a **built-in web dashboard**, developers can **analyze transaction performance**,
+**detect slow or alarming operations**, and **visualize query patterns** — all without adding any manual instrumentation
+or modifying existing code.
 ![Spring Tx Board Image](spring-tx-board-looks-like.png)
 
 ## Features
@@ -22,11 +25,28 @@ and status—all without requiring heavy instrumentation.
 
 ## Getting Started
 
+Good question — your current README is **already quite good**, but yes, it can be improved slightly to make the
+compatibility information **clearer and more professional**.
+
+Right now, it tells users which dependency to use, but it doesn’t explicitly explain *why* there are two versions or
+*which one* to pick beyond the section titles.
+
+Here’s how you can **update and finalize your README.md section** so it’s crystal clear and developer-friendly 👇
+
+---
+
+## Getting Started
+
 ### 1. Add Dependency
 
-Add the following dependency to your `pom.xml`:
+Add the following dependency to your `pom.xml`, based on your **Spring Boot** version.
+
+#### For Spring Boot **3.x or higher**
+
+> Built with **Spring Boot 3.2.0**, compatible with all **3.x** versions and later.
 
 ```xml
+
 <repositories>
     <repository>
         <id>jitpack.io</id>
@@ -38,6 +58,28 @@ Add the following dependency to your `pom.xml`:
     <dependency>
         <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
         <artifactId>spring-tx-board</artifactId>
+        <version>1.6.0</version>
+    </dependency>
+</dependencies>
+```
+
+#### For Spring Boot **2.4.x – 2.7.x**
+
+> Use this version if your project still runs on **Spring Boot 2.x**.
+
+```xml
+
+<repositories>
+    <repository>
+        <id>jitpack.io</id>
+        <url>https://jitpack.io</url>
+    </repository>
+</repositories>
+
+<dependencies>
+    <dependency>
+        <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
+        <artifactId>spring-tx-board-boot2</artifactId>
         <version>1.6.0</version>
     </dependency>
 </dependencies>
@@ -57,12 +99,13 @@ sdlc:
           alarming-threshold:
             transaction: 1000 # 1000 ms
             connection: 1000 # 1000 ms
-          duration-buckets: [100, 500, 1000, 2000, 5000]
+          duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
 ```
 
-> `alarming-threshold.transaction`: If any transaction duration (ms) took more than the configured value then the transaction will be highlighted.
-> `alarming-threshold.connection`: The database connection will be highlighted if the connection lease duration (ms) took higher than configured value.
-
+> `alarming-threshold.transaction`: If any transaction duration (ms) took more than the configured value then the
+> transaction will be highlighted.
+> `alarming-threshold.connection`: The database connection will be highlighted if the connection lease duration (ms)
+> took higher than configured value.
 
 ## Web UI
 
@@ -79,12 +122,14 @@ This dashboard provides a real-time view of transaction activity including filte
 
 ## Configurable transaction logging
 
-Spring Tx Board emits a completion log when a transaction ends. You can choose between two logging modes via the property below:
+Spring Tx Board emits a completion log when a transaction ends. You can choose between two logging modes via the
+property below:
 
 - `sdlc.pro.spring.tx.board.log-type=SIMPLE` (default)
 - `sdlc.pro.spring.tx.board.log-type=DETAILS`
 
 **Health-based severity**
+
 - Healthy transaction (<= alarming thresholds) logs at INFO level.
 - Unhealthy transaction (exceeds transaction duration or connection occupied-time thresholds) logs at WARN level.
 
@@ -104,16 +149,19 @@ sdlc.pro.spring.tx.board:
 ### Examples
 
 **SIMPLE** (healthy -> INFO)
+
 ```
 Transaction [UserService.createUser] took 152 ms, Status: COMMITTED
 ```
 
 **SIMPLE** (unhealthy -> WARN)
+
 ```
 Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connections: 3, Queries: 12
 ```
 
 **DETAILS** (healthy -> INFO)
+
 ```
 [TX-Board] Transaction Completed:
   • ID: 123
@@ -130,6 +178,7 @@ Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connection
 ```
 
 **DETAILS** (with inner transactions, unhealthy -> WARN)
+
 ```
 [TX-Board] Transaction Completed:
   • ID: 789
@@ -189,10 +238,12 @@ No additional annotations or API calls required.
 ## Using the demo project for development
 
 You can use the community demo project at `https://github.com/jamilxt/tx-board-banking-demo.git` to develop and test
-changes to this library quickly. The demo is a small Spring Boot application that integrates `spring-tx-board` so you can
+changes to this library quickly. The demo is a small Spring Boot application that integrates `spring-tx-board` so you
+can
 see the UI, logs, and transaction traces locally.
 
-Follow the demo project's `README.md` for setup and usage instructions: https://github.com/jamilxt/tx-board-banking-demo.git
+Follow the demo project's `README.md` for setup and usage
+instructions: https://github.com/jamilxt/tx-board-banking-demo.git
 
 ## Utilities
 
