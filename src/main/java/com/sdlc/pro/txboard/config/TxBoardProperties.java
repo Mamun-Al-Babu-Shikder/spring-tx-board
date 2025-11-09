@@ -9,7 +9,7 @@ import java.util.List;
 public class TxBoardProperties {
     private boolean enabled = true;
     private AlarmingThreshold alarmingThreshold = new AlarmingThreshold();
-    private StorageType storage = StorageType.IN_MEMORY;
+    private StorageType storage = StorageType.REDIS;
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
     private LogType logType = LogType.SIMPLE;
@@ -97,6 +97,46 @@ public class TxBoardProperties {
 
         public void setConnection(long connection) {
             this.connection = connection;
+        }
+    }
+
+    private RedisProperties redis = new RedisProperties();
+
+    public RedisProperties getRedis() {
+        return redis;
+    }
+
+    public void setRedis(RedisProperties redis) {
+        this.redis = redis;
+    }
+    
+    public static class RedisProperties {
+        private String host = "localhost";
+        private int port = 16379;
+        private String password = "mypass";
+
+        public String getHost() {
+            return host;
+        }
+
+        public void setHost(String host) {
+            this.host = host;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public void setPort(int port) {
+            this.port = port;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        public void setPassword(String password) {
+            this.password = password;
         }
     }
 }

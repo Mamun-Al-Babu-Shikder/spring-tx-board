@@ -5,6 +5,7 @@ import com.sdlc.pro.txboard.domain.FilterNode;
 import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
 import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
+import com.sdlc.pro.txboard.exception.MethodNotImplementedException;
 import com.sdlc.pro.txboard.model.*;
 import com.sdlc.pro.txboard.util.FilterPredicateFactory;
 import com.sdlc.pro.txboard.util.SortUtils;
@@ -160,5 +161,10 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     @Override
     public void afterPropertiesSet() throws Exception {
         log.info("The InMemoryTransactionLogRepository has been created and initialized to support in-memory storage of transaction logs.");
+    }
+
+    @Override
+    public void deleteAll() {
+        throw new MethodNotImplementedException();
     }
 }

@@ -18,4 +18,5 @@ public sealed interface TransactionLogRepository permits InMemoryTransactionLogR
     TransactionLogPageResponse findAll(TransactionLogPageRequest request);
     TransactionSummary getTransactionSummary();
     List<DurationDistribution> getDurationDistributions();
+    void deleteAll();
 }

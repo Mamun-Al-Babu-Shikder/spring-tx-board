@@ -47,6 +47,23 @@
       "type": "com.sdlc.pro.txboard.config.TxBoardProperties.LogType",
       "defaultValue": "SIMPLE",
       "description": "Logging mode for transaction completion logs. Options: SIMPLE, DETAILS."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.redis.host",
+      "type": "java.lang.String",
+      "defaultValue": "localhost",
+      "description": "Redis host address for TX Board Redis storage."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.redis.port",
+      "type": "java.lang.Integer",
+      "defaultValue": 6379,
+      "description": "Redis port for TX Board Redis storage."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.redis.password",
+      "type": "java.lang.String",
+      "description": "Redis password for TX Board Redis storage."
     }
   ]
 }

@@ -1,5 +1,7 @@
 package com.sdlc.pro.txboard.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 import java.time.Instant;
 import java.util.Objects;
 
@@ -16,6 +18,13 @@ public class TransactionEvent {
         this.type = Objects.requireNonNull(type, "Must be valid transaction event type");
         this.timestamp = Objects.requireNonNull(timestamp, "Must be valid event timestamp");
         this.details = details;
+    }
+
+    @JsonCreator
+    public TransactionEvent() {
+        this.type = null;
+        this.timestamp = null;
+        this.details = null;
     }
 
     public Type getType() {

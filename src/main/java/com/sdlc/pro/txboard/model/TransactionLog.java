@@ -1,5 +1,7 @@
 package com.sdlc.pro.txboard.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
@@ -10,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionLog implements Serializable {
     private final Integer txId;
@@ -62,6 +65,27 @@ public class TransactionLog implements Serializable {
         this.havingAlarmingConnection = this.connectionSummary != null ?
                 this.connectionSummary.alarmingConnectionCount() > 0 : null;
         this.postTransactionQuires = postTransactionQuires;
+    }
+
+    @JsonCreator
+    public TransactionLog() {
+        this.txId = null;
+        this.method = null;
+        this.propagation = null;
+        this.isolation = null;
+        this.startTime = null;
+        this.endTime = null;
+        this.duration = 0;
+        this.connectionSummary = null;
+        this.connectionOriented = null;
+        this.status = null;
+        this.thread = null;
+        this.executedQuires = List.of();
+        this.child = List.of();
+        this.events = List.of();
+        this.alarmingTransaction = false;
+        this.havingAlarmingConnection = null;
+        this.postTransactionQuires = List.of();
     }
 
     public Integer getTxId() {

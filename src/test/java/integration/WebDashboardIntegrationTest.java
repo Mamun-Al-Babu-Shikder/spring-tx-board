@@ -25,6 +25,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Tag("integration")
 @SpringBootTest(
@@ -49,6 +51,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @EntityScan(basePackages = "integration.entity")
 @EnableJpaRepositories(basePackages = "integration.repository")
 @TestPropertySource("classpath:application-test.properties")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class WebDashboardIntegrationTest {
 
     private static String baseUrl;
@@ -71,9 +74,21 @@ public class WebDashboardIntegrationTest {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
+    @Autowired
+    private RedisConnectionFactory redisConnectionFactory;
+
     @BeforeAll
     static void setup(@LocalServerPort int port) {
         baseUrl = "http://localhost:" + port;
+    }
+
+    @BeforeAll
+    void clearRedisBeforeAll() {
+        try (var connection = redisConnectionFactory.getConnection()) {
+            connection.serverCommands().flushDb();
+        } catch (Exception e){
+            assumeTrue(false, "Skipping tests because Redis is not available");
+        }
     }
 
     @Test

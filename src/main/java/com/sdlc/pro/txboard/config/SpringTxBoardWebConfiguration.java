@@ -3,16 +3,19 @@ package com.sdlc.pro.txboard.config;
 import com.sdlc.pro.txboard.controller.SpringTxBoardController;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
+import com.sdlc.pro.txboard.model.TransactionLog;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.CacheControl;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -28,19 +31,27 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication
-@Import(SpringTxBoardController.class)
+@Import({SpringTxBoardController.class, RedisTxBoardConfiguration.class})
 public class SpringTxBoardWebConfiguration {
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardWebConfiguration.class);
 
     @Bean("sdlcProSpringTxLogRepository")
     @ConditionalOnMissingBean(TransactionLogRepository.class)
-    public TransactionLogRepository transactionLogRepository(TxBoardProperties txBoardProperties) {
+    public TransactionLogRepository transactionLogRepository(
+            TxBoardProperties txBoardProperties,
+            @Autowired(required = false) RedisTemplate<String, TransactionLog> txRedisTemplate) {
+
         TxBoardProperties.StorageType storageType = txBoardProperties.getStorage();
         log.info("Spring Tx Board is configured to use {} storage for transaction logs.", storageType);
 
         return switch (storageType) {
             case IN_MEMORY -> new InMemoryTransactionLogRepository(txBoardProperties);
-            case REDIS -> new RedisTransactionLogRepository();
+            case REDIS -> {
+                if (txRedisTemplate == null) {
+                    throw new IllegalStateException("Redis storage is selected but RedisTemplate bean is missing.");
+                }
+                yield new RedisTransactionLogRepository(txRedisTemplate, txBoardProperties);
+            }
         };
     }
 
