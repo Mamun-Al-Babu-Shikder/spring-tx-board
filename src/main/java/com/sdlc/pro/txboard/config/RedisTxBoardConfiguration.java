@@ -3,7 +3,7 @@ package com.sdlc.pro.txboard.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sdlc.pro.txboard.model.TransactionLog;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -14,7 +14,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
-@ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnExpression(
+        "${sdlc.pro.spring.tx.board.enabled:true} and '${sdlc.pro.spring.tx.board.storage:IN-MEMORY}' == 'REDIS'"
+)
 @EnableConfigurationProperties(TxBoardProperties.class)
 public class RedisTxBoardConfiguration {
 

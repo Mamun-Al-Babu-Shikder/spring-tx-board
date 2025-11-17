@@ -13,6 +13,7 @@ import com.sdlc.pro.txboard.util.TxLogUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,11 +29,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-@SpringBootTest(classes = {
-        RedisTxBoardConfiguration.class,
-        RedisTransactionLogRepository.class
-})
+@SpringBootTest(classes = RedisTxBoardConfiguration.class)
 @TestPropertySource("classpath:application-test.properties")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RedisTransactionLogRepositoryTest {
     private static TransactionLogRepository logRepository;
     static TxBoardProperties properties = new TxBoardProperties();
@@ -50,17 +49,19 @@ class RedisTransactionLogRepositoryTest {
             );
 
     @BeforeAll
-    static void setup() {
-        if(properties.getStorage() == TxBoardProperties.StorageType.REDIS){
-            contextRunner.run(context -> {
-                RedisTemplate<String, TransactionLog> txRedisTemplate = context.getBean(RedisTemplate.class);
-                logRepository = new RedisTransactionLogRepository(txRedisTemplate, properties);
-                logRepository.deleteAll();
-                for (TransactionLog transactionLog : TxLogUtils.createTestTransactionLogs()) {
-                    logRepository.save(transactionLog);
-                }
-            });
+    void setup() {
+        if (!"REDIS".equalsIgnoreCase(environment.getProperty("sdlc.pro.spring.tx.board.storage"))) {
+            System.out.println("Skipping setup because storage != REDIS");
+            return;
         }
+        contextRunner.run(context -> {
+            RedisTemplate<String, TransactionLog> txRedisTemplate = context.getBean(RedisTemplate.class);
+            logRepository = new RedisTransactionLogRepository(txRedisTemplate, properties);
+            logRepository.deleteAll();
+            for (TransactionLog transactionLog : TxLogUtils.createTestTransactionLogs()) {
+                logRepository.save(transactionLog);
+            }
+        });
     }
 
     @Test
@@ -199,15 +200,17 @@ class RedisTransactionLogRepositoryTest {
     }
 
     @AfterAll
-    static void testDeleteAll() {
-        if(properties.getStorage() == TxBoardProperties.StorageType.REDIS) {
-            contextRunner.run(context -> {
-                RedisTemplate<String, TransactionLog> txRedisTemplate = context.getBean(RedisTemplate.class);
-                logRepository = new RedisTransactionLogRepository(txRedisTemplate, properties);
-                logRepository.deleteAll();
-                long totalTransactionLog = logRepository.count();
-                assertEquals(0L, totalTransactionLog);
-            });
+    void testDeleteAll() {
+        if (!"REDIS".equalsIgnoreCase(environment.getProperty("sdlc.pro.spring.tx.board.storage"))) {
+            System.out.println("Skipping cleanup because storage != REDIS");
+            return;
         }
+        contextRunner.run(context -> {
+            RedisTemplate<String, TransactionLog> txRedisTemplate = context.getBean(RedisTemplate.class);
+            logRepository = new RedisTransactionLogRepository(txRedisTemplate, properties);
+            logRepository.deleteAll();
+            long totalTransactionLog = logRepository.count();
+            assertEquals(0L, totalTransactionLog);
+        });
     }
 }

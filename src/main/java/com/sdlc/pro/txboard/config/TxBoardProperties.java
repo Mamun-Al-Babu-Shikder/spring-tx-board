@@ -9,7 +9,7 @@ import java.util.List;
 public class TxBoardProperties {
     private boolean enabled = true;
     private AlarmingThreshold alarmingThreshold = new AlarmingThreshold();
-    private StorageType storage = StorageType.REDIS;
+    private StorageType storage = StorageType.IN_MEMORY;
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = List.of(100, 500, 1000, 2000, 5000);
     private LogType logType = LogType.SIMPLE;
