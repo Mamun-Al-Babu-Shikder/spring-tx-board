@@ -632,7 +632,7 @@ $(document).ready(() => {
                 const sqlItem = `
                     <div class="sql-item">
                         <div class="sql-index">Query #${index + 1}</div>
-                        <div class="sql-query">${sql}</div>
+                        <div class="sql-highlight">${highlightSql(sql)}</div>
                     </div>
                 `
                 sqlList.append(sqlItem)
@@ -692,7 +692,7 @@ $(document).ready(() => {
                     const sqlItem = `
                     <div class="sql-item">
                         <div class="sql-index">Query #${index + 1}</div>
-                        <div class="sql-query">${sql}</div>
+                        <div class="sql-highlight">${highlightSql(sql)}</div>
                     </div>
                 `
                     postTxSqlList.append(sqlItem)
@@ -873,4 +873,81 @@ $(document).ready(() => {
     function calculateDuration(currEvent, prevEvent) {
         return new Date(currEvent.timestamp).getTime() - new Date(prevEvent.timestamp).getTime()
     }
+
+    /* START: SQL Syntax highlighter */
+    function escapeHtml(str) {
+        return str.replace(/[&<>"']/g, s => ({
+            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[s]));
+    }
+
+    // SQL keywords
+    const KEYWORDS = [
+        'SELECT','FROM','WHERE','GROUP','HAVING','ORDER','BY','LIMIT','OFFSET','FETCH',
+        'RETURN','RAISE','OPEN','CLOSE','DISTINCT','ALL','TOP','INSERT','INTO','DROP',
+        'UPDATE','DELETE','MERGE','UPSERT','REPLACE','VALUES','SET','DEFAULT','CREATE',
+        'ALTER','TRUNCATE','RENAME','COMMENT','CONSTRAINT','PRIMARY KEY','FOREIGN KEY',
+        'UNIQUE','CHECK','DEFAULT','INDEX','VIEW','SEQUENCE','AUTO_INCREMENT','IDENTITY',
+        'GENERATED','BEGIN','START TRANSACTION','COMMIT','ROLLBACK','GRANT','REVOKE',
+        'SAVEPOINT','SET TRANSACTION','LOCK','UNLOCK','JOIN','INNER','OUTER','LEFT','RIGHT',
+        'FULL','CROSS','NATURAL','USING','ON','SELF','COUNT','TABLE','SUM','AVG','MIN',
+        'MAX','GROUP_CONCAT','STRING_AGG','LISTAGG','ARRAY_AGG','AND','OR','NOT','IN',
+        'EXISTS','BETWEEN','LIKE','ILIKE','IS','NULL','ANY','ALL','SOME','CASE','WHEN',
+        'IF','THEN','ELSE','ELSIF','END','UNION','UNION ALL','INTERSECT','EXCEPT','MINUS',
+        'CAST','CONVERT','COALESCE','NULLIF','NVL','IFNULL','ISNULL','CONCAT','SUBSTRING',
+        'LENGTH','UPPER','LOWER','TRIM','ROUND','CEIL','FLOOR','ABS','MOD','POWER','SQRT',
+        'GETDATE','ENGINE','CHARSET','COLLATE','SQL_CALC_FOUND_ROWS','STRAIGHT_JOIN','ROWS',
+        'SQL_SMALL_RESULT','SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE',
+        'DELAYED','HIGH_PRIORITY','LOW_PRIORITY','IGNORE','FOR UPDATE','PROCEDURE','CURSOR',
+        'LOCK IN SHARE MODE','FUNCTION','PACKAGE','DECLARE','EXCEPTION','TRUE','FALSE','ASC',
+        'DESC','FIRST','ONLY','AS'
+    ];
+
+    const TYPES = [
+        'INT','BIGINT','SMALLINT','INTEGER','NUMERIC','VARCHAR','CHAR','TEXT','DATE',
+        'TIMESTAMP','FLOAT','DOUBLE','DECIMAL','TINYINT','MEDIUMINT','LONGTEXT','ENUM',
+        'SET','NVARCHAR','DATETIME2','MONEY','UNIQUEIDENTIFIER','VARCHAR2','NUMBER','CLOB',
+        'BLOB','RAW','NCHAR','NVARCHAR2','ROWNUM','SYSDATE','SYSTIMESTAMP','DUAL','REAL',
+        'TIME','DATETIME','BOOLEAN','JSON','XML','ARRAY','CURRENT_DATE','CURRENT_TIME','NOW',
+    ];
+
+    // Build matchers
+    const keywordRegex = new RegExp('\\b(' + KEYWORDS.join('|') + ')\\b', 'i');
+    const typeRegex    = new RegExp('\\b(' + TYPES.join('|') + ')\\b', 'i');
+
+    const masterRegex = new RegExp(
+        '(' +
+        '/\\*[\\s\\S]*?\\*/' +      // block comment
+        '|--[^\\n]*' +              // single-line comment
+        "|'(?:''|[^'])*'" +         // strings
+        '|\\b\\d+(?:\\.\\d+)?\\b' + // numbers
+        '|\\b[A-Za-z_][A-Za-z0-9_\\$#]*\\b' + // identifiers / keywords
+        '|[<>!=~]+|[:+\\-*/%&|^]|[(),;]' +  // operators and punctuation
+        ')', 'g'
+    );
+
+    function highlightSql(sql) {
+        return sql.replace(masterRegex, (match) => {
+            if (/^\/\*/.test(match) || /^--/.test(match))
+                return `<span class="tok-comment">${escapeHtml(match)}</span>`;
+            if (/^'/.test(match))
+                return `<span class="tok-string">${escapeHtml(match)}</span>`;
+            if (/^\\d/.test(match))
+                return `<span class="tok-number">${escapeHtml(match)}</span>`;
+            if (/^[A-Za-z_]/.test(match)) {
+                if (keywordRegex.test(match)) {
+                    return `<span class="tok-keyword">${escapeHtml(match)}</span>`;
+                }
+                if (typeRegex.test(match))  {
+                    console.log(typeRegex + ' = ' + match);
+                    console.log(typeRegex.test(match));
+                    return `<span class="tok-type">${escapeHtml(match)}</span>`;
+                }
+
+                return `<span class="tok-fn">${escapeHtml(match)}</span>`;
+            }
+            return `<span class="tok-operator">${escapeHtml(match)}</span>`;
+        });
+    }
+    /* END: SQL Syntax highlighter */
 })
