@@ -897,6 +897,83 @@ tr:hover {
   word-break: break-all;
 }
 
+/* highlighter */
+.sql-highlight {
+    font-family: "Courier New", monospace;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    white-space: pre-wrap;
+    word-break: break-all;
+    padding: 14px;
+    overflow-x: auto;
+}
+
+/* Light Mode */
+@media (prefers-color-scheme: light) {
+    .sql-highlight {
+        background: white;
+        color: #1e293b;
+    }
+
+    .tok-keyword {
+        color: #027aff;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .tok-type {
+        color: #7ee787;
+    }
+    .tok-number {
+        color: #d73a49;
+    }
+    .tok-string {
+        color: #032f62;
+    }
+    .tok-comment {
+        color: #6b7280;
+        font-style: italic;
+    }
+    .tok-operator {
+        color: #d73a49;
+    }
+    .tok-fn {
+        color: #1e293b;
+    }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+    .sql-highlight {
+        background: #0f172a;
+        color: #e2e8f0;
+    }
+    .tok-keyword {
+        color: #027aff;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .tok-type {
+        color: #7ee787;
+    }
+    .tok-number {
+        color: #f82e41;
+    }
+    .tok-string {
+        color: #38bdf8;
+    }
+    .tok-comment {
+        color: #94a3b8;
+        font-style: italic;
+    }
+    .tok-operator {
+        color: #f82e41;
+    }
+    .tok-fn {
+        color: #a5b4fc;
+    }
+}
+
 /* Children Container */
 .children-container {
   max-height: 400px;
