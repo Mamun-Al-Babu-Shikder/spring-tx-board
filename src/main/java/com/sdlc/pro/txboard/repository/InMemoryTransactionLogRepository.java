@@ -120,7 +120,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
     @Override
-    public PageResponse findAll(PageRequest pageRequest) {
+    public PageResponse<TransactionLog> findAll(PageRequest pageRequest) {
         List<TransactionLog> logs = pageRequest.getFilter() == FilterNode.UNFILTERED ? this.transactionLogs :
                 this.transactionLogs.stream()
                         .filter(FilterPredicateFactory.buildPredicate(pageRequest.getFilter()))
@@ -130,7 +130,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
         List<TransactionLog> content = getTransactionLogPage(sortedLogs, pageRequest);
 
         int totalElements = sortedLogs.size();
-        return new PageResponse(content, pageRequest, totalElements);
+        return new PageResponse<>(content, pageRequest, totalElements);
     }
 
     @Override

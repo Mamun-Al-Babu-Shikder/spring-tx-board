@@ -42,7 +42,7 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
     }
 
     @Override
-    public PageResponse findAll(PageRequest request) {
+    public PageResponse<TransactionLog> findAll(PageRequest request) {
         throw new MethodNotImplementedException();
     }
 

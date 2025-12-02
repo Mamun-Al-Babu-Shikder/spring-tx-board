@@ -15,7 +15,7 @@ public sealed interface TransactionLogRepository permits InMemoryTransactionLogR
     long count();
     long countByTransactionStatus(TransactionPhaseStatus status);
     double averageDuration();
-    PageResponse findAll(PageRequest request);
+    PageResponse<TransactionLog> findAll(PageRequest request);
     TransactionSummary getTransactionSummary();
     List<DurationDistribution> getDurationDistributions();
 }
