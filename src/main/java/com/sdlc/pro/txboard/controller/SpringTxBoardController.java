@@ -48,7 +48,7 @@ public class SpringTxBoardController {
     }
 
     @GetMapping(value = "/tx-logs", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TransactionLogPageResponse getTransactionLogs(
+    public PageResponse getTransactionLogs(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", required = false) String sort,

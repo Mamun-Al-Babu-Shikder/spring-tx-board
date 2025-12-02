@@ -6,12 +6,12 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-public class TransactionLogPageResponse implements Serializable {
+public class PageResponse implements Serializable {
     private final List<TransactionLog> content;
     private final PageRequest pageRequest;
     private final long totalElements;
 
-    public TransactionLogPageResponse(List<TransactionLog> content, PageRequest pageRequest, long totalElements) {
+    public PageResponse(List<TransactionLog> content, PageRequest pageRequest, long totalElements) {
         Objects.requireNonNull(content, "Content must not be null");
         Objects.requireNonNull(pageRequest, "PageRequest must not be null");
 
