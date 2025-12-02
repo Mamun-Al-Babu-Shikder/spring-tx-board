@@ -1,17 +1,15 @@
 package com.sdlc.pro.txboard.domain;
 
-import com.sdlc.pro.txboard.model.TransactionLog;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 
-public class TransactionLogPageResponse implements Serializable {
-    private final List<TransactionLog> content;
-    private final TransactionLogPageRequest pageRequest;
+public class PageResponse<T> implements Serializable {
+    private final List<T> content;
+    private final PageRequest pageRequest;
     private final long totalElements;
 
-    public TransactionLogPageResponse(List<TransactionLog> content, TransactionLogPageRequest pageRequest, long totalElements) {
+    public PageResponse(List<T> content, PageRequest pageRequest, long totalElements) {
         Objects.requireNonNull(content, "Content must not be null");
         Objects.requireNonNull(pageRequest, "PageRequest must not be null");
 
@@ -25,7 +23,7 @@ public class TransactionLogPageResponse implements Serializable {
     }
 
 
-    public List<TransactionLog> getContent() {
+    public List<T> getContent() {
         return content;
     }
 
