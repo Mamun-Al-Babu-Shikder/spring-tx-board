@@ -1,6 +1,6 @@
 package com.sdlc.pro.txboard.repository;
 
-import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
+import com.sdlc.pro.txboard.domain.PageRequest;
 import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.exception.MethodNotImplementedException;
@@ -42,7 +42,7 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
     }
 
     @Override
-    public TransactionLogPageResponse findAll(TransactionLogPageRequest request) {
+    public TransactionLogPageResponse findAll(PageRequest request) {
         throw new MethodNotImplementedException();
     }
 

@@ -8,10 +8,10 @@ import java.util.Objects;
 
 public class TransactionLogPageResponse implements Serializable {
     private final List<TransactionLog> content;
-    private final TransactionLogPageRequest pageRequest;
+    private final PageRequest pageRequest;
     private final long totalElements;
 
-    public TransactionLogPageResponse(List<TransactionLog> content, TransactionLogPageRequest pageRequest, long totalElements) {
+    public TransactionLogPageResponse(List<TransactionLog> content, PageRequest pageRequest, long totalElements) {
         Objects.requireNonNull(content, "Content must not be null");
         Objects.requireNonNull(pageRequest, "PageRequest must not be null");
 

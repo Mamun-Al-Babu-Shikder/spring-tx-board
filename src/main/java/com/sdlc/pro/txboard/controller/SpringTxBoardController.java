@@ -68,7 +68,7 @@ public class SpringTxBoardController {
 
         FilterNode filter = buildFilter(search, status, propagation, isolation, connectionOriented);
         return transactionLogRepository.findAll(
-                TransactionLogPageRequest.of(page, size, parseSort(sort), filter)
+                PageRequest.of(page, size, parseSort(sort), filter)
         );
     }
 
