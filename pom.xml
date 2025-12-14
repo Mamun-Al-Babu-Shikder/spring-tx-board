@@ -72,6 +72,13 @@
             <scope>test</scope>
             <optional>true</optional>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.springframework.kafka/spring-kafka -->
+        <dependency>
+            <groupId>org.springframework.kafka</groupId>
+            <artifactId>spring-kafka</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
@@ -105,6 +112,12 @@
                 <version>${surefire.plugin.version}</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <argLine>
+                        --add-opens=java.base/java.sql=ALL-UNNAMED
+                        --add-opens=java.base/javax.sql=ALL-UNNAMED
+                        --add-opens=java.base/java.lang=ALL-UNNAMED
+                        -Dnet.bytebuddy.experimental=true
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>
