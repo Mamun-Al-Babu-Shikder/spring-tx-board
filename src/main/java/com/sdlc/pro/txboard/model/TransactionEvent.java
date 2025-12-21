@@ -26,7 +26,6 @@ public class TransactionEvent {
         this.timestamp = null;
         this.details = null;
     }
-
     public Type getType() {
         return type;
     }
@@ -46,4 +45,3 @@ public class TransactionEvent {
         CONNECTION_RELEASED,
     }
 }
-

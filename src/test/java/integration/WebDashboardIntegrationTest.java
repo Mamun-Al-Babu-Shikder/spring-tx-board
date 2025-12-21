@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
+import com.sdlc.pro.txboard.repository.TxRedisDocumentRepository;
 import integration.config.TestTxBoardConfig;
 import integration.entity.Order;
 import integration.entity.Product;
@@ -18,14 +19,16 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -38,6 +41,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +49,10 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Tag("integration")
 @SpringBootTest(
-        classes = {TestTxBoardConfig.class, WebDashboardIntegrationTest.WebTestConfig.class},
+        classes = {
+                TestTxBoardConfig.class,
+                WebDashboardIntegrationTest.WebTestConfig.class
+        },
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @EntityScan(basePackages = "integration.entity")
@@ -75,7 +82,10 @@ public class WebDashboardIntegrationTest {
     private PlatformTransactionManager transactionManager;
 
     @Autowired
-    private RedisConnectionFactory redisConnectionFactory;
+    ObjectProvider<TxRedisDocumentRepository> redisRepositoryProvider;
+
+    @Autowired
+    ObjectProvider<StringRedisTemplate> redisTemplateProvider;
 
     @BeforeAll
     static void setup(@LocalServerPort int port) {
@@ -84,10 +94,14 @@ public class WebDashboardIntegrationTest {
 
     @BeforeAll
     void clearRedisBeforeAll() {
-        try (var connection = redisConnectionFactory.getConnection()) {
-            connection.serverCommands().flushDb();
-        } catch (Exception e){
-            assumeTrue(false, "Skipping tests because Redis is not available");
+        TxRedisDocumentRepository redisRepository = redisRepositoryProvider.getIfAvailable();
+        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisRepository != null && redisTemplate != null){
+            Set<String> keys = redisTemplate.keys("txboard:*");
+            if (!keys.isEmpty()) {
+                redisTemplate.delete(keys);
+            }
+            redisRepository.deleteAll();
         }
     }
 
@@ -378,7 +392,8 @@ public class WebDashboardIntegrationTest {
                 "UserService.registerUserWithAware", 1L,
                 "anonymous", 6L,
                 "main", 17L,
-                "slow-thread", 2L
+                "slow", 2L,
+                "thread", 2L
         );
 
         @ParameterizedTest
@@ -388,7 +403,8 @@ public class WebDashboardIntegrationTest {
                 "UserService.registerUserWithAware",
                 "anonymous",
                 "main",
-                "slow-thread"
+                "slow",
+                "thread"
         })
         void testTransactionLogsFilterBySearchValue(String searchValue) {
             JsonNode response = restTemplate.getForObject(

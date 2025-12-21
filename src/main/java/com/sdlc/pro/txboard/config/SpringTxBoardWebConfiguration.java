@@ -1,21 +1,20 @@
 package com.sdlc.pro.txboard.config;
 
+import com.google.gson.Gson;
+import com.redis.om.spring.search.stream.EntityStream;
 import com.sdlc.pro.txboard.controller.SpringTxBoardController;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
-import com.sdlc.pro.txboard.model.TransactionLog;
-import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
-import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
-import com.sdlc.pro.txboard.repository.TransactionLogRepository;
+import com.sdlc.pro.txboard.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.CacheControl;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -31,7 +30,7 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication
-@Import({SpringTxBoardController.class, RedisTxBoardConfiguration.class})
+@Import({SpringTxBoardController.class, RedisOMConfiguration.class})
 public class SpringTxBoardWebConfiguration {
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardWebConfiguration.class);
 
@@ -39,7 +38,10 @@ public class SpringTxBoardWebConfiguration {
     @ConditionalOnMissingBean(TransactionLogRepository.class)
     public TransactionLogRepository transactionLogRepository(
             TxBoardProperties txBoardProperties,
-            @Autowired(required = false) RedisTemplate<String, TransactionLog> txRedisTemplate) {
+            ObjectProvider<StringRedisTemplate> redisTemplateProvider,
+            ObjectProvider<TxRedisDocumentRepository> redisRepositoryProvider,
+            ObjectProvider<EntityStream> entityStreamProvider,
+            ObjectProvider<Gson> gsonProvider) {
 
         TxBoardProperties.StorageType storageType = txBoardProperties.getStorage();
         log.info("Spring Tx Board is configured to use {} storage for transaction logs.", storageType);
@@ -47,10 +49,24 @@ public class SpringTxBoardWebConfiguration {
         return switch (storageType) {
             case IN_MEMORY -> new InMemoryTransactionLogRepository(txBoardProperties);
             case REDIS -> {
-                if (txRedisTemplate == null) {
-                    throw new IllegalStateException("Redis storage is selected but RedisTemplate bean is missing.");
+                StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+                TxRedisDocumentRepository redisRepository = redisRepositoryProvider.getIfAvailable();
+                EntityStream entityStream = entityStreamProvider.getIfAvailable();
+                Gson gson = gsonProvider.getIfAvailable();
+
+                if (redisTemplate == null) {
+                    throw new IllegalStateException("Redis config: redisTemplate is missing");
                 }
-                yield new RedisTransactionLogRepository(txRedisTemplate, txBoardProperties);
+                if (redisRepository == null) {
+                    throw new IllegalStateException("Redis config: redisRepository is missing");
+                }
+                if (entityStream == null) {
+                    throw new IllegalStateException("Redis config: entityStream is missing");
+                }
+                if (gson == null) {
+                    throw new IllegalStateException("Redis config: gson is missing");
+                }
+                yield new RedisTransactionLogRepository(txBoardProperties, redisTemplate, redisRepository, entityStream, gson);
             }
         };
     }

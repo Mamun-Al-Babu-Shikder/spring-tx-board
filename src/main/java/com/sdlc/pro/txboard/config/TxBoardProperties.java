@@ -112,8 +112,8 @@ public class TxBoardProperties {
     
     public static class RedisProperties {
         private String host = "localhost";
-        private int port = 16379;
-        private String password = "mypass";
+        private int port = 6379;
+        private String password = "mypassword";
 
         public String getHost() {
             return host;
