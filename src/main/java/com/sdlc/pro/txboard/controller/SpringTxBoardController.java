@@ -7,6 +7,7 @@ import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.DurationDistribution;
+import com.sdlc.pro.txboard.model.TransactionLog;
 import com.sdlc.pro.txboard.model.TransactionSummary;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import org.springframework.http.MediaType;
@@ -48,7 +49,7 @@ public class SpringTxBoardController {
     }
 
     @GetMapping(value = "/tx-logs", produces = MediaType.APPLICATION_JSON_VALUE)
-    public TransactionLogPageResponse getTransactionLogs(
+    public PageResponse<TransactionLog> getTransactionLogs(
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", required = false) String sort,
@@ -68,7 +69,7 @@ public class SpringTxBoardController {
 
         FilterNode filter = buildFilter(search, status, propagation, isolation, connectionOriented);
         return transactionLogRepository.findAll(
-                TransactionLogPageRequest.of(page, size, parseSort(sort), filter)
+                PageRequest.of(page, size, parseSort(sort), filter)
         );
     }
 
