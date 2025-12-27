@@ -1,8 +1,9 @@
 package com.sdlc.pro.txboard.enums;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public enum PropagationBehavior {
+public enum PropagationBehavior implements Serializable {
     UNKNOWN(-1),
     REQUIRED(0),
     SUPPORTS(1),
