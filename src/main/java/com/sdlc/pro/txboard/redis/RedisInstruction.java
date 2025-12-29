@@ -7,7 +7,8 @@ public enum RedisInstruction {
     JSON_GET("JSON.GET"),
     FT_SEARCH("FT.SEARCH"),
     FT_CREATE("FT.CREATE"),
-    FT_AGGREGATE("FT.AGGREGATE");
+    FT_AGGREGATE("FT.AGGREGATE"),
+    EXPIRE("EXPIRE");
 
     public final String instruction;
 
