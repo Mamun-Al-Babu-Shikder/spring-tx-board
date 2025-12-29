@@ -1,18 +1,28 @@
 package com.sdlc.pro.txboard.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sdlc.pro.txboard.controller.SpringTxBoardController;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
+import com.sdlc.pro.txboard.redis.JedisJsonOperation;
+import com.sdlc.pro.txboard.redis.LettuceJsonOperation;
+import com.sdlc.pro.txboard.redis.RedisJsonOperation;
 import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.http.CacheControl;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -28,9 +38,15 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnWebApplication
-@Import(SpringTxBoardController.class)
-public class SpringTxBoardWebConfiguration {
+@Import({SpringTxBoardController.class})
+public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
     private static final Logger log = LoggerFactory.getLogger(SpringTxBoardWebConfiguration.class);
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     @Bean("sdlcProSpringTxLogRepository")
     @ConditionalOnMissingBean(TransactionLogRepository.class)
@@ -40,8 +56,22 @@ public class SpringTxBoardWebConfiguration {
 
         return switch (storageType) {
             case IN_MEMORY -> new InMemoryTransactionLogRepository(txBoardProperties);
-            case REDIS -> new RedisTransactionLogRepository();
+            case REDIS -> new RedisTransactionLogRepository(this.prepareRedisJsonOperation(), txBoardProperties);
         };
+    }
+
+    private RedisJsonOperation prepareRedisJsonOperation() {
+        RedisConnectionFactory connectionFactory = this.applicationContext.getBean(RedisConnectionFactory.class);
+        ObjectMapper mapper = applicationContext.getBean(ObjectMapper.class);
+        RedisJsonOperation redisJsonOperation;
+        if (connectionFactory instanceof JedisConnectionFactory) {
+            redisJsonOperation = new JedisJsonOperation(connectionFactory, mapper);
+        } else if (connectionFactory instanceof LettuceConnectionFactory) {
+            redisJsonOperation = new LettuceJsonOperation(connectionFactory, mapper);
+        } else {
+            throw new IllegalArgumentException("Found unsupported 'RedisConnectionFactory'");
+        }
+        return redisJsonOperation;
     }
 
     @Bean("sdlcProTransactionLogPersistenceListener")
