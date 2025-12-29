@@ -17,7 +17,9 @@ public interface RedisJsonOperation {
 
     <T> long count(Class<T> entityType);
 
-    <T> long countByField(Class<T> entityType, String fieldName, Object value);
+    <T> long countByFieldValue(Class<T> entityType, String fieldName, Object value);
+
+    <T> long countByRange(Class<T> entityType, String fieldName, long lowerLimit, long upperLimit);
 
     <T> double sum(Class<T> entityType, String fieldName);
 }
