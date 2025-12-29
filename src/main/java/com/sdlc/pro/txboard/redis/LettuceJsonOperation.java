@@ -1,6 +1,6 @@
 package com.sdlc.pro.txboard.redis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.sdlc.pro.txboard.domain.PageRequest;
 import com.sdlc.pro.txboard.domain.PageResponse;
 import io.lettuce.core.codec.ByteArrayCodec;
@@ -22,7 +22,7 @@ public class LettuceJsonOperation extends AbstractRedisJsonOperation {
     private static final byte[] VALUES = new byte[]{118, 97, 108, 117, 101, 115};
     private static final byte[] TOTAL_RESULTS = {116, 111, 116, 97, 108, 95, 114, 101, 115, 117, 108, 116, 115};
 
-    public LettuceJsonOperation(RedisConnectionFactory connectionFactory, ObjectMapper mapper) {
+    public LettuceJsonOperation(RedisConnectionFactory connectionFactory, Gson mapper) {
         super(connectionFactory, mapper);
     }
 
@@ -72,7 +72,7 @@ public class LettuceJsonOperation extends AbstractRedisJsonOperation {
         for (Map.Entry<?, ?> entry : map.entrySet()) {
             if (entry.getValue() instanceof byte[] values && Arrays.equals(values, VALUES)) {
                 try {
-                    T entity = super.mapper.readValue((byte[]) entry.getKey(), entityType);
+                    T entity = super.mapper.getAdapter(entityType).fromJson(new String((byte[]) entry.getKey()));
                     content.add(entity);
                 } catch (Exception ex) {
                     throw new RedisDataException("Failed to process Redis data!", ex);

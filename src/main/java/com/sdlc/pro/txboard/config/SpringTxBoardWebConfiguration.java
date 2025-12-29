@@ -1,6 +1,6 @@
 package com.sdlc.pro.txboard.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.*;
 import com.sdlc.pro.txboard.controller.SpringTxBoardController;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
@@ -31,7 +31,9 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.lang.reflect.Type;
 import java.net.URI;
+import java.time.Instant;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -62,7 +64,7 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
 
     private RedisJsonOperation prepareRedisJsonOperation() {
         RedisConnectionFactory connectionFactory = this.applicationContext.getBean(RedisConnectionFactory.class);
-        ObjectMapper mapper = applicationContext.getBean(ObjectMapper.class);
+        Gson mapper = gsonMapper();
         RedisJsonOperation redisJsonOperation;
         if (connectionFactory instanceof JedisConnectionFactory) {
             redisJsonOperation = new JedisJsonOperation(connectionFactory, mapper);
@@ -72,6 +74,13 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
             throw new IllegalArgumentException("Found unsupported 'RedisConnectionFactory'");
         }
         return redisJsonOperation;
+    }
+
+    private Gson gsonMapper() {
+        return new GsonBuilder()
+                .registerTypeAdapter(Instant.class, new InstantAdapter())
+                .serializeNulls()
+                .create();
     }
 
     @Bean("sdlcProTransactionLogPersistenceListener")
@@ -109,6 +118,18 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
         public RouterFunction<ServerResponse> redirectUI() {
             return route(GET("/tx-board/ui"),
                     req -> ServerResponse.permanentRedirect(URI.create("/tx-board/ui/index.html")).build());
+        }
+    }
+
+    private static class InstantAdapter implements JsonSerializer<Instant>, JsonDeserializer<Instant> {
+        @Override
+        public JsonElement serialize(Instant src, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(src.toString());
+        }
+
+        @Override
+        public Instant deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) {
+            return Instant.parse(json.getAsString());
         }
     }
 }

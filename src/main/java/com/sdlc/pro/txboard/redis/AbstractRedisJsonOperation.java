@@ -1,6 +1,6 @@
 package com.sdlc.pro.txboard.redis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.sdlc.pro.txboard.domain.Filter;
 import com.sdlc.pro.txboard.domain.PageRequest;
 import com.sdlc.pro.txboard.domain.Sort;
@@ -13,11 +13,11 @@ import java.util.concurrent.ConcurrentMap;
 
 public abstract class AbstractRedisJsonOperation implements RedisJsonOperation {
     protected final RedisConnectionFactory connectionFactory;
-    protected final ObjectMapper mapper;
+    protected final Gson mapper;
 
     private final ConcurrentMap<Class<?>, RedisEntityInfo> entityInfoMap;
 
-    public AbstractRedisJsonOperation(RedisConnectionFactory connectionFactory, ObjectMapper mapper) {
+    public AbstractRedisJsonOperation(RedisConnectionFactory connectionFactory, Gson mapper) {
         this.connectionFactory = connectionFactory;
         this.mapper = mapper;
         this.entityInfoMap = new ConcurrentHashMap<>();
@@ -53,7 +53,7 @@ public abstract class AbstractRedisJsonOperation implements RedisJsonOperation {
 
     protected <T> byte[] generateSerializableValue(T t) {
         try {
-            return mapper.writeValueAsBytes(t);
+            return this.mapper.toJson(t).getBytes();
         } catch (Throwable ex) {
             throw new RuntimeException("Serialization exception");
         }
