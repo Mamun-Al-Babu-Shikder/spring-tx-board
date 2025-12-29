@@ -139,6 +139,19 @@ public abstract class AbstractRedisJsonOperation implements RedisJsonOperation {
                 .build();
     }
 
+    protected RedisCommand buildCountCommandForRange(Class<?> entityType, String fieldName, long lowerLimit, long upperLimit) {
+        RedisEntityInfo entityInfo = redisEntityInfoOf(entityType);
+        if (entityInfo.getRedisSchemaFieldTypeOf(fieldName) != SchemaFieldType.NUMERIC) {
+            throw new IllegalArgumentException("The field %s should be NUMERIC type to perform COUNT operation for according to provided range");
+        }
+
+        return RedisCommand.builder(RedisInstruction.FT_SEARCH)
+                .addArg(entityInfo.getIndexName())
+                .addArg("(@%s:[%d %d])".formatted(fieldName, lowerLimit, upperLimit))
+                .addArgs("LIMIT", 0, 0)
+                .build();
+    }
+
     protected RedisCommand buildAggregateSumCommand(Class<?> entityType, String fieldName) {
         RedisEntityInfo entityInfo = redisEntityInfoOf(entityType);
         if (entityInfo.getRedisSchemaFieldTypeOf(fieldName) != SchemaFieldType.NUMERIC) {
