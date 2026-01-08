@@ -142,7 +142,7 @@ public class LettuceJsonOperation extends AbstractRedisJsonOperation {
 
             ).get();
         } catch (Throwable ex) {
-            throw new RuntimeException("Redis command perform exception", ex);
+            throw new RedisDataException("Redis command perform exception", ex);
         }
     }
 
