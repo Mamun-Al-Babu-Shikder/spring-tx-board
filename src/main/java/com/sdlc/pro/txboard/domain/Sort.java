@@ -25,7 +25,7 @@ public class Sort {
     }
 
     public boolean isSortable() {
-        return this == UNSORTED || (this.property != null && this.direction != null);
+        return this != UNSORTED && this.property != null && this.direction != null;
     }
 
     public static Sort by(String property, Direction direction) {
