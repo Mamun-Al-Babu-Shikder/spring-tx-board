@@ -47,6 +47,12 @@
       "type": "com.sdlc.pro.txboard.config.TxBoardProperties.LogType",
       "defaultValue": "SIMPLE",
       "description": "Logging mode for transaction completion logs. Options: SIMPLE, DETAILS."
+    },
+    {
+      "name": "sdlc.pro.spring.tx.board.redis.entity-ttl",
+      "type": "java.time.Duration",
+      "defaultValue": "PT7d",
+      "description": "Time-to-live for Redis entities"
     }
   ]
 }
