@@ -1,8 +1,9 @@
 package com.sdlc.pro.txboard.enums;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
-public enum IsolationLevel {
+public enum IsolationLevel implements Serializable {
     DEFAULT(-1),
     READ_UNCOMMITTED(1),
     READ_COMMITTED(2),
