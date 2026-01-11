@@ -53,6 +53,20 @@ $(document).ready(() => {
 
     // Setup event listeners
     function setupEventListeners() {
+        // Sidebar Navigation
+        $(".nav-item").click(function(e) {
+            e.preventDefault();
+            const viewId = $(this).data("view");
+            
+            // Update active nav item
+            $(".nav-item").removeClass("active");
+            $(this).addClass("active");
+            
+            // Switch view
+            $(".view-section").removeClass("active");
+            $("#" + viewId + "-view").addClass("active");
+        });
+
         // Refresh button
         $("#refreshBtn").click(function () {
             $(this).find("i").addClass("loading")
@@ -61,6 +75,14 @@ $(document).ready(() => {
                 $(this).find("i").removeClass("loading")
             }, 1000)
         })
+
+        // Refresh SQL button
+        $("#refreshSqlBtn").click(function() {
+            $(this).find("i").addClass("loading");
+            setTimeout(() => {
+                $(this).find("i").removeClass("loading");
+            }, 1000);
+        });
 
         // Export button
         $("#exportBtn").click(exportToCSV)
