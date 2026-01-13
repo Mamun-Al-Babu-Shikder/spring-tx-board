@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 
 
 public final class RedisTransactionLogRepository implements TransactionLogRepository, InitializingBean {
@@ -130,7 +131,7 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
 
     private RedisTransactionLog toRedisTransactionLog(TransactionLog transactionLog) {
         RedisTransactionLog redisTransactionLog = new RedisTransactionLog();
-        redisTransactionLog.setTxId(transactionLog.getTxId());
+        redisTransactionLog.setTxId(transactionLog.getTxId().toString());
         redisTransactionLog.setMethod(transactionLog.getMethod());
         redisTransactionLog.setPropagation(transactionLog.getPropagation().name());
         redisTransactionLog.setIsolation(transactionLog.getIsolation().name());
@@ -164,7 +165,7 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
                 .toList();
 
         return new TransactionLog(
-                redisTransactionLog.getTxId(),
+                UUID.fromString(redisTransactionLog.getTxId()),
                 redisTransactionLog.getMethod(),
                 PropagationBehavior.valueOf(redisTransactionLog.getPropagation()),
                 IsolationLevel.valueOf(redisTransactionLog.getIsolation()),
