@@ -398,8 +398,7 @@ $(document).ready(() => {
     function generateMostParentTransactionId(tx) {
         let tx_id = ""
         if (tx.txId) {
-            const txId = `tx-${String(tx.txId).padStart(5, '0')}`
-            tx_id += '<br><span class="tx-id">ID: ' + txId + '</span>'
+            tx_id += '<br><span class="tx-id">ID: ' + tx.txId + '</span>'
         }
 
         return tx_id;
