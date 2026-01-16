@@ -15,7 +15,7 @@ import static com.sdlc.pro.txboard.redis.SchemaFieldType.*;
 )
 public class RedisTransactionLog implements Serializable {
     @RedisId
-    private Integer txId;
+    private String txId;
     @IndexFiled(sortable = true)
     private String method;
     @IndexFiled(schemaFieldType = TAG, sortable = true)
@@ -47,11 +47,11 @@ public class RedisTransactionLog implements Serializable {
 
     }
 
-    public Integer getTxId() {
+    public String getTxId() {
         return txId;
     }
 
-    public void setTxId(Integer txId) {
+    public void setTxId(String txId) {
         this.txId = txId;
     }
 
