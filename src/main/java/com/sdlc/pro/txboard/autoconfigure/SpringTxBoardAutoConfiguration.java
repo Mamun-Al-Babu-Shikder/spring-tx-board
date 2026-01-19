@@ -2,6 +2,7 @@ package com.sdlc.pro.txboard.autoconfigure;
 
 import com.sdlc.pro.txboard.config.SpringTxBoardWebConfiguration;
 import com.sdlc.pro.txboard.config.TxBoardProperties;
+import com.sdlc.pro.txboard.listener.SqlExecutionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionPhaseListener;
 import com.sdlc.pro.txboard.listener.TransactionPhaseListenerImpl;
@@ -26,7 +27,9 @@ import java.util.List;
 public class SpringTxBoardAutoConfiguration {
 
     @Bean("sdlcProTxPhaseListener")
-    public TransactionPhaseListener transactionPhaseListener(List<TransactionLogListener> transactionLogListeners, TxBoardProperties txBoardProperties) {
-        return new TransactionPhaseListenerImpl(transactionLogListeners, txBoardProperties);
+    public TransactionPhaseListener transactionPhaseListener(TxBoardProperties txBoardProperties,
+                                                             List<TransactionLogListener> transactionLogListeners,
+                                                             List<SqlExecutionLogListener> sqlExecutionLogListeners) {
+        return new TransactionPhaseListenerImpl(txBoardProperties,transactionLogListeners, sqlExecutionLogListeners);
     }
 }
