@@ -39,6 +39,7 @@ class TransactionPhaseListenerImplTest {
     private TxBoardProperties txBoardProperties;
     private TransactionDefinition transactionDefinition;
     private TransactionLogListener txLogListener;
+    private SqlExecutionLogListener sqlExecutionLogListener;
     private TransactionPhaseListenerImpl txPhaseListener;
     private ListAppender<ILoggingEvent> loggingEventAppender;
     private Logger logger;
@@ -49,7 +50,12 @@ class TransactionPhaseListenerImplTest {
         transactionDefinition = mock(TransactionDefinition.class);
 
         txLogListener = mock(TransactionLogListener.class);
-        txPhaseListener = new TransactionPhaseListenerImpl(List.of(txLogListener), txBoardProperties);
+        sqlExecutionLogListener = mock(SqlExecutionLogListener.class);
+        txPhaseListener = new TransactionPhaseListenerImpl(
+                txBoardProperties,
+                List.of(txLogListener),
+                List.of(sqlExecutionLogListener)
+        );
 
         logger = (Logger) LoggerFactory.getLogger(TransactionPhaseListenerImpl.class);
         loggingEventAppender = new ListAppender<>();
@@ -455,7 +461,10 @@ class TransactionPhaseListenerImplTest {
             doThrow(new RuntimeException("Listener failed!")).when(failingListener).listen(any());
 
             TransactionPhaseListenerImpl listenerWithFailingCallback = new TransactionPhaseListenerImpl(
-                    List.of(txLogListener, failingListener), txBoardProperties);
+                    txBoardProperties,
+                    List.of(txLogListener, failingListener),
+                    List.of(sqlExecutionLogListener)
+            );
 
             assertDoesNotThrow(() -> {
                 listenerWithFailingCallback.beforeBegin(transactionDefinition);
@@ -478,7 +487,10 @@ class TransactionPhaseListenerImplTest {
         @Test
         void shouldHandleEmptyListenersList() {
             TransactionPhaseListenerImpl listenerWithEmptyCallbacks = new TransactionPhaseListenerImpl(
-                    List.of(), txBoardProperties);
+                    txBoardProperties,
+                    List.of(),
+                    List.of()
+            );
 
             assertDoesNotThrow(() -> {
                 listenerWithEmptyCallbacks.beforeBegin(transactionDefinition);
@@ -492,7 +504,7 @@ class TransactionPhaseListenerImplTest {
         @Test
         void shouldHandleNullListenersList() {
             TransactionPhaseListenerImpl listenerWithoutCallbacks = new TransactionPhaseListenerImpl(
-                    null, txBoardProperties);
+                    txBoardProperties, null, null);
 
             assertDoesNotThrow(() -> {
                 listenerWithoutCallbacks.beforeBegin(transactionDefinition);

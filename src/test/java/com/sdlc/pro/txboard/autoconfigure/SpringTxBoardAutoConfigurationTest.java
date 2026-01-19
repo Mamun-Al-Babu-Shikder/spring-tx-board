@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class SpringTxBoardAutoConfigurationTest {
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
+            .withPropertyValues("sdlc.pro.spring.tx.board.storage=in_memory")
             .withConfiguration(AutoConfigurations.of(SpringTxBoardAutoConfiguration.class));
 
     @Test
