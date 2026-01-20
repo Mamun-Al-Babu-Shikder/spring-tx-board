@@ -7,8 +7,10 @@ import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.DurationDistribution;
+import com.sdlc.pro.txboard.model.SqlExecutionLog;
 import com.sdlc.pro.txboard.model.TransactionLog;
 import com.sdlc.pro.txboard.model.TransactionSummary;
+import com.sdlc.pro.txboard.repository.SqlExecutionLogRepository;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,10 +28,14 @@ public class SpringTxBoardController {
 
     private final TxBoardProperties txBoardProperties;
     private final TransactionLogRepository transactionLogRepository;
+    private final SqlExecutionLogRepository sqlExecutionLogRepository;
 
-    public SpringTxBoardController(TxBoardProperties txBoardProperties, TransactionLogRepository transactionLogRepository) {
+    public SpringTxBoardController(TxBoardProperties txBoardProperties,
+                                   TransactionLogRepository transactionLogRepository,
+                                   SqlExecutionLogRepository sqlExecutionLogRepository) {
         this.txBoardProperties = txBoardProperties;
         this.transactionLogRepository = transactionLogRepository;
+        this.sqlExecutionLogRepository = sqlExecutionLogRepository;
     }
 
     @GetMapping(value = "/config/alarming-threshold", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -118,5 +124,29 @@ public class SpringTxBoardController {
         }
 
         return filters.isEmpty() ? FilterNode.UNFILTERED : FilterGroup.of(filters, FilterGroup.Logic.AND);
+    }
+
+    @GetMapping(value = "/sql-logs", produces = MediaType.APPLICATION_JSON_VALUE)
+    public PageResponse<SqlExecutionLog> getTransactionLogs(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "search", required = false) String search) {
+
+        if (page < 0) {
+            throw new IllegalArgumentException("The value of 'page' must be positive integer");
+        }
+
+        if (size < 1 || size > 1000) {
+            throw new IllegalArgumentException("The value of 'size' must be between 1 to 1000");
+        }
+
+        FilterNode filter = search != null && !search.isBlank() ? FilterGroup.of(
+                List.of(Filter.of("thread", search, Filter.Operator.CONTAINS)),
+                FilterGroup.Logic.OR
+        ) : FilterNode.UNFILTERED;
+
+        return this.sqlExecutionLogRepository.findAll(
+                PageRequest.of(page, size, parseSort(sort), filter));
     }
 }
