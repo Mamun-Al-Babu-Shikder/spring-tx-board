@@ -119,8 +119,8 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        log.info("The RedisTransactionLogRepository has been created and initialized to support Redis as a storage of transaction logs.");
         this.prepareSchema();
+        log.info("The RedisTransactionLogRepository has been created and initialized to support Redis as a storage of transaction logs.");
     }
 
     private void prepareSchema() {
