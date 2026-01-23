@@ -69,7 +69,7 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
 
         return switch (storageType) {
             case IN_MEMORY -> new InMemorySqlExecutionLogRepository();
-            case REDIS -> new RedisSqlExecutionLogRepository(this.resolveRedisJsonOperation());
+            case REDIS -> new RedisSqlExecutionLogRepository(this.resolveRedisJsonOperation(), txBoardProperties);
         };
     }
 
