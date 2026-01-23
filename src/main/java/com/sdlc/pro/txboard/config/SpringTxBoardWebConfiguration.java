@@ -2,19 +2,18 @@ package com.sdlc.pro.txboard.config;
 
 import com.google.gson.*;
 import com.sdlc.pro.txboard.controller.SpringTxBoardController;
+import com.sdlc.pro.txboard.listener.SqlExecutionLogListener;
+import com.sdlc.pro.txboard.listener.SqlExecutionLogPersistenceListener;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
 import com.sdlc.pro.txboard.redis.JedisJsonOperation;
 import com.sdlc.pro.txboard.redis.LettuceJsonOperation;
 import com.sdlc.pro.txboard.redis.RedisJsonOperation;
-import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
-import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
-import com.sdlc.pro.txboard.repository.TransactionLogRepository;
+import com.sdlc.pro.txboard.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.boot.autoconfigure.condition.*;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
@@ -58,21 +57,40 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
 
         return switch (storageType) {
             case IN_MEMORY -> new InMemoryTransactionLogRepository(txBoardProperties);
-            case REDIS -> new RedisTransactionLogRepository(this.prepareRedisJsonOperation(), txBoardProperties);
+            case REDIS -> new RedisTransactionLogRepository(this.resolveRedisJsonOperation(), txBoardProperties);
         };
     }
 
-    private RedisJsonOperation prepareRedisJsonOperation() {
-        RedisConnectionFactory connectionFactory = this.applicationContext.getBean(RedisConnectionFactory.class);
+    @Bean("sdlcProSqlExecutionLogRepository")
+    @ConditionalOnMissingBean(SqlExecutionLogRepository.class)
+    public SqlExecutionLogRepository sqlExecutionLogRepository(TxBoardProperties txBoardProperties) {
+        TxBoardProperties.StorageType storageType = txBoardProperties.getStorage();
+        log.info("Spring Tx Board is configured to use {} storage for sql execution logs.", storageType);
+
+        return switch (storageType) {
+            case IN_MEMORY -> new InMemorySqlExecutionLogRepository();
+            case REDIS -> new RedisSqlExecutionLogRepository(this.resolveRedisJsonOperation(), txBoardProperties);
+        };
+    }
+
+    private RedisJsonOperation resolveRedisJsonOperation() {
+        return this.applicationContext.getBean("sdlcProRedisJsonOperation", RedisJsonOperation.class);
+    }
+
+    @Bean
+    @ConditionalOnClass(RedisConnectionFactory.class)
+    @ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "storage", havingValue = "redis", matchIfMissing = true)
+    public RedisJsonOperation sdlcProRedisJsonOperation(RedisConnectionFactory redisConnectionFactory) {
         Gson mapper = gsonMapper();
         RedisJsonOperation redisJsonOperation;
-        if (connectionFactory instanceof JedisConnectionFactory) {
-            redisJsonOperation = new JedisJsonOperation(connectionFactory, mapper);
-        } else if (connectionFactory instanceof LettuceConnectionFactory) {
-            redisJsonOperation = new LettuceJsonOperation(connectionFactory, mapper);
+        if (redisConnectionFactory instanceof JedisConnectionFactory) {
+            redisJsonOperation = new JedisJsonOperation(redisConnectionFactory, mapper);
+        } else if (redisConnectionFactory instanceof LettuceConnectionFactory) {
+            redisJsonOperation = new LettuceJsonOperation(redisConnectionFactory, mapper);
         } else {
-            throw new IllegalArgumentException("Found unsupported 'RedisConnectionFactory'");
+            throw new IllegalArgumentException("Found unsupported RedisConnectionFactory instance. Required type must be JedisConnectionFactory or LettuceConnectionFactory");
         }
+
         return redisJsonOperation;
     }
 
@@ -86,6 +104,11 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware {
     @Bean("sdlcProTransactionLogPersistenceListener")
     public TransactionLogListener transactionLogPersistenceListener(TransactionLogRepository transactionLogRepository) {
         return new TransactionLogPersistenceListener(transactionLogRepository);
+    }
+
+    @Bean("sdlcProSqlExecutionLogPersistenceListener")
+    public SqlExecutionLogListener sqlExecutionLogRepositoryPersistenceListener(SqlExecutionLogRepository sqlExecutionLogRepository) {
+        return new SqlExecutionLogPersistenceListener(sqlExecutionLogRepository);
     }
 
     @Configuration

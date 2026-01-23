@@ -63,7 +63,7 @@ public final class TxLogUtils {
 
         ConnectionSummary orderConnectionSummary = fromEvents(orderEvents);
         TransactionLog orderProcessing = new TransactionLog(
-                101, "OrderService.createOrder",
+                UUID.randomUUID(), "OrderService.createOrder",
                 PropagationBehavior.REQUIRED, IsolationLevel.READ_COMMITTED,
                 orderStart, orderStart.plusMillis(950), orderConnectionSummary,
                 TransactionPhaseStatus.COMMITTED, "order-processor-1",
@@ -105,7 +105,7 @@ public final class TxLogUtils {
 
         ConnectionSummary userRegConnSummary = fromEvents(userRegEvents);
         TransactionLog userRegistration = new TransactionLog(
-                102, "UserService.registerUser",
+                UUID.randomUUID(), "UserService.registerUser",
                 PropagationBehavior.REQUIRED, IsolationLevel.READ_COMMITTED,
                 userRegStart, userRegStart.plusMillis(450), userRegConnSummary,
                 TransactionPhaseStatus.ROLLED_BACK, "auth-service-2",
@@ -131,7 +131,7 @@ public final class TxLogUtils {
 
         ConnectionSummary reportConnSummary = fromEvents(reportEvents);
         TransactionLog reportGeneration = new TransactionLog(
-                208, "ReportService.generateMonthlyReport",
+                UUID.randomUUID(), "ReportService.generateMonthlyReport",
                 PropagationBehavior.REQUIRES_NEW, IsolationLevel.SERIALIZABLE,
                 reportStart, reportStart.plusMillis(3200),
                 reportConnSummary,
@@ -150,7 +150,7 @@ public final class TxLogUtils {
         // Simple Cache Update
         Instant cacheStart = baseTime.plusSeconds(180);
         TransactionLog cacheUpdate = new TransactionLog(
-                387, "CacheService.updateUserSession",
+                UUID.randomUUID(), "CacheService.updateUserSession",
                 PropagationBehavior.NOT_SUPPORTED, IsolationLevel.DEFAULT,
                 cacheStart, cacheStart.plusMillis(15), new ConnectionSummary(0, 0, 0),
                 TransactionPhaseStatus.COMMITTED, "session-manager-1",
@@ -175,7 +175,7 @@ public final class TxLogUtils {
 
         ConnectionSummary analyticsConnSummary = fromEvents(analyticsEvents);
         TransactionLog dailyMetrics = new TransactionLog(
-                402, "AnalyticsService.computeDailyMetrics",
+                UUID.randomUUID(), "AnalyticsService.computeDailyMetrics",
                 PropagationBehavior.REQUIRED, IsolationLevel.READ_COMMITTED,
                 analyticsStart, analyticsStart.plusMillis(900),
                 analyticsConnSummary,
