@@ -232,7 +232,7 @@
                                 <table id="transactionTable">
                                     <thead>
                                         <tr>
-                                            <th style="width: 40px;"></th>
+                                            <th class="col-icon"></th>
                                             <th class="sortable" data-sort="method">
                                                 Method Name <i class="fas fa-sort"></i>
                                             </th>
@@ -322,9 +322,31 @@
                                 <p>Monitor and analyze SQL query performance</p>
                             </div>
                             <div class="header-actions">
+                                <button class="btn btn-secondary" id="exportSqlBtn">
+                                    <i class="fas fa-download"></i> Export
+                                </button>
                                 <button class="btn btn-primary" id="refreshSqlBtn">
                                     <i class="fas fa-sync-alt"></i> Refresh
                                 </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SQL Filters -->
+                    <div class="filters-section">
+                        <div class="filters-card">
+                            <div class="filters-header">
+                                <h3><i class="fas fa-filter"></i> Filters</h3>
+                                <button class="btn btn-text" id="clearSqlFilters">Reset</button>
+                            </div>
+                            <div class="filters-content">
+                                <div class="filter-group">
+                                    <label>Search Query</label>
+                                    <div class="input-with-icon">
+                                        <i class="fas fa-search"></i>
+                                        <input type="text" id="sqlSearch" placeholder="Search thread name...">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -338,23 +360,72 @@
                                 <table id="sqlTable">
                                     <thead>
                                         <tr>
-                                            <th>Query</th>
-                                            <th>Start Time</th>
-                                            <th>End Time</th>
-                                            <th>Duration</th>
-                                            <th>Status</th>
+                                            <th>SQL Execution ID</th>
+                                            <th class="sortable" data-sort="conAcquiredTime">
+                                                Connection Acquired Time <i class="fas fa-sort"></i>
+                                            </th>
+                                            <th class="sortable" data-sort="conReleaseTime">
+                                                Connection Release Time <i class="fas fa-sort"></i>
+                                            </th>
+                                            <th class="sortable" data-sort="conOccupiedTime">
+                                                Occupied Time <i class="fas fa-sort"></i>
+                                            </th>
+                                            <th class="sortable" data-sort="thread">
+                                                Thread <i class="fas fa-sort"></i>
+                                            </th>
+                                            <th>SQL Count</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody id="sqlTableBody">
-                                        <tr>
-                                            <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
-                                                <i class="fas fa-info-circle"
-                                                    style="margin-bottom: 10px; font-size: 24px;"></i><br>
-                                                Feature coming soon
-                                            </td>
-                                        </tr>
+                                        <!-- Rows will be populated by JavaScript -->
                                     </tbody>
                                 </table>
+                            </div>
+
+                            <!-- SQL Pagination -->
+                            <div class="table-footer" id="sqlTableFooter">
+                                <div class="pagination-info">
+                                    <p>Showing <span id="sqlStartRecord">0</span> to <span id="sqlEndRecord">0</span> of
+                                        <span id="sqlTotalResults">0</span> queries
+                                    </p>
+                                </div>
+                                <div class="pagination-controls">
+                                    <div class="page-size-selector">
+                                        <label for="sqlPageSize">Rows per page:</label>
+                                        <select id="sqlPageSize">
+                                            <option value="10" selected>10</option>
+                                            <option value="15">15</option>
+                                            <option value="20">20</option>
+                                            <option value="25">25</option>
+                                            <option value="30">30</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <div class="pagination-buttons">
+                                        <button id="sqlFirstPage" class="pagination-btn" title="First Page">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </button>
+                                        <button id="sqlPrevPage" class="pagination-btn" title="Previous Page">
+                                            <i class="fas fa-angle-left"></i>
+                                        </button>
+                                        <div class="page-numbers" id="sqlPageNumbers">
+                                            <!-- Page numbers will be generated by JavaScript -->
+                                        </div>
+                                        <button id="sqlNextPage" class="pagination-btn" title="Next Page">
+                                            <i class="fas fa-angle-right"></i>
+                                        </button>
+                                        <button id="sqlLastPage" class="pagination-btn" title="Last Page">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </button>
+                                    </div>
+                                    <div class="page-jump">
+                                        <span>Go to page:</span>
+                                        <input type="number" id="sqlPageJump" min="1" max="1" value="1">
+                                        <button id="sqlJumpToPage" class="pagination-btn">Go</button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -490,6 +561,50 @@
                         </div>
                         <div class="sql-list" id="postTxSqlList">
                             <!-- Post transaction SQL queries will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SQL Execution Detail Modal -->
+    <div id="sqlModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-info-circle"></i> SQL Execution Details</h2>
+                <button class="modal-close" id="closeSqlModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-padding">
+                    <div class="detail-grid">
+                        <div class="detail-item">
+                            <label>Thread:</label>
+                            <span id="sqlDetailThread">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Connection Acquired:</label>
+                            <span id="sqlDetailAcquired">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Connection Released:</label>
+                            <span id="sqlDetailReleased">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <label>Occupied Time:</label>
+                            <span id="sqlDetailOccupied">-</span>
+                        </div>
+                    </div>
+
+                    <div class="sql-container mt-4">
+                        <div class="sql-header">
+                            <h4>Executed SQL Queries</h4>
+                            <span id="sqlDetailCount" class="badge badge-info">0 queries</span>
+                        </div>
+                        <div class="sql-list" id="sqlDetailList">
+                            <!-- SQL queries will be populated here -->
                         </div>
                     </div>
                 </div>
