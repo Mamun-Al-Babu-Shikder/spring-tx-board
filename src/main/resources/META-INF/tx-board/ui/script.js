@@ -22,6 +22,15 @@ $(document).ready(() => {
         connection: 1000
     }
 
+    // SQL View State
+    let sqlFilteredQueries = []
+    let sqlTotalElements = 0
+    let sqlTotalPages = 0
+    let sqlCurrentPage = 1
+    let sqlPageSize = 10
+    let sqlSortField = "conAcquiredTime"
+    let sqlSortDirection = "desc"
+
     // API Configuration
     // Extract the current full pathname
     const pathname = window.location.pathname;
@@ -33,7 +42,8 @@ $(document).ready(() => {
         ALARMING_THRESHOLD: API_BASE_URL + '/config/alarming-threshold',
         TRANSACTIONS: API_BASE_URL + '/tx-logs',
         SUMMARY: API_BASE_URL + '/tx-summary',
-        CHARTS: API_BASE_URL + '/tx-charts'
+        CHARTS: API_BASE_URL + '/tx-charts',
+        SQL_LOGS: API_BASE_URL + '/sql-logs'
     };
 
     // Initialize the dashboard
@@ -43,6 +53,7 @@ $(document).ready(() => {
         setupEventListeners()
         fetchAlarmingThreshold()
         fetchAndUpdateUI()
+        loadSqlQueries()
     }
 
     function fetchAndUpdateUI() {
@@ -54,14 +65,14 @@ $(document).ready(() => {
     // Setup event listeners
     function setupEventListeners() {
         // Sidebar Navigation
-        $(".nav-item").click(function(e) {
+        $(".nav-item").click(function (e) {
             e.preventDefault();
             const viewId = $(this).data("view");
-            
+
             // Update active nav item
             $(".nav-item").removeClass("active");
             $(this).addClass("active");
-            
+
             // Switch view
             $(".view-section").removeClass("active");
             $("#" + viewId + "-view").addClass("active");
@@ -77,9 +88,10 @@ $(document).ready(() => {
         })
 
         // Refresh SQL button
-        $("#refreshSqlBtn").click(function() {
+        $("#refreshSqlBtn").click(function () {
             $(this).find("i").addClass("loading");
             setTimeout(() => {
+                loadSqlQueries()
                 $(this).find("i").removeClass("loading");
             }, 1000);
         });
@@ -92,11 +104,15 @@ $(document).ready(() => {
 
         // Filter inputs
         $("#statusFilter, #propagationFilter, #isolationFilter, #connectionFilter").change(function () {
-            loadTransactions();
+            currentPage = 1
+            loadTransactions()
         })
 
         document.getElementById("methodSearch")
-            .addEventListener("input", debounce(loadTransactions, 500));
+            .addEventListener("input", debounce(() => {
+                currentPage = 1
+                loadTransactions()
+            }, 500));
 
         // Page size change
         $("#pageSize").change(function () {
@@ -106,7 +122,7 @@ $(document).ready(() => {
         })
 
         // Sorting
-        $(".sortable").click(function () {
+        $("#transactionTable .sortable").click(function () {
             const field = $(this).data("sort")
             if (sortField === field) {
                 sortDirection = sortDirection === "asc" ? "desc" : "asc"
@@ -129,11 +145,71 @@ $(document).ready(() => {
             goToPage(page)
         })
 
+        // --- SQL View Event Listeners ---
+
+        // Export SQL button
+        $("#exportSqlBtn").click(exportSqlToCSV)
+
+        // Clear SQL filters
+        $("#clearSqlFilters").click(clearSqlFilters)
+
+        // SQL Filter inputs
+        document.getElementById("sqlSearch")
+            .addEventListener("input", debounce(() => {
+                sqlCurrentPage = 1
+                loadSqlQueries()
+            }, 500));
+
+        // SQL Page size change
+        $("#sqlPageSize").change(function () {
+            sqlPageSize = Number.parseInt($(this).val())
+            sqlCurrentPage = 1
+            loadSqlQueries()
+        })
+
+        // SQL Sorting
+        $("#sqlTable .sortable").click(function () {
+            const field = $(this).data("sort")
+            if (sqlSortField === field) {
+                sqlSortDirection = sqlSortDirection === "asc" ? "desc" : "asc"
+            } else {
+                sqlSortField = field
+                sqlSortDirection = "asc"
+            }
+            updateSqlSortIcons()
+            loadSqlQueries()
+        })
+
+        // SQL Pagination
+        $("#sqlFirstPage").click(() => goToSqlPage(1))
+        $("#sqlPrevPage").click(() => goToSqlPage(sqlCurrentPage - 1))
+        $("#sqlNextPage").click(() => goToSqlPage(sqlCurrentPage + 1))
+        $("#sqlLastPage").click(() => goToSqlPage(sqlTotalPages))
+
+        $("#sqlJumpToPage").click(() => {
+            const page = parseInt($('#sqlPageJump').val())
+            goToSqlPage(page)
+        })
+
         // Modal
         $("#closeModal").click(closeModal)
+        $("#closeSqlModal").click(closeSqlModal)
         $(window).click((e) => {
             if (e.target.id === "transactionModal") {
                 closeModal()
+            }
+            if (e.target.id === "sqlModal") {
+                closeSqlModal()
+            }
+        })
+
+        // SQL Table View Details
+        $("#sqlTableBody").on("click", ".view-details", function (e) {
+            e.stopPropagation()
+            const id = $(this).data("exe-sql-id")
+            const item = sqlFilteredQueries.find(q => q.id === id)
+            if (item) {
+                showSqlDetails(item)
             }
         })
 
@@ -338,7 +414,8 @@ $(document).ready(() => {
         if (transactions.length === 0) {
             tbody.append(`
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 30px;">
+                    <td colspan="10" class="empty-state-cell-large">
+                        <i class="fas fa-info-circle empty-state-icon"></i><br>
                         No transactions found
                     </td>
                 </tr>
@@ -647,7 +724,7 @@ $(document).ready(() => {
         sqlList.empty()
 
         if (queries.length === 0) {
-            sqlList.append('<p style="color: #64748b; text-align: center; padding: 20px;">No SQL queries executed</p>')
+            sqlList.append('<p class="empty-state-text">No SQL queries executed</p>')
         } else {
             queries.forEach((sql, index) => {
                 const sqlItem = `
@@ -667,7 +744,7 @@ $(document).ready(() => {
         childrenTree.empty()
 
         if (children.length === 0) {
-            childrenTree.append('<p style="color: #64748b; text-align: center; padding: 20px;">No child transactions</p>')
+            childrenTree.append('<p class="empty-state-text">No child transactions</p>')
         } else {
             children.forEach((child, index) => {
                 const childItem = `
@@ -707,7 +784,7 @@ $(document).ready(() => {
             postTxSqlList.empty()
 
             if (queries.length === 0) {
-                postTxSqlList.append('<p style="color: #64748b; text-align: center; padding: 20px;">No post transaction SQL queries executed</p>')
+                postTxSqlList.append('<p class="empty-state-text">No post transaction SQL queries executed</p>')
             } else {
                 queries.forEach((sql, index) => {
                     const sqlItem = `
@@ -751,6 +828,7 @@ $(document).ready(() => {
     // Export to CSV
     function exportToCSV() {
         const headers = [
+            "Transaction ID",
             "Method Name",
             "Start Time",
             "End Time",
@@ -758,18 +836,21 @@ $(document).ready(() => {
             "Status",
             "Propagation",
             "Isolation",
+            "Thread",
             "SQL Count",
         ]
         const csvContent = [headers.join(",")]
 
         // Recursive function to add all transactions including children
         function addTransactionToCSV(tx, depth = 0) {
+            const txId = tx.txId
             const indent = depth > 0 ? " ".repeat(depth * 2) : ""
             const row = [
+                `${txId === undefined || txId === null ? '' : tx.txId}`,
                 `"${indent}${tx.method}"`,
                 `"${formatDateTime(tx.startTime)}"`,
                 `"${formatDateTime(tx.endTime)}"`,
-                tx.duration,
+                formatDuration(tx.duration),
                 tx.status,
                 tx.propagation,
                 tx.isolation,
@@ -785,7 +866,7 @@ $(document).ready(() => {
 
         transactions.forEach((tx) => addTransactionToCSV(tx))
 
-        const blob = new Blob([csvContent.join("\n")], {type: "text/csv"})
+        const blob = new Blob([csvContent.join("\n")], { type: "text/csv" })
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
@@ -844,7 +925,7 @@ $(document).ready(() => {
         timeline.empty()
 
         if (events.length === 0) {
-            timeline.append('<p style="color: #64748b; text-align: center; padding: 20px;">No timing events available</p>')
+            timeline.append('<p class="empty-state-text">No timing events available</p>')
             return
         }
 
@@ -895,46 +976,294 @@ $(document).ready(() => {
         return new Date(currEvent.timestamp).getTime() - new Date(prevEvent.timestamp).getTime()
     }
 
+    /* START: SQL View Logic */
+    function loadSqlQueries() {
+        const url = buildSqlLogFetchingRequestUrl()
+
+        $.ajax({
+            url: url,
+            method: 'GET',
+            success: function (response) {
+                sqlFilteredQueries = response.content
+                sqlTotalElements = response.totalElements
+                sqlTotalPages = response.totalPages
+                renderSqlTable()
+                updateSqlPaginationControls()
+            },
+            error: function (error) {
+                console.error('Error loading SQL queries:', error);
+            }
+        });
+    }
+
+    function buildSqlLogFetchingRequestUrl() {
+        const search = $("#sqlSearch").val().toLowerCase()
+
+        // Build query parameters
+        const params = [];
+        params.push('page=' + (sqlCurrentPage - 1)); // Spring Boot pages are 0-indexed
+        params.push('size=' + sqlPageSize);
+
+        if (search) {
+            params.push('search=' + encodeURIComponent(search))
+        }
+
+        if (sqlSortField) {
+            params.push('sort=' + sqlSortField + ',' + sqlSortDirection)
+        }
+
+        return ENDPOINTS.SQL_LOGS + '?' + params.join('&');
+    }
+
+    function renderSqlTable() {
+        const tbody = $("#sqlTableBody")
+        tbody.empty()
+
+        if (sqlFilteredQueries.length === 0) {
+            tbody.append(`
+                <tr>
+                    <td colspan="7" class="empty-state-cell-large">
+                        <i class="fas fa-info-circle empty-state-icon"></i><br>
+                        No SQL queries found
+                    </td>
+                </tr>
+            `)
+            return
+        }
+
+        sqlFilteredQueries.forEach(item => {
+            const row = `
+                <tr>
+                    <td>ID: ${item.id}</td>
+                    <td>${formatDateTime(item.conAcquiredTime)}</td>
+                    <td>${formatDateTime(item.conReleaseTime)}</td>
+                    <td>
+                         <span class="badge ${item.alarmingConnection ? "badge-warning" : "badge-secondary"}">
+                            ${formatDuration(item.conOccupiedTime)}
+                        </span>
+                    </td>
+                    <td><span class="thread-id">${item.thread || 'N/A'}</span></td>
+                    <td>
+                        <span class="badge badge-info">${item.executedQuires.length}</span>
+                    </td>
+                    <td>
+                        <button class="btn btn-sm btn-primary view-details" data-exe-sql-id="${item.id}">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                </tr>
+            `
+            tbody.append(row)
+        })
+    }
+
+    function updateSqlPaginationControls() {
+        // Update info text
+        const startRecord = sqlTotalElements === 0 ? 0 : (sqlCurrentPage - 1) * sqlPageSize + 1
+        const endRecord = Math.min(sqlCurrentPage * sqlPageSize, sqlTotalElements)
+
+        $('#sqlStartRecord').text(startRecord.toLocaleString())
+        $('#sqlEndRecord').text(endRecord.toLocaleString())
+        $('#sqlTotalResults').text(sqlTotalElements.toLocaleString())
+
+        // Update page jump input
+        const pageJump = $('#sqlPageJump');
+        pageJump.attr('max', sqlTotalPages || 1)
+        pageJump.val(sqlCurrentPage);
+
+        // Update navigation buttons
+        $('#sqlFirstPage, #sqlPrevPage').prop('disabled', sqlCurrentPage === 1)
+        $('#sqlNextPage, #sqlLastPage').prop('disabled', sqlCurrentPage === sqlTotalPages || sqlTotalPages === 0)
+
+        // Generate page numbers
+        const pageNumbers = $('#sqlPageNumbers')
+        pageNumbers.empty()
+
+        if (sqlTotalPages <= 1) return
+
+        const maxVisiblePages = 5
+        let startPage = Math.max(1, sqlCurrentPage - Math.floor(maxVisiblePages / 2))
+        let endPage = Math.min(sqlTotalPages, startPage + maxVisiblePages - 1)
+
+        if (endPage - startPage < maxVisiblePages - 1) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1)
+        }
+
+        if (startPage > 1) {
+            $('<button>')
+                .addClass('pagination-btn sql-page-number')
+                .attr('data-page', '1')
+                .text('1')
+                .appendTo(pageNumbers)
+
+            if (startPage > 2) {
+                $('<span>')
+                    .addClass('pagination-ellipsis')
+                    .text('...')
+                    .appendTo(pageNumbers)
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            $('<button>')
+                .addClass('pagination-btn sql-page-number' + (i === sqlCurrentPage ? ' active' : ''))
+                .attr('data-page', i)
+                .text(i)
+                .appendTo(pageNumbers)
+        }
+
+        if (endPage < sqlTotalPages) {
+            if (endPage < sqlTotalPages - 1) {
+                $('<span>')
+                    .addClass('pagination-ellipsis')
+                    .text('...')
+                    .appendTo(pageNumbers)
+            }
+
+            $('<button>')
+                .addClass('pagination-btn sql-page-number')
+                .attr('data-page', sqlTotalPages)
+                .text(sqlTotalPages)
+                .appendTo(pageNumbers)
+        }
+
+        $('.sql-page-number').click(function () {
+            const page = parseInt($(this).attr('data-page'))
+            goToSqlPage(page)
+        })
+    }
+
+    function goToSqlPage(page) {
+        if (page >= 1 && page <= sqlTotalPages && page !== sqlCurrentPage) {
+            sqlCurrentPage = page
+            loadSqlQueries()
+        }
+    }
+
+    function clearSqlFilters() {
+        $("#sqlSearch").val("")
+        sqlCurrentPage = 1
+        loadSqlQueries()
+    }
+
+    function updateSqlSortIcons() {
+        $("#sqlTable .sortable").removeClass("asc desc")
+        $(`#sqlTable .sortable[data-sort="${sqlSortField}"]`).addClass(sqlSortDirection)
+    }
+
+    // Export SQL to CSV
+    function exportSqlToCSV() {
+        const headers = [
+            "SQL Execution ID",
+            "Connection Acquired Time",
+            "Connection Release Time",
+            "Occupied Time",
+            "Thread",
+            "SQL Count"
+        ]
+        const csvContent = [headers.join(",")]
+
+        sqlFilteredQueries.forEach(item => {
+            const row = [
+                `"${item.id}"`,
+                `"${formatDateTime(item.conAcquiredTime)}"`,
+                `"${formatDateTime(item.conReleaseTime)}"`,
+                formatDuration(item.conOccupiedTime),
+                `"${item.thread || 'N/A'}"`,
+                item.executedQuires ? item.executedQuires.length : 0
+            ]
+            csvContent.push(row.join(","))
+        })
+
+        const blob = new Blob([csvContent.join("\n")], { type: "text/csv" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = `sql-execution-logs-${new Date().toISOString().split("T")[0]}.csv`
+        a.click()
+        window.URL.revokeObjectURL(url)
+    }
+
+    function showSqlDetails(item) {
+        $("#sqlDetailThread").text(item.thread || "N/A")
+        $("#sqlDetailAcquired").text(formatDateTime(item.conAcquiredTime))
+        $("#sqlDetailReleased").text(formatDateTime(item.conReleaseTime))
+
+        const occupiedElem = $("#sqlDetailOccupied")
+        occupiedElem.text(formatDuration(item.conOccupiedTime))
+        occupiedElem.removeClass("badge badge-warning")
+
+        if (item.alarmingConnection) {
+            occupiedElem.addClass("badge badge-warning")
+        }
+
+        const queries = item.executedQuires || []
+        $("#sqlDetailCount").text(`${queries.length} queries`)
+        const sqlList = $("#sqlDetailList")
+        sqlList.empty()
+
+        if (queries.length === 0) {
+            sqlList.append('<p class="empty-state-text">No SQL queries executed</p>')
+        } else {
+            queries.forEach((sql, index) => {
+                const sqlItem = `
+                    <div class="sql-item">
+                        <div class="sql-index">Query #${index + 1}</div>
+                        <div class="sql-highlight">${highlightSql(sql)}</div>
+                    </div>
+                `
+                sqlList.append(sqlItem)
+            })
+        }
+
+        $("#sqlModal").show()
+    }
+
+    function closeSqlModal() {
+        $("#sqlModal").hide()
+    }
+    /* END: SQL View Logic */
+
     /* START: SQL Syntax highlighter */
     function escapeHtml(str) {
         return str.replace(/[&<>"']/g, s => ({
-            '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
         }[s]));
     }
 
     // SQL keywords
     const KEYWORDS = [
-        'SELECT','FROM','WHERE','GROUP','HAVING','ORDER','BY','LIMIT','OFFSET','FETCH',
-        'RETURN','RAISE','OPEN','CLOSE','DISTINCT','ALL','TOP','INSERT','INTO','DROP',
-        'UPDATE','DELETE','MERGE','UPSERT','REPLACE','VALUES','SET','DEFAULT','CREATE',
-        'ALTER','TRUNCATE','RENAME','COMMENT','CONSTRAINT','PRIMARY KEY','FOREIGN KEY',
-        'UNIQUE','CHECK','DEFAULT','INDEX','VIEW','SEQUENCE','AUTO_INCREMENT','IDENTITY',
-        'GENERATED','BEGIN','START TRANSACTION','COMMIT','ROLLBACK','GRANT','REVOKE',
-        'SAVEPOINT','SET TRANSACTION','LOCK','UNLOCK','JOIN','INNER','OUTER','LEFT','RIGHT',
-        'FULL','CROSS','NATURAL','USING','ON','SELF','COUNT','TABLE','SUM','AVG','MIN',
-        'MAX','GROUP_CONCAT','STRING_AGG','LISTAGG','ARRAY_AGG','AND','OR','NOT','IN',
-        'EXISTS','BETWEEN','LIKE','ILIKE','IS','NULL','ANY','ALL','SOME','CASE','WHEN',
-        'IF','THEN','ELSE','ELSIF','END','UNION','UNION ALL','INTERSECT','EXCEPT','MINUS',
-        'CAST','CONVERT','COALESCE','NULLIF','NVL','IFNULL','ISNULL','CONCAT','SUBSTRING',
-        'LENGTH','UPPER','LOWER','TRIM','ROUND','CEIL','FLOOR','ABS','MOD','POWER','SQRT',
-        'GETDATE','ENGINE','CHARSET','COLLATE','SQL_CALC_FOUND_ROWS','STRAIGHT_JOIN','ROWS',
-        'SQL_SMALL_RESULT','SQL_BIG_RESULT','SQL_BUFFER_RESULT','SQL_CACHE','SQL_NO_CACHE',
-        'DELAYED','HIGH_PRIORITY','LOW_PRIORITY','IGNORE','FOR UPDATE','PROCEDURE','CURSOR',
-        'LOCK IN SHARE MODE','FUNCTION','PACKAGE','DECLARE','EXCEPTION','TRUE','FALSE','ASC',
-        'DESC','FIRST','ONLY','AS'
+        'SELECT', 'FROM', 'WHERE', 'GROUP', 'HAVING', 'ORDER', 'BY', 'LIMIT', 'OFFSET', 'FETCH',
+        'RETURN', 'RAISE', 'OPEN', 'CLOSE', 'DISTINCT', 'ALL', 'TOP', 'INSERT', 'INTO', 'DROP',
+        'UPDATE', 'DELETE', 'MERGE', 'UPSERT', 'REPLACE', 'VALUES', 'SET', 'DEFAULT', 'CREATE',
+        'ALTER', 'TRUNCATE', 'RENAME', 'COMMENT', 'CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY',
+        'UNIQUE', 'CHECK', 'DEFAULT', 'INDEX', 'VIEW', 'SEQUENCE', 'AUTO_INCREMENT', 'IDENTITY',
+        'GENERATED', 'BEGIN', 'START TRANSACTION', 'COMMIT', 'ROLLBACK', 'GRANT', 'REVOKE',
+        'SAVEPOINT', 'SET TRANSACTION', 'LOCK', 'UNLOCK', 'JOIN', 'INNER', 'OUTER', 'LEFT', 'RIGHT',
+        'FULL', 'CROSS', 'NATURAL', 'USING', 'ON', 'SELF', 'COUNT', 'TABLE', 'SUM', 'AVG', 'MIN',
+        'MAX', 'GROUP_CONCAT', 'STRING_AGG', 'LISTAGG', 'ARRAY_AGG', 'AND', 'OR', 'NOT', 'IN',
+        'EXISTS', 'BETWEEN', 'LIKE', 'ILIKE', 'IS', 'NULL', 'ANY', 'ALL', 'SOME', 'CASE', 'WHEN',
+        'IF', 'THEN', 'ELSE', 'ELSIF', 'END', 'UNION', 'UNION ALL', 'INTERSECT', 'EXCEPT', 'MINUS',
+        'CAST', 'CONVERT', 'COALESCE', 'NULLIF', 'NVL', 'IFNULL', 'ISNULL', 'CONCAT', 'SUBSTRING',
+        'LENGTH', 'UPPER', 'LOWER', 'TRIM', 'ROUND', 'CEIL', 'FLOOR', 'ABS', 'MOD', 'POWER', 'SQRT',
+        'GETDATE', 'ENGINE', 'CHARSET', 'COLLATE', 'SQL_CALC_FOUND_ROWS', 'STRAIGHT_JOIN', 'ROWS',
+        'SQL_SMALL_RESULT', 'SQL_BIG_RESULT', 'SQL_BUFFER_RESULT', 'SQL_CACHE', 'SQL_NO_CACHE',
+        'DELAYED', 'HIGH_PRIORITY', 'LOW_PRIORITY', 'IGNORE', 'FOR UPDATE', 'PROCEDURE', 'CURSOR',
+        'LOCK IN SHARE MODE', 'FUNCTION', 'PACKAGE', 'DECLARE', 'EXCEPTION', 'TRUE', 'FALSE', 'ASC',
+        'DESC', 'FIRST', 'ONLY', 'AS'
     ];
 
     const TYPES = [
-        'INT','BIGINT','SMALLINT','INTEGER','NUMERIC','VARCHAR','CHAR','TEXT','DATE',
-        'TIMESTAMP','FLOAT','DOUBLE','DECIMAL','TINYINT','MEDIUMINT','LONGTEXT','ENUM',
-        'SET','NVARCHAR','DATETIME2','MONEY','UNIQUEIDENTIFIER','VARCHAR2','NUMBER','CLOB',
-        'BLOB','RAW','NCHAR','NVARCHAR2','ROWNUM','SYSDATE','SYSTIMESTAMP','DUAL','REAL',
-        'TIME','DATETIME','BOOLEAN','JSON','XML','ARRAY','CURRENT_DATE','CURRENT_TIME','NOW',
+        'INT', 'BIGINT', 'SMALLINT', 'INTEGER', 'NUMERIC', 'VARCHAR', 'CHAR', 'TEXT', 'DATE',
+        'TIMESTAMP', 'FLOAT', 'DOUBLE', 'DECIMAL', 'TINYINT', 'MEDIUMINT', 'LONGTEXT', 'ENUM',
+        'SET', 'NVARCHAR', 'DATETIME2', 'MONEY', 'UNIQUEIDENTIFIER', 'VARCHAR2', 'NUMBER', 'CLOB',
+        'BLOB', 'RAW', 'NCHAR', 'NVARCHAR2', 'ROWNUM', 'SYSDATE', 'SYSTIMESTAMP', 'DUAL', 'REAL',
+        'TIME', 'DATETIME', 'BOOLEAN', 'JSON', 'XML', 'ARRAY', 'CURRENT_DATE', 'CURRENT_TIME', 'NOW',
     ];
 
     // Build matchers
     const keywordRegex = new RegExp('\\b(' + KEYWORDS.join('|') + ')\\b', 'i');
-    const typeRegex    = new RegExp('\\b(' + TYPES.join('|') + ')\\b', 'i');
+    const typeRegex = new RegExp('\\b(' + TYPES.join('|') + ')\\b', 'i');
 
     const masterRegex = new RegExp(
         '(' +
@@ -959,7 +1288,7 @@ $(document).ready(() => {
                 if (keywordRegex.test(match)) {
                     return `<span class="tok-keyword">${escapeHtml(match)}</span>`;
                 }
-                if (typeRegex.test(match))  {
+                if (typeRegex.test(match)) {
                     console.log(typeRegex + ' = ' + match);
                     console.log(typeRegex.test(match));
                     return `<span class="tok-type">${escapeHtml(match)}</span>`;
