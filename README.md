@@ -16,6 +16,7 @@ or modifying existing code.
 * Can observe the complex hierarchy of inner transactions
 * Track each step of transactions and database connections
 * In-memory and Redis-based storage support
+* **Built-in Kafka integration** for streaming transaction logs to external systems
 * Alarming threshold to flag slow transactions and database connections
 * Lightweight API endpoint for fetching transaction logs
 * Supports filtering, sorting, pagination, and duration distribution
@@ -88,6 +89,9 @@ sdlc:
             transaction: 1000 # 1000 ms
             connection: 1000 # 1000 ms
           duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
+          kafka:
+            enabled: true # Enable/disable Kafka publishing (default: true)
+            topic: tx-board-transactions # Kafka topic name (default: tx-board-transactions)
 ```
 
 > `alarming-threshold.transaction`: If any transaction duration (ms) took more than the configured value then the
@@ -107,6 +111,83 @@ This dashboard provides a real-time view of transaction activity including filte
 
 * **IN\_MEMORY** (default): Simple, thread-safe `List` with in-memory counters
 * **REDIS** (planned): Store and distribute logs across instances (not-implemented)
+
+## Kafka Integration
+
+Spring Tx Board includes **built-in Kafka integration** that automatically publishes every completed transaction log to a Kafka topic. This feature enables real-time streaming of transaction logs to external systems for analytics, alerting, and distributed observability.
+
+### Automatic Activation
+
+Kafka integration **automatically activates** when:
+- `spring-kafka` dependency is present in your application classpath
+- A `KafkaTemplate` bean is available in the Spring context
+
+No manual setup is required beyond basic Kafka configuration.
+
+### Configuration
+
+```yaml
+sdlc:
+  pro:
+    spring:
+      tx:
+        board:
+          kafka:
+            enabled: true  # Enable/disable Kafka publishing (default: true)
+            topic: tx-board-transactions  # Kafka topic name (default: tx-board-transactions)
+```
+
+### Features
+
+* **Automatic Detection**: Activates automatically when Kafka is available
+* **Fail-Safe**: Kafka publishing failures never disrupt application logic or transaction execution
+* **Non-Blocking**: Publishing happens asynchronously without blocking transaction completion
+* **Configurable**: Easy to enable/disable and customize topic name
+* **Multi-Boot Support**: Works with Spring Boot 2.x, 3.x, and 4.x
+
+### Usage Example
+
+Once Kafka is on your classpath and configured, transaction logs are automatically published:
+
+```java
+@Service
+public class OrderService {
+    @Transactional
+    public void placeOrder() {
+        // Transaction completes
+        // TransactionLog is automatically published to Kafka topic
+    }
+}
+```
+
+### Consumer Example
+
+You can consume transaction logs from Kafka:
+
+```java
+@KafkaListener(topics = "tx-board-transactions")
+public void consumeTransactionLog(TransactionLog transactionLog) {
+    // Process transaction log for analytics, alerting, etc.
+    log.info("Received transaction: {} took {} ms", 
+        transactionLog.getMethod(), transactionLog.getDuration());
+}
+```
+
+### Disabling Kafka Integration
+
+To disable Kafka publishing:
+
+```yaml
+sdlc:
+  pro:
+    spring:
+      tx:
+        board:
+          kafka:
+            enabled: false
+```
+
+Or simply remove `spring-kafka` from your dependencies if you don't need Kafka integration.
 
 ## Configurable transaction logging
 
