@@ -290,7 +290,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
     private static class TransactionInfo {
         private static final AtomicInteger ATOMIC_TX_ID_GEN = new AtomicInteger(0);
 
-        private final Integer txId;
+        private final UUID txId;
         private final boolean isMostParent;
         private final String methodName;
         private final PropagationBehavior propagation;
@@ -308,7 +308,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         public TransactionInfo(String methodName, PropagationBehavior propagation, IsolationLevel isolation,
                                AlarmingThreshold alarmingThreshold, boolean isMostParent) {
             this.isMostParent = isMostParent;
-            this.txId = this.isMostParent ? ATOMIC_TX_ID_GEN.incrementAndGet() : null;
+            this.txId = this.isMostParent ? UUID.randomUUID() : null;
             this.methodName = methodName;
             this.propagation = propagation;
             this.isolation = isolation;

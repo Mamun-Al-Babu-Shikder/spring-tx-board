@@ -9,12 +9,13 @@ import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import static java.util.Collections.emptyList;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TransactionLog implements Serializable {
-    private final Integer txId;
+    private final UUID txId;
     private final String method;
     private final PropagationBehavior propagation;
     private final IsolationLevel isolation;
@@ -32,7 +33,7 @@ public class TransactionLog implements Serializable {
     private final Boolean havingAlarmingConnection;
     private final List<String> postTransactionQuires;
 
-    public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
+    public TransactionLog(UUID txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold) {
@@ -41,7 +42,7 @@ public class TransactionLog implements Serializable {
                 txId == null ? null : emptyList());
     }
 
-    public TransactionLog(Integer txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
+    public TransactionLog(UUID txId, String method, PropagationBehavior propagation, IsolationLevel isolation,
                           Instant startTime, Instant endTime, ConnectionSummary connectionSummary,
                           TransactionPhaseStatus status, String thread, List<String> executedQuires,
                           List<TransactionLog> child, List<TransactionEvent> events, long txAlarmingThreshold,
@@ -66,7 +67,7 @@ public class TransactionLog implements Serializable {
         this.postTransactionQuires = postTransactionQuires;
     }
 
-    public Integer getTxId() {
+    public UUID getTxId() {
         return txId;
     }
 

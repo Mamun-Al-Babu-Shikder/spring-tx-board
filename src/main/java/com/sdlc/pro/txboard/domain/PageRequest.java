@@ -1,12 +1,12 @@
 package com.sdlc.pro.txboard.domain;
 
-public class TransactionLogPageRequest {
+public class PageRequest {
     private final int pageNumber;
     private final int pageSize;
     private final Sort sort;
     private final FilterNode filter;
 
-    private TransactionLogPageRequest(int pageNumber, int pageSize, Sort sort, FilterNode filter) {
+    private PageRequest(int pageNumber, int pageSize, Sort sort, FilterNode filter) {
         if (pageNumber < 0 || pageSize < 1 || filter == null) {
             throw new IllegalArgumentException("Found invalid argument (pageNumber or pageSize or filter)  to initialize TransactionLogPageRequest");
         }
@@ -16,15 +16,15 @@ public class TransactionLogPageRequest {
         this.filter = filter;
     }
 
-    public static TransactionLogPageRequest of(int pageNumber, int pageSize, Sort sort, FilterNode filter) {
-        return new TransactionLogPageRequest(pageNumber, pageSize, sort, filter);
+    public static PageRequest of(int pageNumber, int pageSize, Sort sort, FilterNode filter) {
+        return new PageRequest(pageNumber, pageSize, sort, filter);
     }
 
-    public static TransactionLogPageRequest of(int pageNumber, int pageSize, Sort sort) {
+    public static PageRequest of(int pageNumber, int pageSize, Sort sort) {
         return of(pageNumber, pageSize, sort, FilterNode.UNFILTERED);
     }
 
-    public static TransactionLogPageRequest of(int pageNumber, int pageSize) {
+    public static PageRequest of(int pageNumber, int pageSize) {
         return of(pageNumber, pageSize, Sort.UNSORTED);
     }
 

@@ -2,8 +2,8 @@ package com.sdlc.pro.txboard.repository;
 
 import com.sdlc.pro.txboard.config.TxBoardProperties;
 import com.sdlc.pro.txboard.domain.FilterNode;
-import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
-import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
+import com.sdlc.pro.txboard.domain.PageRequest;
+import com.sdlc.pro.txboard.domain.PageResponse;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.*;
 import com.sdlc.pro.txboard.util.FilterPredicateFactory;
@@ -129,7 +129,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
     @Override
-    public TransactionLogPageResponse findAll(TransactionLogPageRequest pageRequest) {
+    public PageResponse findAll(PageRequest pageRequest) {
         List<TransactionLog> logs = pageRequest.getFilter() == FilterNode.UNFILTERED ? this.transactionLogs :
                 this.transactionLogs.stream()
                         .filter(FilterPredicateFactory.buildPredicate(pageRequest.getFilter()))
@@ -139,7 +139,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
         List<TransactionLog> content = getTransactionLogPage(sortedLogs, pageRequest);
 
         int totalElements = sortedLogs.size();
-        return new TransactionLogPageResponse(content, pageRequest, totalElements);
+        return new PageResponse(content, pageRequest, totalElements);
     }
 
     @Override
@@ -156,7 +156,7 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
 
-    private static List<TransactionLog> getTransactionLogPage(List<TransactionLog> logs, TransactionLogPageRequest pageRequest) {
+    private static List<TransactionLog> getTransactionLogPage(List<TransactionLog> logs, PageRequest pageRequest) {
         try {
             int start = pageRequest.getPageNumber() * pageRequest.getPageSize();
             int end = (pageRequest.getPageNumber() + 1) * pageRequest.getPageSize();
