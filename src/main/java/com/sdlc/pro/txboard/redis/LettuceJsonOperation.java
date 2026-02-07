@@ -116,7 +116,7 @@ public class LettuceJsonOperation extends AbstractRedisJsonOperation {
         Map<?, ?> map = (Map<?, ?>) this.performCommand(command, new MapOutput<>(ByteArrayCodec.INSTANCE));
         return map.entrySet()
                 .stream()
-                .filter(e -> e.getValue() instanceof byte[] && Arrays.equals((byte[]) e.getKey(), VALUES))
+                .filter(e -> e.getValue() instanceof byte[] && Arrays.equals((byte[]) e.getValue(), VALUES))
                 .map(e -> Double.valueOf(new String((byte[]) e.getKey())))
                 .findFirst()
                 .orElse(0.0);
