@@ -1,8 +1,8 @@
 package com.sdlc.pro.txboard.repository;
 
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
-import com.sdlc.pro.txboard.domain.TransactionLogPageRequest;
-import com.sdlc.pro.txboard.domain.TransactionLogPageResponse;
+import com.sdlc.pro.txboard.domain.PageRequest;
+import com.sdlc.pro.txboard.domain.PageResponse;
 import com.sdlc.pro.txboard.model.DurationDistribution;
 import com.sdlc.pro.txboard.model.TransactionLog;
 import com.sdlc.pro.txboard.model.TransactionSummary;
@@ -15,7 +15,7 @@ public interface TransactionLogRepository {
     long count();
     long countByTransactionStatus(TransactionPhaseStatus status);
     double averageDuration();
-    TransactionLogPageResponse findAll(TransactionLogPageRequest request);
+    PageResponse findAll(PageRequest request);
     TransactionSummary getTransactionSummary();
     List<DurationDistribution> getDurationDistributions();
 }

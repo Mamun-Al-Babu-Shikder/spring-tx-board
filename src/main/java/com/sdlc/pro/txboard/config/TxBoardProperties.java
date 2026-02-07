@@ -2,9 +2,11 @@ package com.sdlc.pro.txboard.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @ConfigurationProperties(prefix = "sdlc.pro.spring.tx.board")
 public class TxBoardProperties {
@@ -14,6 +16,7 @@ public class TxBoardProperties {
     private boolean enableListenerLog = false;
     private List<Integer> durationBuckets = Arrays.asList(100, 500, 1000, 2000, 5000);
     private LogType logType = LogType.SIMPLE;
+    private final Redis redis = new Redis();
 
     public boolean isEnabled() {
         return enabled;
@@ -52,7 +55,7 @@ public class TxBoardProperties {
     }
 
     public void setDurationBuckets(List<Integer> durationBuckets) {
-        if (durationBuckets == null || durationBuckets.isEmpty() || durationBuckets.size() > 5) {
+        if (durationBuckets == null || durationBuckets.isEmpty() || durationBuckets.stream().distinct().count() > 5) {
             throw new IllegalArgumentException("The duration bucket size must be between 1-5");
         }
 
@@ -61,7 +64,7 @@ public class TxBoardProperties {
         }
 
         Collections.sort(durationBuckets);
-        this.durationBuckets = Collections.unmodifiableList(durationBuckets);
+        this.durationBuckets = durationBuckets.stream().distinct().collect(Collectors.toList());
     }
 
     public LogType getLogType() {
@@ -70,6 +73,10 @@ public class TxBoardProperties {
 
     public void setLogType(LogType logType) {
         this.logType = logType == null ? LogType.SIMPLE : logType;
+    }
+
+    public Redis getRedis() {
+        return redis;
     }
 
     public enum StorageType {
@@ -98,6 +105,21 @@ public class TxBoardProperties {
 
         public void setConnection(long connection) {
             this.connection = connection;
+        }
+    }
+
+    public static class Redis {
+        private Duration entityTtl = Duration.ofDays(7);
+
+        public Duration getEntityTtl() {
+            return entityTtl;
+        }
+
+        public void setEntityTtl(Duration entityTtl) {
+            if (entityTtl.isNegative()) {
+                throw new IllegalArgumentException("Redis Entity TTL must be positive value");
+            }
+            this.entityTtl = entityTtl;
         }
     }
 }

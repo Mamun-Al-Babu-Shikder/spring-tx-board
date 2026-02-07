@@ -16,6 +16,8 @@ import org.springframework.boot.test.context.FilteredClassLoader;
 import org.springframework.boot.test.context.runner.WebApplicationContextRunner;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -23,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class SpringTxBoardAutoConfigurationTest {
     private final WebApplicationContextRunner contextRunner = new WebApplicationContextRunner()
+            .withPropertyValues("sdlc.pro.spring.tx.board.storage=in_memory")
             .withBean(ObjectMapper.class, new ObjectMapper())
             .withConfiguration(AutoConfigurations.of(SpringTxBoardAutoConfiguration.class));
 
@@ -135,6 +138,8 @@ class SpringTxBoardAutoConfigurationTest {
         void shouldCreateRedisTransactionLogRepository() {
             contextRunner
                     .withPropertyValues("sdlc.pro.spring.tx.board.storage=REDIS")
+                    .withPropertyValues("spring.data.redis.client-type=lettuce")
+                    .withBean(RedisConnectionFactory.class, LettuceConnectionFactory::new)
                     .run(context -> assertThat(context.getBean("sdlcProSpringTxLogRepository"))
                             .isInstanceOf(RedisTransactionLogRepository.class)
                     );

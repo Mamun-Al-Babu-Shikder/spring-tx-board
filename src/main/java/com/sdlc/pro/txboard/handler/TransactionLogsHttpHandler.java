@@ -40,8 +40,8 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
         String connectionOriented = request.getParameter("connectionOriented");
 
         FilterNode filter = buildFilter(search, status, propagation, isolation, connectionOriented);
-        TransactionLogPageResponse pageResponse = transactionLogRepository.findAll(
-                TransactionLogPageRequest.of(page, size, sort, filter)
+        PageResponse pageResponse = transactionLogRepository.findAll(
+                PageRequest.of(page, size, sort, filter)
         );
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);

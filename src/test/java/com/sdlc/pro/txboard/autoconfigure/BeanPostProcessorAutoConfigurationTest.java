@@ -20,7 +20,8 @@ class BeanPostProcessorAutoConfigurationTest {
             .withConfiguration(AutoConfigurations.of(BeanPostProcessorAutoConfiguration.class, SpringTxBoardAutoConfiguration.class))
             .withBean(ObjectMapper.class, ObjectMapper::new)
             .withBean(DataSource.class, () -> mock(DataSource.class))
-            .withBean(PlatformTransactionManager.class, () -> mock(PlatformTransactionManager.class));
+            .withBean(PlatformTransactionManager.class, () -> mock(PlatformTransactionManager.class))
+            .withPropertyValues("sdlc.pro.spring.tx.board.storage=in_memory");
 
     @Test
     void shouldExistDataSourceAndPlatformTransactionManagerProxyInstance() {
