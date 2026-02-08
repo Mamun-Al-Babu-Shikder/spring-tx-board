@@ -2,18 +2,15 @@ package com.sdlc.pro.txboard.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.*;
-import com.sdlc.pro.txboard.handler.AlarmingThresholdHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionChartHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionLogsHttpHandler;
-import com.sdlc.pro.txboard.handler.TransactionMetricsHttpHandler;
+import com.sdlc.pro.txboard.handler.*;
+import com.sdlc.pro.txboard.listener.SqlExecutionLogListener;
+import com.sdlc.pro.txboard.listener.SqlExecutionLogPersistenceListener;
 import com.sdlc.pro.txboard.listener.TransactionLogListener;
 import com.sdlc.pro.txboard.listener.TransactionLogPersistenceListener;
 import com.sdlc.pro.txboard.redis.JedisJsonOperation;
 import com.sdlc.pro.txboard.redis.LettuceJsonOperation;
 import com.sdlc.pro.txboard.redis.RedisJsonOperation;
-import com.sdlc.pro.txboard.repository.InMemoryTransactionLogRepository;
-import com.sdlc.pro.txboard.repository.RedisTransactionLogRepository;
-import com.sdlc.pro.txboard.repository.TransactionLogRepository;
+import com.sdlc.pro.txboard.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -62,6 +59,19 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware, W
         }
     }
 
+    @Bean("sdlcProSqlExecutionLogRepository")
+    @ConditionalOnMissingBean(SqlExecutionLogRepository.class)
+    public SqlExecutionLogRepository sqlExecutionLogRepository(TxBoardProperties txBoardProperties) {
+        TxBoardProperties.StorageType storageType = txBoardProperties.getStorage();
+        log.info("Spring Tx Board is configured to use {} storage for sql execution logs.", storageType);
+
+        switch (storageType) {
+            case IN_MEMORY: return new InMemorySqlExecutionLogRepository();
+            case REDIS: return new RedisSqlExecutionLogRepository(this.resolveRedisJsonOperation(), txBoardProperties);
+            default: throw new IllegalStateException("Unsupported storage type: " + storageType);
+        }
+    }
+
     private RedisJsonOperation resolveRedisJsonOperation() {
         return this.applicationContext.getBean("sdlcProRedisJsonOperation", RedisJsonOperation.class);
     }
@@ -95,12 +105,20 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware, W
         return new TransactionLogPersistenceListener(transactionLogRepository);
     }
 
+    @Bean("sdlcProSqlExecutionLogPersistenceListener")
+    public SqlExecutionLogListener sqlExecutionLogRepositoryPersistenceListener(SqlExecutionLogRepository sqlExecutionLogRepository) {
+        return new SqlExecutionLogPersistenceListener(sqlExecutionLogRepository);
+    }
+
     @Bean("sdlcProTxBoardRestHandlerMapping")
-    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TxBoardProperties txBoardProperties, TransactionLogRepository transactionLogRepository) {
-        Map<String, Object> urlMap = new HashMap<String, Object>();
+    public HandlerMapping txBoardRestHandlerMapping(ObjectMapper objectMapper, TxBoardProperties txBoardProperties,
+                                                    TransactionLogRepository transactionLogRepository,
+                                                    SqlExecutionLogRepository sqlExecutionLogRepository) {
+        Map<String, Object> urlMap = new HashMap<>();
         urlMap.put("/api/tx-board/config/alarming-threshold", new AlarmingThresholdHttpHandler(objectMapper, txBoardProperties));
         urlMap.put("/api/tx-board/tx-summary", new TransactionMetricsHttpHandler(objectMapper, transactionLogRepository));
         urlMap.put("/api/tx-board/tx-logs", new TransactionLogsHttpHandler(objectMapper, transactionLogRepository));
+        urlMap.put("/api/tx-board/sql-logs", new SqlExecutionLogHttpHandler(objectMapper, sqlExecutionLogRepository));
         urlMap.put("/api/tx-board/tx-charts", new TransactionChartHttpHandler(objectMapper, transactionLogRepository));
         return new SimpleUrlHandlerMapping(urlMap, ORDER);
     }

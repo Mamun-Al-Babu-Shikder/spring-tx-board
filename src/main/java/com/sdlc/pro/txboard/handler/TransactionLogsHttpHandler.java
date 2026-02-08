@@ -5,6 +5,7 @@ import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.domain.*;
+import com.sdlc.pro.txboard.model.TransactionLog;
 import com.sdlc.pro.txboard.repository.TransactionLogRepository;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,8 +40,16 @@ public class TransactionLogsHttpHandler implements HttpRequestHandler {
         String isolation = request.getParameter("isolation");
         String connectionOriented = request.getParameter("connectionOriented");
 
+        if (page < 0) {
+            throw new IllegalArgumentException("The value of 'page' must be positive integer");
+        }
+
+        if (size < 1 || size > 1000) {
+            throw new IllegalArgumentException("The value of 'size' must be between 1 to 1000");
+        }
+
         FilterNode filter = buildFilter(search, status, propagation, isolation, connectionOriented);
-        PageResponse pageResponse = transactionLogRepository.findAll(
+        PageResponse<TransactionLog> pageResponse = transactionLogRepository.findAll(
                 PageRequest.of(page, size, sort, filter)
         );
 

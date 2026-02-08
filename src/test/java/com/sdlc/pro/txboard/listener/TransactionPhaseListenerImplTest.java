@@ -34,6 +34,7 @@ class TransactionPhaseListenerImplTest {
     private TxBoardProperties txBoardProperties;
     private TransactionDefinition txDefinition;
     private TransactionLogListener txLogListener;
+    private SqlExecutionLogListener sqlExecutionLogListener;
     private TransactionPhaseListenerImpl txListener;
     private Logger logger;
     private ListAppender<ch.qos.logback.classic.spi.ILoggingEvent> appender;
@@ -51,7 +52,12 @@ class TransactionPhaseListenerImplTest {
         txBoardProperties = new TxBoardProperties();
         txDefinition = mock(TransactionDefinition.class);
         txLogListener = mock(TransactionLogListener.class);
-        txListener = new TransactionPhaseListenerImpl(Arrays.asList(txLogListener), txBoardProperties);
+        sqlExecutionLogListener = mock(SqlExecutionLogListener.class);
+        txListener = new TransactionPhaseListenerImpl(
+                txBoardProperties,
+                Collections.singletonList(txLogListener),
+                Collections.singletonList(sqlExecutionLogListener)
+        );
 
         logger = (Logger) LoggerFactory.getLogger(TransactionPhaseListenerImpl.class);
         appender = new ListAppender<>();
@@ -146,7 +152,6 @@ class TransactionPhaseListenerImplTest {
             txListener.afterCloseConnection();
 
             txListener.afterCommit();
-            txListener.afterCloseConnection();
 
             ArgumentCaptor<TransactionLog> captor = ArgumentCaptor.forClass(TransactionLog.class);
             verify(txLogListener).listen(captor.capture());
@@ -166,7 +171,6 @@ class TransactionPhaseListenerImplTest {
             }
 
             txListener.afterCommit();
-            txListener.afterCloseConnection();
 
             ArgumentCaptor<TransactionLog> captor = ArgumentCaptor.forClass(TransactionLog.class);
             verify(txLogListener).listen(captor.capture());
@@ -223,7 +227,10 @@ class TransactionPhaseListenerImplTest {
             doThrow(new RuntimeException("Listener failed!")).when(failingListener).listen(any());
 
             TransactionPhaseListenerImpl listenerWithFailingCallback = new TransactionPhaseListenerImpl(
-                    Arrays.asList(txLogListener, failingListener), txBoardProperties);
+                    txBoardProperties,
+                    Arrays.asList(txLogListener, failingListener),
+                    Collections.singletonList(sqlExecutionLogListener)
+            );
 
             assertDoesNotThrow(() -> {
                 listenerWithFailingCallback.beforeBegin(txDefinition);
@@ -246,7 +253,10 @@ class TransactionPhaseListenerImplTest {
         @Test
         void shouldHandleEmptyListenersList() {
             TransactionPhaseListenerImpl listenerWithEmptyCallbacks = new TransactionPhaseListenerImpl(
-                    Collections.emptyList(), txBoardProperties);
+                    txBoardProperties,
+                    Collections.emptyList(),
+                    Collections.emptyList()
+            );
 
             assertDoesNotThrow(() -> {
                 listenerWithEmptyCallbacks.beforeBegin(txDefinition);
@@ -260,7 +270,7 @@ class TransactionPhaseListenerImplTest {
         @Test
         void shouldHandleNullListenersList() {
             TransactionPhaseListenerImpl listenerWithoutCallbacks = new TransactionPhaseListenerImpl(
-                    null, txBoardProperties);
+                    txBoardProperties, null, null);
 
             assertDoesNotThrow(() -> {
                 listenerWithoutCallbacks.beforeBegin(txDefinition);
