@@ -5,6 +5,7 @@ import com.sdlc.pro.txboard.enums.IsolationLevel;
 import com.sdlc.pro.txboard.enums.PropagationBehavior;
 import com.sdlc.pro.txboard.enums.TransactionPhaseStatus;
 import com.sdlc.pro.txboard.model.ConnectionSummary;
+import com.sdlc.pro.txboard.model.SqlExecutionLog;
 import com.sdlc.pro.txboard.model.TransactionEvent;
 import com.sdlc.pro.txboard.model.TransactionLog;
 import org.slf4j.Logger;
@@ -14,20 +15,26 @@ import org.springframework.transaction.TransactionDefinition;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.sdlc.pro.txboard.config.TxBoardProperties.AlarmingThreshold;
 
 public final class TransactionPhaseListenerImpl implements TransactionPhaseListener {
     private static final Logger log = LoggerFactory.getLogger(TransactionPhaseListenerImpl.class);
+
+    private final TxBoardProperties txBoardProperties;
+    private final List<TransactionLogListener> transactionLogListeners;
+    private final List<SqlExecutionLogListener> sqlExecutionLogListeners;
+
     private static final ThreadLocal<Deque<TransactionInfo>> txInfoThreadLocal = ThreadLocal.withInitial(LinkedList::new);
     private static final ThreadLocal<Integer> activeConnectionCount = ThreadLocal.withInitial(() -> 0);
-    private final List<TransactionLogListener> transactionLogListeners;
-    private final TxBoardProperties txBoardProperties;
+    private static final ThreadLocal<SqlExecutionInfo> sqlExecInfoThreadLocal = new ThreadLocal<>();
 
-    public TransactionPhaseListenerImpl(List<TransactionLogListener> transactionLogListeners, TxBoardProperties txBoardProperties) {
-        this.transactionLogListeners = transactionLogListeners;
+    public TransactionPhaseListenerImpl(TxBoardProperties txBoardProperties,
+                                        List<TransactionLogListener> transactionLogListeners,
+                                        List<SqlExecutionLogListener> sqlExecutionLogListeners) {
         this.txBoardProperties = txBoardProperties;
+        this.transactionLogListeners = transactionLogListeners;
+        this.sqlExecutionLogListeners = sqlExecutionLogListeners;
     }
 
     @Override
@@ -75,6 +82,11 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         if (hasActiveTransaction()) {
             int count = onConnectionAcquired();
             addTransactionEvent(new TransactionEvent(TransactionEvent.Type.CONNECTION_ACQUIRED, String.format("Connection Acquired [%d]", count)));
+        } else {
+            long conAlarmingThreshold = this.txBoardProperties.getAlarmingThreshold().getConnection();
+            SqlExecutionInfo sqlExecutionInfo = new SqlExecutionInfo(conAlarmingThreshold);
+            sqlExecutionInfo.setThread(Thread.currentThread().getName());
+            sqlExecInfoThreadLocal.set(sqlExecutionInfo);
         }
     }
 
@@ -86,6 +98,11 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             if (getParentTransactionInfo().isCompleted()) {
                 finish();
             }
+        } else {
+            SqlExecutionInfo sqlExecutionInfo = sqlExecInfoThreadLocal.get();
+            sqlExecutionInfo.complete();
+            sqlExecInfoThreadLocal.remove();
+            finish(sqlExecutionInfo);
         }
     }
 
@@ -99,6 +116,8 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
                     txInfo.addExecutedQuery(query);
                 }
             });
+        } else {
+            sqlExecInfoThreadLocal.get().add(query);
         }
     }
 
@@ -287,9 +306,66 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
         return len < 2 ? "anonymous" : strings[len - 2] + "." + strings[strings.length - 1];
     }
 
-    private static class TransactionInfo {
-        private static final AtomicInteger ATOMIC_TX_ID_GEN = new AtomicInteger(0);
+    private void finish(SqlExecutionInfo executionInfo) {
+        if (executionInfo.notExecutedAnyQueries()) {
+            return;
+        }
 
+        SqlExecutionLog executionLog = executionInfo.toSqlExecutionLog();
+        boolean isAlarming = executionLog.isAlarmingConnection();
+
+        List<String> quires = executionLog.getExecutedQuires();
+        if (txBoardProperties.getLogType() == TxBoardProperties.LogType.DETAILS) {
+            StringBuilder message = new StringBuilder()
+                    .append("[TX-Board] SQL Execution Completed:")
+                    .append("  • ID: ").append(executionLog.getId()).append('\n')
+                    .append("  • Connection Acquired At: ").append(executionLog.getConAcquiredTime()).append('\n')
+                    .append("  • Connection Released At: ").append(executionLog.getConReleaseTime()).append('\n')
+                    .append("  • Connection Occupied Time: ").append(executionLog.getConOccupiedTime()).append(" ms\n")
+                    .append("  • Executed Query Count: ").append(quires.size()).append('\n')
+                    .append("  • Executed Queries:\n");
+
+            for (int i = 0; i < quires.size(); i++) {
+                boolean last = (i == quires.size() - 1);
+                message
+                        .append('\t')
+                        .append(last ? "└── " : "├── ")
+                        .append(quires.get(i));
+
+                if (!last) {
+                    message.append('\n');
+                }
+            }
+
+            if (isAlarming) {
+                log.warn(message.toString());
+            } else {
+                log.info(message.toString());
+            }
+        } else {
+            if (isAlarming) {
+                log.warn("SQL executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
+            } else {
+                log.info("SQL executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
+            }
+        }
+
+        publishSqlExecutionLogToListeners(executionLog);
+    }
+
+    private void publishSqlExecutionLogToListeners(SqlExecutionLog sqlExecutionLog) {
+        if (this.sqlExecutionLogListeners != null && !this.sqlExecutionLogListeners.isEmpty()) {
+            for (SqlExecutionLogListener logListener : this.sqlExecutionLogListeners) {
+                try {
+                    logListener.listen(sqlExecutionLog);
+                } catch (Exception ex) {
+                    log.error("Failed to publish sql execution log to listener: {}, Ex: {}", logListener.getClass().getName(), ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private static class TransactionInfo {
         private final UUID txId;
         private final boolean isMostParent;
         private final String methodName;
@@ -413,6 +489,52 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             }
 
             return new ConnectionSummary(acquisitionCount, alarmingConnectionCount, occupiedTime);
+        }
+    }
+
+    private static class SqlExecutionInfo {
+        private final Instant conAcquiredTime;
+        private Instant conReleaseTime;
+        private String thread;
+        private final List<String> executedQuires;
+        private final long conAlarmingThreshold;
+
+        public SqlExecutionInfo(long conAlarmingThreshold) {
+            this.conAcquiredTime = Instant.now();
+            this.executedQuires = new ArrayList<>();
+            this.conAlarmingThreshold = conAlarmingThreshold;
+        }
+
+        public void add(String query) {
+            if (this.conReleaseTime != null) {
+                throw new IllegalStateException("The execution has already been explicitly marked as finished");
+            }
+            this.executedQuires.add(query);
+        }
+
+        public void complete() {
+            this.conReleaseTime = Instant.now();
+        }
+
+        public void setThread(String thread) {
+            this.thread = thread;
+        }
+
+        public boolean notExecutedAnyQueries() {
+            return this.executedQuires.isEmpty();
+        }
+
+        public SqlExecutionLog toSqlExecutionLog() {
+            boolean isAlarmingCon = Duration.between(conAcquiredTime, conReleaseTime).toMillis() > this.conAlarmingThreshold;
+
+            return new SqlExecutionLog(
+                    UUID.randomUUID(),
+                    this.conAcquiredTime,
+                    this.conReleaseTime,
+                    isAlarmingCon,
+                    this.thread,
+                    this.executedQuires
+            );
         }
     }
 }
