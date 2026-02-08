@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,268 +10,428 @@
     <script src="chart-4.5.1.min.js"></script>
     <link href="font-awesome-6.0.0.min.css" rel="stylesheet">
 </head>
+
 <body>
-<div class="dashboard">
-    <!-- Header -->
-    <div class="header">
-        <div class="header-content">
-            <div class="header-text">
-                <h1><i class="fas fa-database"></i> Spring Tx Board</h1>
-                <p>Advanced transaction monitoring and analysis dashboard</p>
-            </div>
-            <div class="header-actions">
-                <button class="btn btn-secondary" id="exportBtn">
-                    <i class="fas fa-download"></i> Export
-                </button>
-                <button class="btn btn-primary" id="refreshBtn">
-                    <i class="fas fa-sync-alt"></i> Refresh
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Summary Cards -->
-    <div class="summary-grid">
-        <div class="summary-card">
-            <div class="summary-header">
-                <span class="summary-title">Total Transactions</span>
+<div class="app-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
                 <i class="fas fa-database"></i>
+                <span>Spring Tx Board</span>
             </div>
-            <div class="summary-value" id="totalTransactions">0</div>
-            <div class="summary-subtitle">Lifetime</div>
         </div>
-
-        <div class="summary-card">
-            <div class="summary-header">
-                <span class="summary-title">Success Rate</span>
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="summary-value success" id="successRate">0%</div>
-            <div class="summary-subtitle">Commit rate</div>
+        <nav class="sidebar-nav">
+            <a href="#" class="nav-item active" data-view="transaction-board">
+                <i class="fas fa-columns"></i>
+                <span>Transaction Board</span>
+            </a>
+            <a href="#" class="nav-item" data-view="sql-execution">
+                <i class="fas fa-code"></i>
+                <span>Transaction Less SQL</span>
+            </a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="version-info">v1.7.0</div>
         </div>
+    </aside>
 
-        <div class="summary-card">
-            <div class="summary-header">
-                <span class="summary-title">Committed</span>
-                <i class="fas fa-check-circle success"></i>
-            </div>
-            <div class="summary-value success" id="committedCount">0</div>
-            <div class="summary-subtitle">Successful transactions</div>
-        </div>
-
-        <div class="summary-card">
-            <div class="summary-header">
-                <span class="summary-title">Rolled Back & Errored</span>
-                <i class="fas fa-times-circle error"></i>
-            </div>
-            <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
-            <div class="summary-subtitle">Failed transactions</div>
-        </div>
-
-        <div class="summary-card">
-            <div class="summary-header">
-                <span class="summary-title">Avg Duration</span>
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="summary-value" id="avgDuration">0.00s</div>
-            <div class="summary-subtitle">Average execution time</div>
-        </div>
-
-        <div class="summary-card">
-            <div class="summary-header">
-                <span class="summary-title">Connection Occupied</span>
-                <i class="fas fa-clock"></i>
-            </div>
-            <div class="summary-value" id="avgConnOccupied">0.00s</div>
-            <div class="summary-subtitle">Average connection occupied</div>
-        </div>
-    </div>
-
-    <div class="charts-section">
-        <div class="tabs">
-            <div class="tab-buttons">
-                <button class="chart-tab-btn active" data-tab="overview">Distribution Chart</button>
-            </div>
-
-            <div class="chart-tab-content active" id="distributionChart">
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Transaction Status Distribution</h3>
-                            <p>Commit vs Rollback ratio</p>
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Transaction Board View -->
+        <div id="transaction-board-view" class="view-section active">
+            <div class="dashboard">
+                <!-- Header -->
+                <div class="header">
+                    <div class="header-content">
+                        <div class="header-text">
+                            <h1>Transaction Monitoring</h1>
+                            <p>Real-time transaction analysis and insights</p>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="statusChart" width="782" height="600"
-                                    style="display: block; box-sizing: border-box; height: 300px; width: 391px;"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="chart-card">
-                        <div class="chart-header">
-                            <h3>Duration Distribution</h3>
-                            <p>Transaction execution time ranges</p>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="durationChart" width="782" height="600"
-                                    style="display: block; box-sizing: border-box; height: 300px; width: 391px;"></canvas>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" id="exportBtn">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button class="btn btn-primary" id="refreshBtn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
                         </div>
                     </div>
                 </div>
-            </div>
 
-        </div>
-    </div>
-
-    <!-- Filters -->
-    <div class="filters-section">
-        <div class="filters-card">
-            <div class="filters-header">
-                <h3><i class="fas fa-filter"></i> Filters</h3>
-                <button class="btn btn-primary" id="clearFilters">Clear All</button>
-            </div>
-            <div class="filters-content">
-                <div class="filter-group">
-                    <label>Search Method</label>
-                    <input type="text" id="methodSearch" placeholder="Search by method, thread name...">
-                </div>
-                <div class="filter-group">
-                    <label>Status</label>
-                    <select id="statusFilter">
-                        <option value="">All Status</option>
-                        <option value="COMMITTED">Committed</option>
-                        <option value="ROLLED_BACK">Rolled Back</option>
-                        <option value="ERRORED">Errored</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Propagation</label>
-                    <select id="propagationFilter">
-                        <option value="">All Propagation</option>
-                        <option value="REQUIRED">Required</option>
-                        <option value="REQUIRES_NEW">Requires New</option>
-                        <option value="NESTED">Nested</option>
-                        <option value="SUPPORTS">Supports</option>
-                        <option value="NOT_SUPPORTED">Not Supported</option>
-                        <option value="NEVER">Never</option>
-                        <option value="MANDATORY">Mandatory</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Isolation Level</label>
-                    <select id="isolationFilter">
-                        <option value="">All Isolation</option>
-                        <option value="DEFAULT">Default</option>
-                        <option value="READ_UNCOMMITTED">Read Uncommitted</option>
-                        <option value="READ_COMMITTED">Read Committed</option>
-                        <option value="REPEATABLE_READ">Repeatable Read</option>
-                        <option value="SERIALIZABLE">Serializable</option>
-                    </select>
-                </div>
-                <div class="filter-group">
-                    <label>Connection Oriented</label>
-                    <select id="connectionFilter">
-                        <option value="">All</option>
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Transaction Table -->
-    <div class="table-section">
-        <div class="table-card">
-            <div class="table-header">
-                <h3><i class="fas fa-list"></i> Transaction Details</h3>
-            </div>
-
-            <div class="table-container">
-                <table id="transactionTable">
-                    <thead>
-                    <tr>
-                        <th style="width: 30px;"></th>
-                        <th class="sortable" data-sort="method">
-                            Method Name <i class="fas fa-sort"></i>
-                        </th>
-                        <th class="sortable" data-sort="startTime">
-                            Start Time <i class="fas fa-sort"></i>
-                        </th>
-                        <th class="sortable" data-sort="duration">
-                            Duration <i class="fas fa-sort"></i>
-                        </th>
-                        <th class="sortable" data-sort="status">
-                            Status <i class="fas fa-sort"></i>
-                        </th>
-                        <th class="sortable" data-sort="propagation">
-                            Propagation <i class="fas fa-sort"></i>
-                        </th>
-                        <th class="sortable" data-sort="isolation">
-                            Isolation <i class="fas fa-sort"></i>
-                        </th>
-                        <th class="sortable" data-sort="thread">
-                            Thread <i class="fas fa-sort"></i>
-                        </th>
-                        <th>SQL Count</th>
-                        <th>Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody id="transactionTableBody">
-                    <!-- Rows will be populated by JavaScript -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="table-footer" id="tableFooter">
-                <div class="pagination-info">
-                    <p>Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span
-                            id="totalResults">0</span> transactions</p>
-                </div>
-                <div class="pagination-controls">
-                    <div class="page-size-selector">
-                        <label for="pageSize">Show:</label>
-                        <select id="pageSize">
-                            <option value="10" selected>10</option>
-                            <option value="15">15</option>
-                            <option value="20">20</option>
-                            <option value="25">25</option>
-                            <option value="30">30</option>
-                            <option value="35">35</option>
-                            <option value="40">40</option>
-                            <option value="45">45</option>
-                            <option value="50">50</option>
-                            <option value="75">75</option>
-                            <option value="100">100</option>
-                        </select>
-                        <span>per page</span>
-                    </div>
-                    <div class="pagination-buttons">
-                        <button id="firstPage" class="pagination-btn" title="First Page">
-                            <i class="fas fa-angle-double-left"></i>
-                        </button>
-                        <button id="prevPage" class="pagination-btn" title="Previous Page">
-                            <i class="fas fa-angle-left"></i>
-                        </button>
-                        <div class="page-numbers" id="pageNumbers">
-                            <!-- Page numbers will be generated by JavaScript -->
+                <!-- Summary Cards -->
+                <div class="summary-grid">
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <span class="summary-title">Total Transactions</span>
+                            <div class="icon-box bg-blue-100 text-blue-600">
+                                <i class="fas fa-database"></i>
+                            </div>
                         </div>
-                        <button id="nextPage" class="pagination-btn" title="Next Page">
-                            <i class="fas fa-angle-right"></i>
-                        </button>
-                        <button id="lastPage" class="pagination-btn" title="Last Page">
-                            <i class="fas fa-angle-double-right"></i>
-                        </button>
+                        <div class="summary-value" id="totalTransactions">0</div>
+                        <div class="summary-subtitle">Lifetime transactions</div>
                     </div>
-                    <div class="page-jump">
-                        <span>Go to page:</span>
-                        <input type="number" id="pageJump" min="1" max="1" value="1">
-                        <button id="jumpToPage" class="pagination-btn">Go</button>
+
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <span class="summary-title">Success Rate</span>
+                            <div class="icon-box bg-green-100 text-green-600">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </div>
+                        <div class="summary-value success" id="successRate">0%</div>
+                        <div class="summary-subtitle">Commit rate</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <span class="summary-title">Committed</span>
+                            <div class="icon-box bg-green-100 text-green-600">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        </div>
+                        <div class="summary-value success" id="committedCount">0</div>
+                        <div class="summary-subtitle">Successful transactions</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <span class="summary-title">Rolled Back & Errored</span>
+                            <div class="icon-box bg-red-100 text-red-600">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                        </div>
+                        <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
+                        <div class="summary-subtitle">Failed transactions</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <span class="summary-title">Avg Duration</span>
+                            <div class="icon-box bg-purple-100 text-purple-600">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="summary-value" id="avgDuration">0.00s</div>
+                        <div class="summary-subtitle">Average execution time</div>
+                    </div>
+
+                    <div class="summary-card">
+                        <div class="summary-header">
+                            <span class="summary-title">Connection Occupied</span>
+                            <div class="icon-box bg-orange-100 text-orange-600">
+                                <i class="fas fa-plug"></i>
+                            </div>
+                        </div>
+                        <div class="summary-value" id="avgConnOccupied">0.00s</div>
+                        <div class="summary-subtitle">Average connection time</div>
+                    </div>
+                </div>
+
+                <div class="charts-section">
+                    <div class="tabs">
+                        <div class="tab-buttons">
+                            <button class="chart-tab-btn active" data-tab="overview">Distribution Chart</button>
+                        </div>
+
+                        <div class="chart-tab-content active" id="distributionChart">
+                            <div class="charts-grid">
+                                <div class="chart-card">
+                                    <div class="chart-header">
+                                        <h3>Transaction Status</h3>
+                                        <p>Distribution of transaction outcomes</p>
+                                    </div>
+                                    <div class="chart-container">
+                                        <canvas id="statusChart"></canvas>
+                                    </div>
+                                </div>
+
+                                <div class="chart-card">
+                                    <div class="chart-header">
+                                        <h3>Duration Distribution</h3>
+                                        <p>Execution time frequency</p>
+                                    </div>
+                                    <div class="chart-container">
+                                        <canvas id="durationChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-section">
+                    <div class="filters-card">
+                        <div class="filters-header">
+                            <h3><i class="fas fa-filter"></i> Filters</h3>
+                            <button class="btn btn-text" id="clearFilters">Reset</button>
+                        </div>
+                        <div class="filters-content">
+                            <div class="filter-group">
+                                <label>Search</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="methodSearch" placeholder="Method, thread name...">
+                                </div>
+                            </div>
+                            <div class="filter-group">
+                                <label>Status</label>
+                                <select id="statusFilter">
+                                    <option value="">All Status</option>
+                                    <option value="COMMITTED">Committed</option>
+                                    <option value="ROLLED_BACK">Rolled Back</option>
+                                    <option value="ERRORED">Errored</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Propagation</label>
+                                <select id="propagationFilter">
+                                    <option value="">All Propagation</option>
+                                    <option value="REQUIRED">Required</option>
+                                    <option value="REQUIRES_NEW">Requires New</option>
+                                    <option value="NESTED">Nested</option>
+                                    <option value="SUPPORTS">Supports</option>
+                                    <option value="NOT_SUPPORTED">Not Supported</option>
+                                    <option value="NEVER">Never</option>
+                                    <option value="MANDATORY">Mandatory</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Isolation Level</label>
+                                <select id="isolationFilter">
+                                    <option value="">All Isolation</option>
+                                    <option value="DEFAULT">Default</option>
+                                    <option value="READ_UNCOMMITTED">Read Uncommitted</option>
+                                    <option value="READ_COMMITTED">Read Committed</option>
+                                    <option value="REPEATABLE_READ">Repeatable Read</option>
+                                    <option value="SERIALIZABLE">Serializable</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>Connection Oriented</label>
+                                <select id="connectionFilter">
+                                    <option value="">All</option>
+                                    <option value="true">Yes</option>
+                                    <option value="false">No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction Table -->
+                <div class="table-section">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3><i class="fas fa-list"></i> Recent Transactions</h3>
+                        </div>
+
+                        <div class="table-container">
+                            <table id="transactionTable">
+                                <thead>
+                                <tr>
+                                    <th class="col-icon"></th>
+                                    <th class="sortable" data-sort="method">
+                                        Method Name <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="startTime">
+                                        Start Time <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="duration">
+                                        Duration <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="status">
+                                        Status <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="propagation">
+                                        Propagation <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="isolation">
+                                        Isolation <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="thread">
+                                        Thread <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th>SQL Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody id="transactionTableBody">
+                                <!-- Rows will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <div class="table-footer" id="tableFooter">
+                            <div class="pagination-info">
+                                <p>Showing <span id="startRecord">0</span> to <span id="endRecord">0</span> of <span
+                                        id="totalResults">0</span> transactions</p>
+                            </div>
+                            <div class="pagination-controls">
+                                <div class="page-size-selector">
+                                    <label for="pageSize">Rows per page:</label>
+                                    <select id="pageSize">
+                                        <option value="10" selected>10</option>
+                                        <option value="15">15</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="30">30</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="pagination-buttons">
+                                    <button id="firstPage" class="pagination-btn" title="First Page">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </button>
+                                    <button id="prevPage" class="pagination-btn" title="Previous Page">
+                                        <i class="fas fa-angle-left"></i>
+                                    </button>
+                                    <div class="page-numbers" id="pageNumbers">
+                                        <!-- Page numbers will be generated by JavaScript -->
+                                    </div>
+                                    <button id="nextPage" class="pagination-btn" title="Next Page">
+                                        <i class="fas fa-angle-right"></i>
+                                    </button>
+                                    <button id="lastPage" class="pagination-btn" title="Last Page">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </button>
+                                </div>
+                                <div class="page-jump">
+                                    <span>Go to page:</span>
+                                    <input type="number" id="pageJump" min="1" max="1" value="1">
+                                    <button id="jumpToPage" class="pagination-btn">Go</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- SQL Execution View -->
+        <div id="sql-execution-view" class="view-section">
+            <div class="dashboard">
+                <div class="header">
+                    <div class="header-content">
+                        <div class="header-text">
+                            <h1>SQL Execution Analysis</h1>
+                            <p>Monitor and analyze SQL query performance</p>
+                        </div>
+                        <div class="header-actions">
+                            <button class="btn btn-secondary" id="exportSqlBtn">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                            <button class="btn btn-primary" id="refreshSqlBtn">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SQL Filters -->
+                <div class="filters-section">
+                    <div class="filters-card">
+                        <div class="filters-header">
+                            <h3><i class="fas fa-filter"></i> Filters</h3>
+                            <button class="btn btn-text" id="clearSqlFilters">Reset</button>
+                        </div>
+                        <div class="filters-content">
+                            <div class="filter-group">
+                                <label>Search</label>
+                                <div class="input-with-icon">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="sqlSearch" placeholder="Search by thread name...">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section">
+                    <div class="table-card">
+                        <div class="table-header">
+                            <h3><i class="fas fa-database"></i> SQL Queries</h3>
+                        </div>
+                        <div class="table-container">
+                            <table id="sqlTable">
+                                <thead>
+                                <tr>
+                                    <th>SQL Execution ID</th>
+                                    <th class="sortable" data-sort="conAcquiredTime">
+                                        Connection Acquired Time <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="conReleaseTime">
+                                        Connection Release Time <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="conOccupiedTime">
+                                        Occupied Time <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th class="sortable" data-sort="thread">
+                                        Thread <i class="fas fa-sort"></i>
+                                    </th>
+                                    <th>SQL Count</th>
+                                    <th>Actions</th>
+                                </tr>
+                                </thead>
+                                <tbody id="sqlTableBody">
+                                <!-- Rows will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- SQL Pagination -->
+                        <div class="table-footer" id="sqlTableFooter">
+                            <div class="pagination-info">
+                                <p>Showing <span id="sqlStartRecord">0</span> to <span id="sqlEndRecord">0</span> of
+                                    <span id="sqlTotalResults">0</span> queries
+                                </p>
+                            </div>
+                            <div class="pagination-controls">
+                                <div class="page-size-selector">
+                                    <label for="sqlPageSize">Rows per page:</label>
+                                    <select id="sqlPageSize">
+                                        <option value="10" selected>10</option>
+                                        <option value="15">15</option>
+                                        <option value="20">20</option>
+                                        <option value="25">25</option>
+                                        <option value="30">30</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+                                <div class="pagination-buttons">
+                                    <button id="sqlFirstPage" class="pagination-btn" title="First Page">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </button>
+                                    <button id="sqlPrevPage" class="pagination-btn" title="Previous Page">
+                                        <i class="fas fa-angle-left"></i>
+                                    </button>
+                                    <div class="page-numbers" id="sqlPageNumbers">
+                                        <!-- Page numbers will be generated by JavaScript -->
+                                    </div>
+                                    <button id="sqlNextPage" class="pagination-btn" title="Next Page">
+                                        <i class="fas fa-angle-right"></i>
+                                    </button>
+                                    <button id="sqlLastPage" class="pagination-btn" title="Last Page">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </button>
+                                </div>
+                                <div class="page-jump">
+                                    <span>Go to page:</span>
+                                    <input type="number" id="sqlPageJump" min="1" max="1" value="1">
+                                    <button id="sqlJumpToPage" class="pagination-btn">Go</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
 
 <!-- Transaction Detail Modal -->
@@ -286,11 +447,14 @@
             <div class="detail-tabs">
                 <button class="tab-btn active" data-tab="overview">Overview</button>
                 <button class="tab-btn" data-tab="timing" id="timingTab">Timing</button>
-                <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection Summary
+                <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection
+                    Summary
                 </button>
                 <button class="tab-btn" data-tab="sql">SQL Queries</button>
                 <button class="tab-btn" data-tab="children">Child Transactions</button>
-                <button class="tab-btn" data-tab="post-tx-quires" id="postTxQuiresTab">Post Transaction Queries</button>
+                <button class="tab-btn" data-tab="post-tx-quires" id="postTxQuiresTab">Post Transaction
+                    Queries
+                </button>
             </div>
 
             <div class="tab-content active" id="overview">
@@ -406,6 +570,51 @@
     </div>
 </div>
 
+<!-- SQL Execution Detail Modal -->
+<div id="sqlModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-info-circle"></i> SQL Execution Details</h2>
+            <button class="modal-close" id="closeSqlModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-padding">
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <label>Thread:</label>
+                        <span id="sqlDetailThread">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Connection Acquired:</label>
+                        <span id="sqlDetailAcquired">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Connection Released:</label>
+                        <span id="sqlDetailReleased">-</span>
+                    </div>
+                    <div class="detail-item">
+                        <label>Occupied Time:</label>
+                        <span id="sqlDetailOccupied">-</span>
+                    </div>
+                </div>
+
+                <div class="sql-container mt-4">
+                    <div class="sql-header">
+                        <h4>Executed SQL Queries</h4>
+                        <span id="sqlDetailCount" class="badge badge-info">0 queries</span>
+                    </div>
+                    <div class="sql-list" id="sqlDetailList">
+                        <!-- SQL queries will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="script.js"></script>
 </body>
+
 </html>
