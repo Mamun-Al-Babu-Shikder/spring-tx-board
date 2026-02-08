@@ -191,7 +191,7 @@ public final class TxLogUtils {
 
         Instant emailVerify = baseTime.plusMillis(500);
         TransactionLog emailVerificationWithoutExistingTx = new TransactionLog(
-                null, "EmailService.sendVerificationEmail",
+                UUID.randomUUID(), "EmailService.sendVerificationEmail",
                 PropagationBehavior.MANDATORY, IsolationLevel.READ_COMMITTED,
                 emailVerify, emailVerify.plusMillis(0),
                 new ConnectionSummary(0, 0, 0),
