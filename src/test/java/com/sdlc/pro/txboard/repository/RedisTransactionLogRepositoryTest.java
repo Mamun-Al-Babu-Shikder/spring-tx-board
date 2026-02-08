@@ -53,7 +53,7 @@ class RedisTransactionLogRepositoryTest {
     @BeforeAll
     static void setup() {
         TxBoardProperties properties = new TxBoardProperties();
-        properties.getRedis().setEntityTtl(Duration.ofSeconds(10));
+        properties.getRedis().setEntityTtl(Duration.ofSeconds(5));
         Gson gson = new GsonBuilder()
                 .registerTypeAdapter(Instant.class, new RedisTransactionLogRepositoryTest.InstantAdapter())
                 .serializeNulls()
