@@ -38,8 +38,9 @@ public class LettuceJsonOperation extends AbstractRedisJsonOperation {
                 log.warn("Unexpected error occurred while creating index for @RedisEntity type '{}'", clazz.getName());
             }
         } catch (Throwable ex) {
-            if (Objects.equals("Index already exists", ex.getCause().getCause().getMessage())) {
-                log.warn("Index already exist for @RedisEntity type '{}'", clazz.getName());
+            if (ex.getCause() != null && ex.getCause().getCause() != null
+                    && Objects.equals("Index already exists", ex.getCause().getCause().getMessage())) {
+                log.info("Index already exist for @RedisEntity type '{}'", clazz.getName());
             } else {
                 throw ex;
             }
