@@ -82,9 +82,9 @@ class RedisTransactionLogRepositoryTest {
         assertEquals(4L, transactionSummary.getCommittedCount());
         assertEquals(1L, transactionSummary.getRolledBackCount());
         assertEquals(1L, transactionSummary.getErroredCount());
-        // assertEquals(0L, transactionSummary.getAlarmingCount()); // currently this is not required
+        assertEquals(1L, transactionSummary.getAlarmingCount());
         assertEquals(4L, transactionSummary.getConnectionAcquisitionCount());
-        // assertEquals(1L, transactionSummary.getAlarmingConnectionCount()); // currently this is not required
+        assertEquals(1L, transactionSummary.getAlarmingConnectionCount());
 
         assertEquals(5515L, transactionSummary.getTotalDuration());
         assertEquals(919.0, Math.floor(transactionSummary.getAverageDuration()));

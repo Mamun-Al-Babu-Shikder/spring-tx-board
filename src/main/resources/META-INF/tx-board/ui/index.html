@@ -130,6 +130,28 @@
                                 <div class="summary-value" id="avgConnOccupied">0.00s</div>
                                 <div class="summary-subtitle">Average connection time</div>
                             </div>
+
+                            <div class="summary-card">
+                                <div class="summary-header">
+                                    <span class="summary-title">Alarming Transactions</span>
+                                    <div class="icon-box bg-orange-100 text-orange-600">
+                                        <i class="fas fa-exclamation-triangle"></i>
+                                    </div>
+                                </div>
+                                <div class="summary-value error" id="alarmingCount">0</div>
+                                <div class="summary-subtitle">Transactions exceeding threshold</div>
+                            </div>
+
+                            <div class="summary-card">
+                                <div class="summary-header">
+                                    <span class="summary-title">Alarming Connections</span>
+                                    <div class="icon-box bg-orange-100 text-orange-600">
+                                        <i class="fas fa-circle-exclamation"></i>
+                                    </div>
+                                </div>
+                                <div class="summary-value error" id="alarmingConnectionCount">0</div>
+                                <div class="summary-subtitle">Connections held longer than threshold</div>
+                            </div>
                         </div>
                         <button class="slider-btn right" id="slideRight">
                             <i class="fas fa-chevron-right"></i>

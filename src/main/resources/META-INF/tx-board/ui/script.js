@@ -730,6 +730,8 @@ $(document).ready(() => {
         $("#successRate").text(displaySuccessRate)
         $("#committedCount").text(committedTx)
         $("#rolledBackErroredCount").text(rolledBackTx + " / " + erroredTx)
+        $("#alarmingCount").text(txSummary.alarmingCount || 0)
+        $("#alarmingConnectionCount").text(txSummary.alarmingConnectionCount || 0)
         $("#avgDuration").text(formatDuration(txSummary.averageDuration))
         $("#avgConnOccupied").text(formatDuration(txSummary.averageConnectionOccupiedTime))
     }
