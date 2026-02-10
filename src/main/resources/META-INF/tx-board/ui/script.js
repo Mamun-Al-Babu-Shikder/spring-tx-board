@@ -221,6 +221,72 @@ $(document).ready(() => {
             $(".tab-content").removeClass("active")
             $("#" + tabId).addClass("active")
         })
+
+        // Summary Cards Slider
+        initSlider()
+    }
+
+    // Summary Cards Slider Interaction
+    function initSlider() {
+        const $grid = $(".summary-grid");
+        const $leftBtn = $("#slideLeft");
+        const $rightBtn = $("#slideRight");
+
+        if (!$grid.length) return;
+
+        const updateButtons = () => {
+            const scrollLeft = $grid.scrollLeft();
+            const maxScroll = $grid[0].scrollWidth - $grid[0].clientWidth;
+
+            $leftBtn.prop("disabled", scrollLeft <= 0);
+            $rightBtn.prop("disabled", scrollLeft >= maxScroll - 5); // 5px buffer
+        };
+
+        $leftBtn.click(function () {
+            const scrollAmount = $grid.width() * 0.8;
+            $grid.animate({
+                scrollLeft: $grid.scrollLeft() - scrollAmount
+            }, 300, updateButtons);
+        });
+
+        $rightBtn.click(function () {
+            const scrollAmount = $grid.width() * 0.8;
+            $grid.animate({
+                scrollLeft: $grid.scrollLeft() + scrollAmount
+            }, 300, updateButtons);
+        });
+
+        $grid.on("scroll", debounce(updateButtons, 50));
+
+        // Drag to scroll functionality
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        $grid.on("mousedown", (e) => {
+            isDown = true;
+            $grid.css('cursor', 'grabbing');
+            startX = e.pageX - $grid.offset().left;
+            scrollLeft = $grid.scrollLeft();
+        });
+
+        $(window).on("mouseup", () => {
+            isDown = false;
+            $grid.css('cursor', 'grab');
+        });
+
+        $grid.on("mousemove", (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - $grid.offset().left;
+            const walk = (x - startX) * 2;
+            $grid.scrollLeft(scrollLeft - walk);
+            updateButtons();
+        });
+
+        // Initial update and resize handling
+        setTimeout(updateButtons, 500);
+        $(window).on('resize', debounce(updateButtons, 100));
     }
 
     // Status distribution pie chart
