@@ -242,15 +242,37 @@ body {
   font-size: 0.75rem;
 }
 
-/* Summary Cards */
+/* Summary Cards Slider */
+.summary-slider-container {
+  position: relative;
+  margin-bottom: 2rem;
+  padding: 0 10px;
+}
+
 .summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  display: flex !important;
   gap: 1.5rem;
-  margin-bottom: 1.5rem;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding: 0.5rem 0.25rem;
+  cursor: grab;
+  user-select: none;
+}
+
+.summary-grid::-webkit-scrollbar {
+  display: none;
+}
+
+.summary-grid:active {
+  cursor: grabbing;
 }
 
 .summary-card {
+  flex: 0 0 calc(20% - 1.125rem);
+  /* 5 cards on desktop */
+  min-width: 260px;
   background: white;
   border-radius: var(--radius-lg);
   padding: 1.5rem;
@@ -262,6 +284,53 @@ body {
 .summary-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
+}
+
+/* Slider Navigation */
+.slider-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: white;
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-md);
+  color: var(--text-main);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.summary-slider-container:hover .slider-btn {
+  opacity: 1;
+  visibility: visible;
+}
+
+.slider-btn:hover {
+  background: var(--bg-body);
+  color: var(--primary-color);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.slider-btn.left {
+  left: -18px;
+}
+
+.slider-btn.right {
+  right: -18px;
+}
+
+.slider-btn:disabled {
+  opacity: 0.3 !important;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .summary-header {
