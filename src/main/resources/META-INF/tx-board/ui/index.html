@@ -59,73 +59,103 @@
                     </div>
                 </div>
 
-                <!-- Summary Cards -->
-                <div class="summary-grid">
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <span class="summary-title">Total Transactions</span>
-                            <div class="icon-box bg-blue-100 text-blue-600">
-                                <i class="fas fa-database"></i>
+                <!-- Summary Cards Slider -->
+                <div class="summary-slider-container">
+                    <button class="slider-btn left" id="slideLeft">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <div class="summary-grid">
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Total Transactions</span>
+                                <div class="icon-box bg-blue-100 text-blue-600">
+                                    <i class="fas fa-database"></i>
+                                </div>
                             </div>
+                            <div class="summary-value" id="totalTransactions">0</div>
+                            <div class="summary-subtitle">Lifetime transactions</div>
                         </div>
-                        <div class="summary-value" id="totalTransactions">0</div>
-                        <div class="summary-subtitle">Lifetime transactions</div>
-                    </div>
 
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <span class="summary-title">Success Rate</span>
-                            <div class="icon-box bg-green-100 text-green-600">
-                                <i class="fas fa-chart-line"></i>
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Success Rate</span>
+                                <div class="icon-box bg-green-100 text-green-600">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
                             </div>
+                            <div class="summary-value success" id="successRate">0%</div>
+                            <div class="summary-subtitle">Commit rate</div>
                         </div>
-                        <div class="summary-value success" id="successRate">0%</div>
-                        <div class="summary-subtitle">Commit rate</div>
-                    </div>
 
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <span class="summary-title">Committed</span>
-                            <div class="icon-box bg-green-100 text-green-600">
-                                <i class="fas fa-check-circle"></i>
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Committed</span>
+                                <div class="icon-box bg-green-100 text-green-600">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
                             </div>
+                            <div class="summary-value success" id="committedCount">0</div>
+                            <div class="summary-subtitle">Successful transactions</div>
                         </div>
-                        <div class="summary-value success" id="committedCount">0</div>
-                        <div class="summary-subtitle">Successful transactions</div>
-                    </div>
 
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <span class="summary-title">Rolled Back & Errored</span>
-                            <div class="icon-box bg-red-100 text-red-600">
-                                <i class="fas fa-times-circle"></i>
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Rolled Back & Errored</span>
+                                <div class="icon-box bg-red-100 text-red-600">
+                                    <i class="fas fa-times-circle"></i>
+                                </div>
                             </div>
+                            <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
+                            <div class="summary-subtitle">Failed transactions</div>
                         </div>
-                        <div class="summary-value error" id="rolledBackErroredCount">0 / 0</div>
-                        <div class="summary-subtitle">Failed transactions</div>
-                    </div>
 
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <span class="summary-title">Avg Duration</span>
-                            <div class="icon-box bg-purple-100 text-purple-600">
-                                <i class="fas fa-clock"></i>
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Avg Duration</span>
+                                <div class="icon-box bg-purple-100 text-purple-600">
+                                    <i class="fas fa-clock"></i>
+                                </div>
                             </div>
+                            <div class="summary-value" id="avgDuration">0.00s</div>
+                            <div class="summary-subtitle">Average execution time</div>
                         </div>
-                        <div class="summary-value" id="avgDuration">0.00s</div>
-                        <div class="summary-subtitle">Average execution time</div>
-                    </div>
 
-                    <div class="summary-card">
-                        <div class="summary-header">
-                            <span class="summary-title">Connection Occupied</span>
-                            <div class="icon-box bg-orange-100 text-orange-600">
-                                <i class="fas fa-plug"></i>
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Connection Occupied</span>
+                                <div class="icon-box bg-orange-100 text-orange-600">
+                                    <i class="fas fa-plug"></i>
+                                </div>
                             </div>
+                            <div class="summary-value" id="avgConnOccupied">0.00s</div>
+                            <div class="summary-subtitle">Average connection time</div>
                         </div>
-                        <div class="summary-value" id="avgConnOccupied">0.00s</div>
-                        <div class="summary-subtitle">Average connection time</div>
+
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Alarming Transactions</span>
+                                <div class="icon-box bg-orange-100 text-orange-600">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                            </div>
+                            <div class="summary-value error" id="alarmingCount">0</div>
+                            <div class="summary-subtitle">Transactions exceeding threshold</div>
+                        </div>
+
+                        <div class="summary-card">
+                            <div class="summary-header">
+                                <span class="summary-title">Alarming Connections</span>
+                                <div class="icon-box bg-orange-100 text-orange-600">
+                                    <i class="fas fa-circle-exclamation"></i>
+                                </div>
+                            </div>
+                            <div class="summary-value error" id="alarmingConnectionCount">0</div>
+                            <div class="summary-subtitle">Connections held longer than threshold</div>
+                        </div>
                     </div>
+                    <button class="slider-btn right" id="slideRight">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
                 </div>
 
                 <div class="charts-section">
@@ -448,13 +478,11 @@
                 <button class="tab-btn active" data-tab="overview">Overview</button>
                 <button class="tab-btn" data-tab="timing" id="timingTab">Timing</button>
                 <button class="tab-btn" data-tab="connectionSummary" id="connectionSummaryTab">Connection
-                    Summary
-                </button>
+                    Summary</button>
                 <button class="tab-btn" data-tab="sql">SQL Queries</button>
                 <button class="tab-btn" data-tab="children">Child Transactions</button>
                 <button class="tab-btn" data-tab="post-tx-quires" id="postTxQuiresTab">Post Transaction
-                    Queries
-                </button>
+                    Queries</button>
             </div>
 
             <div class="tab-content active" id="overview">
