@@ -24,6 +24,12 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Note: Before run this test please remove previous RedisSqlExecutionLog(s) from Redis server.
+ * You can find those log record with prefix 'SpringTxBoardSqlExecutionLog' and
+ * the index name is 'spring_tx_board_transaction_log_idx'
+ */
+
 class RedisSqlExecutionLogRepositoryTest {
     private static SqlExecutionLogRepository logRepository;
     private static LettuceConnectionFactory lettuceConnectionFactory;
