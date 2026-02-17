@@ -37,7 +37,7 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
         RedisTransactionLog redisTransactionLog = toRedisTransactionLog(transactionLog);
         Duration ttl = this.txBoardProperties.getRedis().getEntityTtl();
         String key = this.redisJsonOperation.saveWithExpire(redisTransactionLog, ttl.toSeconds());
-        log.debug("Redis entity saved. key: {}, TTL: {}",key, ttl);
+        log.debug("Redis entity saved. key: {}, TTL: {}", key, ttl);
     }
 
     @Override
@@ -78,10 +78,10 @@ public final class RedisTransactionLogRepository implements TransactionLogReposi
         long rolledBackCount = this.countByTransactionStatus(TransactionPhaseStatus.ROLLED_BACK);
         long erroredCount = this.countByTransactionStatus(TransactionPhaseStatus.ERRORED);
         long totalDuration = (long) this.redisJsonOperation.sum(entityType, "duration");
-        long alarmingCount = 0L; // this.redisJsonOperation.countByFieldValue(entityType, "alarmingTransaction", true);
+        long alarmingCount = this.redisJsonOperation.countByFieldValue(entityType, "alarmingTransaction", true);
         long connectionAcquisitionCount = (long) this.redisJsonOperation.sum(entityType, "connectionSummary.acquisitionCount");
         long totalConnectionOccupiedTime = (long) this.redisJsonOperation.sum(entityType, "connectionSummary.occupiedTime");
-        long alarmingConnectionCount = 0L; // (long) this.redisJsonOperation.sum(entityType, "connectionSummary.alarmingConnectionCount");
+        long alarmingConnectionCount = (long) this.redisJsonOperation.sum(entityType, "connectionSummary.alarmingConnectionCount");
 
         return new TransactionSummary(
                 commitCount,
