@@ -79,9 +79,10 @@ public class SpringTxBoardWebConfiguration implements ApplicationContextAware, W
     @Bean
     @ConditionalOnClass(RedisConnectionFactory.class)
     @ConditionalOnProperty(prefix = "sdlc.pro.spring.tx.board", name = "storage", havingValue = "redis", matchIfMissing = true)
-    public RedisJsonOperation sdlcProRedisJsonOperation(RedisConnectionFactory redisConnectionFactory) {
+    public RedisJsonOperation sdlcProRedisJsonOperation() {
         Gson mapper = gsonMapper();
         RedisJsonOperation redisJsonOperation;
+        RedisConnectionFactory redisConnectionFactory = this.applicationContext.getBean(RedisConnectionFactory.class);
         if (redisConnectionFactory instanceof JedisConnectionFactory) {
             redisJsonOperation = new JedisJsonOperation(redisConnectionFactory, mapper);
         } else if (redisConnectionFactory instanceof LettuceConnectionFactory) {
