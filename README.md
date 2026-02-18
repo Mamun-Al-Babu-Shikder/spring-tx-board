@@ -7,7 +7,7 @@ transactions, executed SQL queries, connection usage, and post-transaction activ
 With both **in-console logs** and a **built-in web dashboard**, developers can **analyze transaction performance**,
 **detect slow or alarming operations**, and **visualize query patterns** — all without adding any manual instrumentation
 or modifying existing code.
-![Spring Tx Board Image](spring-tx-board-looks-like.png)
+![Spring Tx Board Image](spring-tx-board-looks-like-v1.7.0.png)
 
 ## Features
 
