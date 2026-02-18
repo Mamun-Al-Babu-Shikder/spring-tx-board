@@ -8,7 +8,7 @@ With both **in-console logs** and a **built-in web dashboard**, developers can *
 **detect slow or alarming operations**, and **visualize query patterns** — all without adding any manual instrumentation
 or modifying existing code.
 
-![Spring Tx Board Image](spring-tx-board-looks-like.png)
+![Spring Tx Board Image](spring-tx-board-looks-like-v1.7.0.png)
 
 ## Features
 
@@ -47,7 +47,7 @@ Add the following dependency to your `pom.xml`, based on your **Spring Boot** ve
     <dependency>
         <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
         <artifactId>spring-tx-board</artifactId>
-        <version>1.6.0-boot2</version>
+        <version>1.7.0-boot2</version>
     </dependency>
 </dependencies>
 ```
@@ -69,7 +69,7 @@ Add the following dependency to your `pom.xml`, based on your **Spring Boot** ve
     <dependency>
         <groupId>com.github.Mamun-Al-Babu-Shikder</groupId>
         <artifactId>spring-tx-board</artifactId>
-        <version>1.6.0</version>
+        <version>1.7.0</version>
     </dependency>
 </dependencies>
 ```
@@ -89,6 +89,8 @@ sdlc:
             transaction: 1000 # 1000 ms
             connection: 1000 # 1000 ms
           duration-buckets: [ 100, 500, 1000, 2000, 5000 ]
+          redis:
+            entity-ttl: 7d # keep log into redis for 7 days
 ```
 
 > `alarming-threshold.transaction`: If any transaction duration (ms) took more than the configured value then the
@@ -153,7 +155,7 @@ Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connection
 
 ```
 [TX-Board] Transaction Completed:
-  • ID: 123
+  • ID: 4bfd0935-2de3-4992-96da-1992431d48c1
   • Method: UserService.createUser
   • Propagation: REQUIRED
   • Isolation: DEFAULT
@@ -170,7 +172,7 @@ Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connection
 
 ```
 [TX-Board] Transaction Completed:
-  • ID: 789
+  • ID: 65cdc135-eb42-4fd3-9dc2-4282064a9045
   • Method: CheckoutService.checkout
   • Propagation: REQUIRED
   • Isolation: DEFAULT
@@ -185,6 +187,27 @@ Transaction [UserService.createUser] took 2150 ms, Status: COMMITTED, Connection
     ├── InventoryService.reserveStock (Duration: 450 ms, Propagation: MANDATORY, Isolation: DEFAULT, Status: COMMITTED)
     ├── PaymentService.charge (Duration: 1200 ms, Propagation: MANDATORY, Isolation: DEFAULT, Status: COMMITTED)
     └── EmailService.sendReceipt (Duration: 120 ms, Propagation: MANDATORY, Isolation: DEFAULT, Status: COMMITTED)
+```
+
+### Transaction Less SQL
+
+**SIMPLE**
+
+```
+SQL executor leased connection for 2009 ms to executed 3 queries
+```
+
+**DETAILS**
+
+```
+[TX-Board] SQL Execution Completed:
+  • ID: e127a497-f92d-4ef3-b686-23b7b0503aa7
+  • Connection Acquired At: 2026-02-18T12:33:20.292078108Z
+  • Connection Released At: 2026-02-18T12:33:22.307549887Z
+  • Connection Occupied Time: 2015 ms
+  • Executed Query Count: 1
+  • Executed Queries:
+	└── SELECT name FROM Employees WHERE age >= 30;
 ```
 
 ## Developer Usage
@@ -250,7 +273,8 @@ Spring Boot metadata support for IDE auto-completion is provided via `spring-con
 
 ## Future Enhancements
 
-* Redis-backed storage with TTL
+* Kafka integration to stream logs
+* Provide ELK support
 * Spring Boot Admin integration
 
 ## Contribution

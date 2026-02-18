@@ -344,9 +344,9 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
             }
         } else {
             if (isAlarming) {
-                log.warn("SQL executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
+                log.warn("SQL Executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
             } else {
-                log.info("SQL executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
+                log.info("SQL Executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
             }
         }
 
