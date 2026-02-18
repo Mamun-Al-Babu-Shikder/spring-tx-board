@@ -6,7 +6,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.sdlc.pro</groupId>
     <artifactId>spring-tx-board</artifactId>
-    <version>1.6.0</version>
+    <version>1.7.0</version>
     <packaging>jar</packaging>
     <name>Spring Transaction Board</name>
     <description>Auto-configurable Spring transaction monitoring library</description>

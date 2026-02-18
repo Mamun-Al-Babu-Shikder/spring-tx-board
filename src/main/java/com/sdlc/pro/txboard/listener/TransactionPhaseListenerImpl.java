@@ -359,7 +359,7 @@ public final class TransactionPhaseListenerImpl implements TransactionPhaseListe
 
             logBuilder.log(message.toString());
         } else {
-            logBuilder.log("SQL executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
+            logBuilder.log("SQL Executor leased connection for {} ms to executed {} queries", executionLog.getConOccupiedTime(), quires.size());
         }
 
         publishSqlExecutionLogToListeners(executionLog);
