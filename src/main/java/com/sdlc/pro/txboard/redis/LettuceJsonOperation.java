@@ -80,7 +80,7 @@ public class LettuceJsonOperation extends AbstractRedisJsonOperation {
                     throw new RedisDataException("Failed to process Redis data!", ex);
                 }
             } else if (entry.getKey() instanceof byte[] && Arrays.equals((byte[]) entry.getKey(), TOTAL_RESULTS)) {
-                totalElements = (long) entry.getValue();
+                totalElements = Long.parseLong(entry.getValue().toString());
             }
         }
 
