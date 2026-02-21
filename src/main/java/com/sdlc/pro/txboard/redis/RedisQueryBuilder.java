@@ -81,14 +81,17 @@ public final class RedisQueryBuilder {
         return sanitizeText(v);
     }
 
-    private static String sanitizeText(Object v) {
-        return v.toString(); // best sanitize logic should be applied
-        /*
-                .replace("-", "\\-")
-                .replace(" ", "\\ ")
-                .replace("\"", "\\\"");
+    public static String sanitizeText(Object value) {
+        String specialChars = ",-.<>{}[]\"':;!@#$%^&*()+= ~|?/\\";
+        StringBuilder escaped = new StringBuilder();
+        for (char c : value.toString().toCharArray()) {
+            if (specialChars.indexOf(c) != -1) {
+                escaped.append('\\');
+            }
+            escaped.append(c);
+        }
 
-         */
+        return escaped.toString();
     }
 
     private static String numeric(Object v) {
