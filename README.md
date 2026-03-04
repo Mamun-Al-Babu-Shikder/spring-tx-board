@@ -108,7 +108,7 @@ This dashboard provides a real-time view of transaction activity including filte
 ## Storage Options
 
 * **IN\_MEMORY** (default): Simple, thread-safe `List` with in-memory counters
-* **REDIS** (planned): Store and distribute logs across instances (not-implemented)
+* **REDIS**: Store logs into redis
 
 ## Configurable transaction logging
 
