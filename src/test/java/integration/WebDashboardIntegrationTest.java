@@ -207,16 +207,16 @@ public class WebDashboardIntegrationTest {
             assertThat(durationDist.get(0).path("range").path("minMillis").asInt()).isEqualTo(0);
             assertThat(durationDist.get(0).path("range").path("maxMillis").asInt()).isEqualTo(100);
 
-            assertThat(durationDist.get(1).path("range").path("minMillis").asInt()).isEqualTo(100);
+            assertThat(durationDist.get(1).path("range").path("minMillis").asInt()).isEqualTo(101);
             assertThat(durationDist.get(1).path("range").path("maxMillis").asInt()).isEqualTo(500);
 
-            assertThat(durationDist.get(2).path("range").path("minMillis").asInt()).isEqualTo(500);
+            assertThat(durationDist.get(2).path("range").path("minMillis").asInt()).isEqualTo(501);
             assertThat(durationDist.get(2).path("range").path("maxMillis").asInt()).isEqualTo(1000);
 
-            assertThat(durationDist.get(3).path("range").path("minMillis").asInt()).isEqualTo(1000);
+            assertThat(durationDist.get(3).path("range").path("minMillis").asInt()).isEqualTo(1001);
             assertThat(durationDist.get(3).path("range").path("maxMillis").asInt()).isEqualTo(2000);
 
-            assertThat(durationDist.get(4).path("range").path("minMillis").asInt()).isEqualTo(2000);
+            assertThat(durationDist.get(4).path("range").path("minMillis").asInt()).isEqualTo(2001);
             assertThat(durationDist.get(4).path("range").path("maxMillis").asInt()).isEqualTo(5000);
         }
 

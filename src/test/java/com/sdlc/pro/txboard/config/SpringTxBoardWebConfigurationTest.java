@@ -14,7 +14,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest
+@WebMvcTest(
+        properties = "sdlc.pro.spring.tx.board.storage=in_memory"
+)
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = {
         SpringTxBoardWebConfiguration.class,

@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,8 +35,8 @@ class TransactionLogTest {
         connectionSummary = new ConnectionSummary(2, 1, 500L);
         executedQueries = Arrays.asList("SELECT * FROM users", "INSERT INTO orders");
         events = Arrays.asList(
-            new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Transaction started"),
-            new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, "Transaction completed")
+                new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Transaction started"),
+                new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, "Transaction completed")
         );
         txAlarmingThreshold = 1000L; // 1 second threshold
     }
@@ -48,7 +49,7 @@ class TransactionLogTest {
         @DisplayName("Should create TransactionLog with all fields correctly initialized")
         void shouldCreateTransactionLogWithAllFields() {
             // Given
-            Integer txId = 123;
+            UUID txId = UUID.randomUUID();
             String method = "UserService.createUser";
             PropagationBehavior propagation = PropagationBehavior.REQUIRED;
             IsolationLevel isolation = IsolationLevel.READ_COMMITTED;
@@ -57,8 +58,8 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                txId, method, propagation, isolation, startTime, endTime,
-                connectionSummary, status, thread, executedQueries, null, events, txAlarmingThreshold
+                    txId, method, propagation, isolation, startTime, endTime,
+                    connectionSummary, status, thread, executedQueries, null, events, txAlarmingThreshold
             );
 
             // Then
@@ -84,9 +85,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -101,9 +102,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                sameTime, sameTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    sameTime, sameTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -123,9 +124,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -140,9 +141,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -154,9 +155,9 @@ class TransactionLogTest {
         void connectionOrientedShouldBeNullWhenConnectionSummaryIsNull() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -173,9 +174,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, threshold
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, threshold
             );
 
             // Then
@@ -192,9 +193,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, threshold
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, threshold
             );
 
             // Then
@@ -211,9 +212,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, threshold
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, threshold
             );
 
             // Then
@@ -228,9 +229,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -245,9 +246,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -259,9 +260,9 @@ class TransactionLogTest {
         void havingAlarmingConnectionShouldBeNullWhenConnectionSummaryIsNull() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -278,9 +279,9 @@ class TransactionLogTest {
         void getChildShouldReturnEmptyListWhenChildIsNull() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -292,15 +293,15 @@ class TransactionLogTest {
         void getChildShouldReturnProvidedChildListWhenNotNull() {
             // Given
             List<TransactionLog> children = Arrays.asList(
-                createChildTransactionLog(2),
-                createChildTransactionLog(3)
+                    createChildTransactionLog(UUID.randomUUID()),
+                    createChildTransactionLog(UUID.randomUUID())
             );
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, children, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, children, null, 1000L
             );
 
             // Then
@@ -313,9 +314,9 @@ class TransactionLogTest {
         void getTotalTransactionCountShouldReturnOneForTransactionWithoutChildren() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -326,20 +327,20 @@ class TransactionLogTest {
         @DisplayName("getTotalTransactionCount should recursively count all child transactions")
         void getTotalTransactionCountShouldRecursivelyCountAllChildTransactions() {
             // Given
-            TransactionLog grandChild1 = createChildTransactionLog(3);
-            TransactionLog grandChild2 = createChildTransactionLog(4);
+            TransactionLog grandChild1 = createChildTransactionLog(UUID.randomUUID());
+            TransactionLog grandChild2 = createChildTransactionLog(UUID.randomUUID());
             TransactionLog child1 = new TransactionLog(
-                2, "child1", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, Arrays.asList(grandChild1, grandChild2), null, 1000L
+                    UUID.randomUUID(), "child1", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, Arrays.asList(grandChild1, grandChild2), null, 1000L
             );
-            TransactionLog child2 = createChildTransactionLog(5);
+            TransactionLog child2 = createChildTransactionLog(UUID.randomUUID());
 
             // When
             TransactionLog parent = new TransactionLog(
-                1, "parent", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, Arrays.asList(child1, child2), null, 1000L
+                    UUID.randomUUID(), "parent", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, Arrays.asList(child1, child2), null, 1000L
             );
 
             // Then
@@ -352,9 +353,9 @@ class TransactionLogTest {
         void getTotalQueryCountShouldReturnZeroForTransactionWithoutQueriesAndChildren() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -370,22 +371,22 @@ class TransactionLogTest {
             List<String> grandChildQueries = Arrays.asList("SELECT * FROM grandchild");
 
             TransactionLog grandChild = new TransactionLog(
-                3, "grandchild", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                grandChildQueries, null, null, 1000L
+                    UUID.randomUUID(), "grandchild", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    grandChildQueries, null, null, 1000L
             );
 
             TransactionLog child = new TransactionLog(
-                2, "child", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                childQueries, Arrays.asList(grandChild), null, 1000L
+                    UUID.randomUUID(), "child", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    childQueries, Arrays.asList(grandChild), null, 1000L
             );
 
             // When
             TransactionLog parent = new TransactionLog(
-                1, "parent", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                parentQueries, Arrays.asList(child), null, 1000L
+                    UUID.randomUUID(), "parent", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    parentQueries, Arrays.asList(child), null, 1000L
             );
 
             // Then
@@ -403,9 +404,9 @@ class TransactionLogTest {
         void getExecutedQuiresShouldReturnEmptyListWhenExecutedQuiresIsNull() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -420,9 +421,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                queries, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    queries, null, null, 1000L
             );
 
             // Then
@@ -445,9 +446,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -464,9 +465,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -483,9 +484,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -502,9 +503,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, summary, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -520,9 +521,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -538,9 +539,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -557,15 +558,15 @@ class TransactionLogTest {
         void getEventsShouldReturnTheProvidedEventsList() {
             // Given
             List<TransactionEvent> events = Arrays.asList(
-                new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Started"),
-                new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, "Completed")
+                    new TransactionEvent(TransactionEvent.Type.TRANSACTION_START, "Started"),
+                    new TransactionEvent(TransactionEvent.Type.TRANSACTION_END, "Completed")
             );
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, events, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, events, 1000L
             );
 
             // Then
@@ -577,9 +578,9 @@ class TransactionLogTest {
         void getEventsShouldReturnNullWhenEventsIsNull() {
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -596,9 +597,9 @@ class TransactionLogTest {
         void shouldExcludeNullFieldsInJsonSerialization() throws Exception {
             // Given
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -625,9 +626,9 @@ class TransactionLogTest {
         void shouldIncludeNonNullFieldsInJsonSerialization() throws Exception {
             // Given
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, connectionSummary, TransactionPhaseStatus.COMMITTED, "thread",
-                executedQueries, null, events, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, connectionSummary, TransactionPhaseStatus.COMMITTED, "thread",
+                    executedQueries, null, events, 1000L
             );
 
             ObjectMapper objectMapper = new ObjectMapper();
@@ -660,9 +661,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -678,9 +679,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, 1000L
             );
 
             // Then
@@ -698,9 +699,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
-                null, null, null, threshold
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    start, end, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    null, null, null, threshold
             );
 
             // Then
@@ -717,9 +718,9 @@ class TransactionLogTest {
 
             // When
             TransactionLog transactionLog = new TransactionLog(
-                1, "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-                emptyQueries, emptyChildren, emptyEvents, 1000L
+                    UUID.randomUUID(), "test", PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                    startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                    emptyQueries, emptyChildren, emptyEvents, 1000L
             );
 
             // Then
@@ -732,11 +733,11 @@ class TransactionLogTest {
     }
 
     // Helper method to create child transaction logs
-    private TransactionLog createChildTransactionLog(Integer txId) {
+    private TransactionLog createChildTransactionLog(UUID txId) {
         return new TransactionLog(
-            txId, "child" + txId, PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
-            startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
-            null, null, null, 1000L
+                txId, "child" + txId, PropagationBehavior.REQUIRED, IsolationLevel.DEFAULT,
+                startTime, endTime, null, TransactionPhaseStatus.COMMITTED, "thread",
+                null, null, null, 1000L
         );
     }
 }

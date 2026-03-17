@@ -12,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -21,7 +23,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class InMemoryTransactionLogRepository implements TransactionLogRepository, InitializingBean {
     private static final Logger log = LoggerFactory.getLogger(InMemoryTransactionLogRepository.class);
 
-    private final Set<DurationRange> ranges = new LinkedHashSet<>();
     private final int MAX_DURATION_DIST_RANGE;
 
     private final List<TransactionLog> transactionLogs;
@@ -34,21 +35,15 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
         this.durationDistributionMap = new ConcurrentSkipListMap<>(Comparator.comparingLong(DurationRange::minMillis));
         List<Integer> buckets = txBoardProperties.getDurationBuckets();
         this.MAX_DURATION_DIST_RANGE = buckets.get(buckets.size() - 1);
-        this.buildDurationBucketRange(buckets);
-        this.initializeDurationDistributionMap();
+        this.initializeDurationDistributionMap(buckets);
     }
 
-    private void buildDurationBucketRange(List<Integer> buckets) {
+    private void initializeDurationDistributionMap(List<Integer> buckets) {
         int prev = 0;
         for (int curr : buckets) {
-            ranges.add(DurationRange.of(prev, curr));
-            prev = curr;
-        }
-    }
-
-    private void initializeDurationDistributionMap() {
-        for (DurationRange range : ranges) {
+            DurationRange range = DurationRange.of(prev, curr);
             this.durationDistributionMap.put(range, new AtomicLong(0));
+            prev = curr + 1;
         }
     }
 
@@ -86,10 +81,11 @@ public final class InMemoryTransactionLogRepository implements TransactionLogRep
     }
 
     private void updateDurationDistribution(TransactionLog transactionLog) {
-        DurationRange range = ranges.stream()
+        DurationRange range = this.durationDistributionMap.keySet()
+                .stream()
                 .filter(r -> r.matches(transactionLog.getDuration()))
                 .findFirst()
-                .orElse(DurationRange.of(this.MAX_DURATION_DIST_RANGE, Integer.MAX_VALUE));
+                .orElse(DurationRange.of(this.MAX_DURATION_DIST_RANGE + 1, Integer.MAX_VALUE));
 
         this.durationDistributionMap
                 .computeIfAbsent(range, k -> new AtomicLong(0))
